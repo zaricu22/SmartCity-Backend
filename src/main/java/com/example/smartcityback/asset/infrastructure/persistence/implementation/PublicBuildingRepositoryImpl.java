@@ -1,0 +1,57 @@
+package com.example.smartcityback.asset.infrastructure.persistence.implementation;
+
+import com.example.smartcityback.asset.domain.aggregate.PublicBuilding;
+import com.example.smartcityback.asset.domain.repository.PublicBuildingRepository;
+import com.example.smartcityback.asset.infrastructure.persistence.entity.PublicBuildingJpaEntity;
+import com.example.smartcityback.asset.infrastructure.persistence.interfaces.PublicBuildingJpaRepository;
+import com.example.smartcityback.asset.infrastructure.persistence.mapper.PublicBuildingMapper;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.stereotype.Repository;
+
+import java.util.List;
+import java.util.Optional;
+import java.util.UUID;
+
+@Repository
+@Slf4j
+public class PublicBuildingRepositoryImpl implements PublicBuildingRepository {
+
+    private final PublicBuildingJpaRepository jpaRepository;
+
+    public PublicBuildingRepositoryImpl(PublicBuildingJpaRepository jpaRepository) {
+        this.jpaRepository = jpaRepository;
+    }
+
+    @Override
+    public Optional<PublicBuilding> findById(UUID id) {
+        return jpaRepository.findById(id).map(PublicBuildingMapper::toDomain);
+    }
+
+    @Override
+    public List<PublicBuilding> findAll() {
+        return jpaRepository.findAll().stream()
+                .map(PublicBuildingMapper::toDomain)
+                .toList();
+    }
+
+    @Override
+    public void save(PublicBuilding building) {
+        // If the PublicBuildingJpaEntity already exists in Hibernate session (ex. from getAll),
+        // now we create another PublicBuildingJpaEntity object with the same ID and exception will be thrown
+        // PublicBuildingJpaEntity entity = PublicBuildingMapper.toJpa(building);
+
+        PublicBuildingJpaEntity existing = jpaRepository.findById(building.getId())
+                .orElse(new PublicBuildingJpaEntity());
+
+        PublicBuildingMapper.updateJpaEntity(existing, building);
+
+        log.debug("Persisting PublicBuilding aggregateId={}", building.getId());
+
+        jpaRepository.save(existing);
+    }
+
+    @Override
+    public void delete(UUID id) {
+        jpaRepository.deleteById(id);
+    }
+}
