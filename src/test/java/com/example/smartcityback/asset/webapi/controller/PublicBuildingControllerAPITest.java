@@ -1,0 +1,359 @@
+package com.example.smartcityback.asset.webapi.controller;
+
+import com.example.smartcityback.asset.application.dto.EnergyDeviceDto;
+import com.example.smartcityback.asset.application.dto.PublicBuildingDto;
+import com.example.smartcityback.asset.application.exception.BuildingNotFoundException;
+import com.example.smartcityback.asset.application.service.PublicBuildingAppService;
+import com.example.smartcityback.asset.domain.exception.BuildingTotalCapacityExceededException;
+import com.example.smartcityback.asset.domain.exception.DeviceCapacityLimitException;
+import com.example.smartcityback.asset.domain.exception.DeviceAlreadyExistsException;
+import com.example.smartcityback.asset.domain.exception.DeviceNotFoundException;
+import com.example.smartcityback.asset.domain.exception.ValidationException;
+import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
+import com.example.smartcityback.asset.domain.shared.enums.ErrorCode;
+import com.example.smartcityback.asset.application.service.PublicBuildingQueryService;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.test.context.bean.override.mockito.MockitoBean;
+import org.springframework.http.MediaType;
+import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.web.servlet.MockMvc;
+
+import java.math.BigDecimal;
+import java.util.List;
+import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
+
+/**
+ * The @WebMvcTest does not start a real servlet container so server.servlet.context-path is NOT applied.
+ * Only the web layer is loaded (controller + GlobalExceptionHandler), with the service mocked via Mockito.
+ * No real DB, no full context.
+ *
+ * Its specific purpose is to test exception → HTTP response mapping through GlobalExceptionHandler.
+ * Because the service is mocked, it can force any exception to be thrown.
+ *
+ * Syntax:
+ *    methods which return values (like create) use willReturn() for the happy path, but willThrow() for exceptions
+ *    methods which return void (like addDevice) use willDoNothing() for the happy path, but willThrow() for exceptions
+ */
+
+
+@WebMvcTest(PublicBuildingController.class)
+@ActiveProfiles("test")
+class PublicBuildingControllerAPITest {
+
+    @Autowired
+    private MockMvc mockMvc;
+
+    // Not used, but required to load the controller and test the exception handling flow.
+    @MockitoBean
+    private PublicBuildingAppService appService;
+
+    @MockitoBean
+    private PublicBuildingQueryService queryService;
+
+    private static final UUID BUILDING_ID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
+    private static final UUID DEVICE_ID   = UUID.fromString("660e8400-e29b-41d4-a716-446655440001");
+
+    // =====================================================================
+    // Happy path: valid requests succeed with 200 OK
+    // =====================================================================
+
+    @Test
+    void create_validRequest_returns200() throws Exception {
+        given(appService.create(any())).willReturn(BUILDING_ID);
+
+        mockMvc.perform(post("/v1/buildings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "City Hall", "location": "Main St 1"}
+                                """))
+                .andExpect(status().isOk())
+                .andExpect(content().string("\"" + BUILDING_ID + "\""));
+    }
+
+    @Test
+    void addDevice_validRequest_returns200() throws Exception {
+        mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
+                                """))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void changeConsumption_validRequest_returns200() throws Exception {
+        mockMvc.perform(put("/v1/buildings/{id}/consumption", BUILDING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"consumptionValue": 50, "consumptionUnit": "kW"}
+                                """))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void getBuilding_found_returns200WithBody() throws Exception {
+        PublicBuildingDto response = new PublicBuildingDto(
+                BUILDING_ID, "City Hall", "Main St 1",
+                BigDecimal.ZERO, EnergyUnit.kW,
+                List.of(new EnergyDeviceDto(DEVICE_ID,
+                        com.example.smartcityback.asset.domain.shared.enums.DeviceType.SOLAR,
+                        new BigDecimal("100"), EnergyUnit.kW,
+                        BigDecimal.ZERO, EnergyUnit.kW))
+        );
+        given(queryService.getById(BUILDING_ID)).willReturn(response);
+
+        mockMvc.perform(get("/v1/buildings/{id}", BUILDING_ID))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(BUILDING_ID.toString()))
+                .andExpect(jsonPath("$.name").value("City Hall"))
+                .andExpect(jsonPath("$.location").value("Main St 1"))
+                .andExpect(jsonPath("$.devices").isArray())
+                .andExpect(jsonPath("$.devices[0].type").value("SOLAR"));
+    }
+
+    @Test
+    void changeProduction_validRequest_returns200() throws Exception {
+        mockMvc.perform(patch("/v1/buildings/{buildingId}/devices/{deviceId}/production",
+                        BUILDING_ID, DEVICE_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"productionValue": 60, "productionUnit": "kW"}
+                                """))
+                .andExpect(status().isOk());
+    }
+
+    // =====================================================================
+    // Validation path: invalid requests fail with 400 (GlobalExceptionHandler.handleValidation())
+    // =====================================================================
+
+    @Test
+    void create_domainValidationException_returns400WithDomainErrorCode() throws Exception {
+        given(appService.create(any()))
+                .willThrow(new ValidationException("Ustanova mora imati naziv!", ErrorCode.BUILDING_NAME_EMPTY));
+
+        mockMvc.perform(post("/v1/buildings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "X", "location": "Main St 1"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("BUILDING_NAME_EMPTY"));
+    }
+
+    // =====================================================================
+    // Validation path: invalid requests fail with 400 (GlobalExceptionHandler.handleSpringValidation())
+    // =====================================================================
+
+    @Test
+    void create_blankName_returns400WithValidationErrorCode() throws Exception {
+        mockMvc.perform(post("/v1/buildings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "", "location": "Main St 1"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.status").value(400));
+    }
+
+    @Test
+    void create_missingLocation_returns400() throws Exception {
+        mockMvc.perform(post("/v1/buildings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "City Hall"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void addDevice_missingType_returns400() throws Exception {
+        mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"ratedCapacityValue": 50, "ratedCapacityUnit": "kW"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void addDevice_negativeCapacity_returns400() throws Exception {
+        mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"type": "SOLAR", "ratedCapacityValue": -5, "ratedCapacityUnit": "kW"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void changeConsumption_negativeValue_returns400() throws Exception {
+        mockMvc.perform(put("/v1/buildings/{id}/consumption", BUILDING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"consumptionValue": -1, "consumptionUnit": "kW"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void changeProduction_negativeValue_returns400() throws Exception {
+        mockMvc.perform(patch("/v1/buildings/{buildingId}/devices/{deviceId}/production",
+                        BUILDING_ID, DEVICE_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"productionValue": -1, "productionUnit": "kW"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+    }
+
+    // =====================================================================
+    // Not Found path: invalid requests fail with 404 (GlobalExceptionHandler.handleNotFound())
+    // =====================================================================
+
+    @Test
+    void addDevice_buildingNotFound_returns404() throws Exception {
+        willThrow(new BuildingNotFoundException()).given(appService).addDevice(any());
+
+        mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("BUILDING_NOT_FOUND"));
+    }
+
+    @Test
+    void changeConsumption_buildingNotFound_returns404() throws Exception {
+        willThrow(new BuildingNotFoundException()).given(appService).changeConsumption(any(), any());
+
+        mockMvc.perform(put("/v1/buildings/{id}/consumption", BUILDING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"consumptionValue": 50, "consumptionUnit": "kW"}
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("BUILDING_NOT_FOUND"));
+    }
+
+    @Test
+    void changeProduction_buildingNotFound_returns404() throws Exception {
+        willThrow(new BuildingNotFoundException()).given(appService).changeProduction(any(), any(), any());
+
+        mockMvc.perform(patch("/v1/buildings/{buildingId}/devices/{deviceId}/production",
+                        BUILDING_ID, DEVICE_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"productionValue": 60, "productionUnit": "kW"}
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("BUILDING_NOT_FOUND"));
+    }
+
+    @Test
+    void changeProduction_deviceNotFound_returns404() throws Exception {
+        willThrow(new DeviceNotFoundException()).given(appService).changeProduction(any(), any(), any());
+
+        mockMvc.perform(patch("/v1/buildings/{buildingId}/devices/{deviceId}/production",
+                        BUILDING_ID, DEVICE_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"productionValue": 60, "productionUnit": "kW"}
+                                """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("DEVICE_NOT_FOUND"));
+    }
+
+    // =====================================================================
+    // Conflict path: invalid requests fail with 409 (GlobalExceptionHandler.handleBusinessRule()
+    // =====================================================================
+
+    @Test
+    void addDevice_duplicateDevice_returns409() throws Exception {
+        willThrow(new DeviceAlreadyExistsException()).given(appService).addDevice(any());
+
+        mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value("DEVICE_ALREADY_EXISTS"));
+    }
+
+    @Test
+    void changeConsumption_exceedsCapacity_returns409() throws Exception {
+        willThrow(new BuildingTotalCapacityExceededException()).given(appService).changeConsumption(any(), any());
+
+        mockMvc.perform(put("/v1/buildings/{id}/consumption", BUILDING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"consumptionValue": 999, "consumptionUnit": "kW"}
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value("TOTAL_CAPACITY_EXCEEDED"));
+    }
+
+    @Test
+    void changeProduction_exceedsDeviceCapacity_returns409() throws Exception {
+        willThrow(new DeviceCapacityLimitException()).given(appService).changeProduction(any(), any(), any());
+
+        mockMvc.perform(patch("/v1/buildings/{buildingId}/devices/{deviceId}/production",
+                        BUILDING_ID, DEVICE_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"productionValue": 999, "productionUnit": "kW"}
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value("DEVICE_CAPACITY_OUT_OF_RANGE"));
+    }
+
+    // =====================================================================
+    // Error path: unexpected exceptions fail with 500 (GlobalExceptionHandler.handleUnknown())
+    // =====================================================================
+
+    @Test
+    void unexpectedException_returns500() throws Exception {
+        given(appService.create(any())).willThrow(new RuntimeException("Unexpected"));
+
+        mockMvc.perform(post("/v1/buildings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "City Hall", "location": "Main St 1"}
+                                """))
+                .andExpect(status().isInternalServerError())
+                .andExpect(jsonPath("$.errorCode").value("INTERNAL_ERROR"));
+    }
+
+    // =====================================================================
+    // ErrorResponse shape contract
+    // =====================================================================
+
+    @Test
+    void errorResponse_hasAllRequiredFields() throws Exception {
+        mockMvc.perform(post("/v1/buildings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": ""}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.errorCode").exists())
+                .andExpect(jsonPath("$.message").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.requestId").exists());
+    }
+}
