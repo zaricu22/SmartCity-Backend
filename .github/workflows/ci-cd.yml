@@ -1,0 +1,160 @@
+# 1. The name of your workflow
+name: CI/CD Pipeline
+
+# 2. The TRIGGER: When should this run?
+on:
+  push:
+    branches: [dev, main]
+  pull_request:
+    branches: [dev, main]
+
+# 3. The JOBS: What should it do?
+jobs:
+  # -------------------------------------------------------------------------
+  # JOB 1: SECURITY - The "Shield"
+  # -------------------------------------------------------------------------
+  security:
+    name: Security Scan
+
+    # The RUNNER: The machine that executes the code
+    runs-on: ubuntu-latest
+
+    # 4. The STEPS: The individual commands
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for Gitleaks to scan history
+
+      # Gitleaks: Scans commits for secrets (API keys, passwords)
+      - name: Gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # CodeQL: Static Analysis Security Testing (SAST) - looks for logic vulnerabilities
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: java
+
+      - name: Autobuild for CodeQL
+        uses: github/codeql-action/autobuild@v3
+
+      - name: CodeQL analysis
+        uses: github/codeql-action/analyze@v3
+
+      # Snyk: Software Composition Analysis (SCA) - scans Maven dependencies for CVEs
+      - name: Snyk dependency vulnerability scan
+        uses: snyk/actions/maven@master
+        env:
+          SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
+
+  # -------------------------------------------------------------------------
+  # JOB 2: TESTING - The "Validator"
+  # -------------------------------------------------------------------------
+  test:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    needs: security # Only run if security scan passes
+    steps:
+      - uses: actions/checkout@v4
+
+      # setup-java: Installs JDK 17 and configures Maven caching for speed
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Run tests with coverage
+        run: mvn verify
+        env:
+          DB_URL: ${{ secrets.DB_URL }}
+          DB_USERNAME: ${{ secrets.DB_USERNAME }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+
+      # Codecov: Uploads test coverage reports to a visual dashboard
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+
+      # Artifacts: Saves the raw test results in case you need to debug failure
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-results
+          path: target/surefire-reports/
+
+  # -------------------------------------------------------------------------
+  # JOB 3: CODE QUALITY - The "Linter"
+  # -------------------------------------------------------------------------
+  code-quality:
+    name: Code Quality & Linting
+    runs-on: ubuntu-latest
+    needs: security
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      # Checkstyle: Annotates PRs with style violations (spacing, naming, etc.)
+      - name: Run Checkstyle
+        uses: dbelyaev/action-checkstyle@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          level: warning
+
+      # PMD: Detects common programming flaws (empty catch blocks, unused code)
+      - name: Run PMD
+        uses: pmd/pmd-github-action@v2
+        with:
+          rulesets: 'rulesets/java/quickstart.xml'
+          analyze_all_files: false
+
+      # SonarCloud: In-depth analysis of technical debt and code smells
+      - name: SonarCloud analysis
+        run: mvn sonar:sonar
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # -------------------------------------------------------------------------
+  # JOB 4: RELEASE & DEPLOY - The "Shipper"
+  # Conditional: This job ONLY runs when code hits 'main'
+  # -------------------------------------------------------------------------
+  release-and-deploy:
+    name: Semantic Release & Deploy
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    needs: [test, code-quality] # Must pass tests and quality checks first
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GH_TOKEN }} # Use personal access token for tagging
+
+      # Semantic Release: Automates SemVer versioning and creates GitHub Releases
+      - name: Semantic Release
+        uses: cycjimmy/semantic-release-action@v4
+        env:
+          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
+
+      # Deployment: Triggers the Render hosting service to pull new code
+      - name: Trigger Render deployment
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
+
+      # Smoke Test: Pings your live URL to ensure the app is actually running
+      - name: Smoke Test - Health Check
+        run: |
+          echo "Waiting for Render to spin up..."
+          sleep 60
+          curl --fail https://your-app-name.onrender.com/health || exit 1
