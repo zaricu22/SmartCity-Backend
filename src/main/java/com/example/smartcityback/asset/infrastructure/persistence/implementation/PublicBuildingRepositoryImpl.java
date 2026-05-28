@@ -9,6 +9,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -38,12 +39,13 @@ public class PublicBuildingRepositoryImpl implements PublicBuildingRepository {
     public void save(PublicBuilding building) {
         // If the PublicBuildingJpaEntity already exists in Hibernate session (ex. from getAll),
         // now we create another PublicBuildingJpaEntity object with the same ID and exception will be thrown
-        // PublicBuildingJpaEntity entity = PublicBuildingMapper.toJpa(building);
-
         PublicBuildingJpaEntity existing = jpaRepository.findById(building.getId())
-                .orElse(new PublicBuildingJpaEntity());
+                .orElse(null);
 
-        PublicBuildingMapper.updateJpaEntity(existing, building);
+        if (!Objects.isNull(existing))
+            PublicBuildingMapper.updateJpaEntity(existing, building);
+        else
+            existing = PublicBuildingMapper.toJpa(building);
 
         log.debug("Persisting PublicBuilding aggregateId={}", building.getId());
 

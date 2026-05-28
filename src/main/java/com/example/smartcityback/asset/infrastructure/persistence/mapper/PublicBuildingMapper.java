@@ -7,6 +7,7 @@ import com.example.smartcityback.asset.infrastructure.persistence.entity.EnergyD
 import com.example.smartcityback.asset.infrastructure.persistence.entity.PublicBuildingJpaEntity;
 
 import java.util.List;
+import java.util.Objects;
 
 public class PublicBuildingMapper {
 
@@ -67,11 +68,13 @@ public class PublicBuildingMapper {
         existing.setLocation(building.getLocation());
 
         // Because of orphanRemoval = true, otherwise Hibernate do not allow to just set new list
-        existing.getDevices().clear();
-        existing.getDevices().addAll(building.getDevices()
-                .stream()
-                .map(d -> EnergyDeviceMapper.toJpa(d, existing))
-                .toList());
+        if (!Objects.isNull(existing.getDevices())) {
+            existing.getDevices().clear();
+            existing.getDevices().addAll(building.getDevices()
+                    .stream()
+                    .map(d -> EnergyDeviceMapper.toJpa(d, existing))
+                    .toList());
+        }
 
         existing.setConsumption(
                 new EnergyEmbeddable(

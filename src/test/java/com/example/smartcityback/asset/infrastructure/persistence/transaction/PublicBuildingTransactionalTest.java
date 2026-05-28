@@ -20,6 +20,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
+import org.springframework.transaction.support.TransactionTemplate;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
@@ -64,6 +65,9 @@ class PublicBuildingTransactionalTest {
 
     @Autowired
     private PublicBuildingJpaRepository jpaRepository;
+
+    @Autowired
+    private TransactionTemplate transactionTemplate;
 
     private UUID buildingId;
 
@@ -114,9 +118,10 @@ class PublicBuildingTransactionalTest {
         // Non-existent buildingId → BuildingNotFoundException is thrown before
         // any domain mutation or save — device count must stay at 0.
         UUID unknownBuildingId = UUID.randomUUID();
-        int deviceCountBefore = jpaRepository.findById(buildingId)
-                .map(b -> b.getDevices().size())
-                .orElse(0);
+        int deviceCountBefore = transactionTemplate.execute(status ->
+                jpaRepository.findById(buildingId)
+                        .map(b -> b.getDevices().size())
+                        .orElse(0));
 
         AddDeviceCommand cmd = new AddDeviceCommand(
                 unknownBuildingId, DeviceType.SOLAR, new BigDecimal("50"), EnergyUnit.kW);
@@ -125,8 +130,9 @@ class PublicBuildingTransactionalTest {
                 .isInstanceOf(BuildingNotFoundException.class);
 
         // The existing building must be completely untouched.
-        PublicBuildingJpaEntity persisted = jpaRepository.findById(buildingId).orElseThrow();
-        assertThat(persisted.getDevices()).hasSize(deviceCountBefore);
+        int deviceCount = transactionTemplate.execute(status ->
+                jpaRepository.findById(buildingId).orElseThrow().getDevices().size());
+        assertThat(deviceCount).isEqualTo(deviceCountBefore);
     }
 
     @Test
@@ -157,8 +163,10 @@ class PublicBuildingTransactionalTest {
                 .isInstanceOf(DeviceNotFoundException.class);
 
         // DB row must be unchanged — no devices, consumption still 0.
+        int deviceCount = transactionTemplate.execute(status ->
+                jpaRepository.findById(buildingId).orElseThrow().getDevices().size());
+        assertThat(deviceCount).isEqualTo(0);
         PublicBuildingJpaEntity persisted = jpaRepository.findById(buildingId).orElseThrow();
-        assertThat(persisted.getDevices()).isEmpty();
         assertThat(persisted.getConsumption().getValue()).isEqualByComparingTo(BigDecimal.ZERO);
     }
 

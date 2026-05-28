@@ -91,12 +91,6 @@
             <scope>test</scope>
         </dependency>
         <dependency>
-            <groupId>org.wiremock</groupId>
-            <artifactId>wiremock</artifactId>
-            <version>3.10.0</version>
-            <scope>test</scope>
-        </dependency>
-        <dependency>
             <groupId>io.rest-assured</groupId>
             <artifactId>rest-assured</artifactId>
             <scope>test</scope>
@@ -134,7 +128,30 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-        </plugins>
+            <plugin>
+                <groupId>org.jacoco</groupId>
+                <artifactId>jacoco-maven-plugin</artifactId>
+                <version>0.8.12</version>
+                  
+                <executions>
+                    <!-- Attaches JaCoCo agent before tests -->
+                    <execution>
+                      <goals>
+                          <goal>prepare-agent</goal>
+                      </goals>
+                    </execution>
+         
+                    <!-- Generates XML/HTML reports after tests -->
+                    <execution>
+                      <id>report</id>
+                      <phase>verify</phase>
+                      <goals>
+                          <goal>report</goal>
+                      </goals>
+                    </execution>
+                </executions>
+            </plugin>
+       </plugins>
     </build>
 
 </project>
