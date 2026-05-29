@@ -6,6 +6,7 @@ import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
@@ -34,6 +35,7 @@ import static com.github.tomakehurst.wiremock.client.WireMock.*;
  */
 
 
+@SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 @Testcontainers
 @ActiveProfiles("test")
 class ExternalServiceWireMockTest {
@@ -91,8 +93,8 @@ class ExternalServiceWireMockTest {
                .willReturn(aResponse()
                    .withStatus(200)
                    .withHeader("Content-Type", "application/json")
-                   .withBody(""" 
-                           { "pricePerKWh": 0.12, "currency": "EUR" } 
+                   .withBody("""
+                           { "pricePerKWh": 0.12, "currency": "EUR" }
                            """)));
 
         // Call stubbed endpoint via client:
@@ -134,8 +136,8 @@ class ExternalServiceWireMockTest {
                    .willReturn(aResponse()
                            .withStatus(200)
                            .withHeader("Content-Type", "application/json")
-                           .withBody(""" 
-                                   { "unexpectedField": "unexpectedValue" } 
+                           .withBody("""
+                                   { "unexpectedField": "unexpectedValue" }
                                    """)));
 
         // Call stubbed endpoint via client:

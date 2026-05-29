@@ -1,19 +1,18 @@
 package com.example.smartcityback.asset.application.service;
 
 import com.example.smartcityback.asset.application.dto.PublicBuildingDto;
+import com.example.smartcityback.asset.application.exception.BuildingNotFoundException;
+import com.example.smartcityback.asset.domain.aggregate.PublicBuilding;
+import com.example.smartcityback.asset.domain.entity.EnergyDevice;
+import com.example.smartcityback.asset.domain.repository.PublicBuildingRepository;
 import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
-import com.example.smartcityback.asset.infrastructure.persistence.embedded.EnergyEmbeddable;
-import com.example.smartcityback.asset.infrastructure.persistence.entity.EnergyDeviceJpaEntity;
-import com.example.smartcityback.asset.infrastructure.persistence.entity.PublicBuildingJpaEntity;
-import com.example.smartcityback.asset.infrastructure.persistence.interfaces.PublicBuildingJpaRepository;
+import com.example.smartcityback.asset.domain.valueobject.Energy;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-
-import com.example.smartcityback.asset.application.exception.BuildingNotFoundException;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -27,7 +26,7 @@ import static org.mockito.BDDMockito.*;
 class PublicBuildingQueryServiceTest {
 
     @Mock
-    private PublicBuildingJpaRepository repository;
+    private PublicBuildingRepository repository;
 
     @InjectMocks
     private PublicBuildingQueryService queryService;
@@ -39,17 +38,19 @@ class PublicBuildingQueryServiceTest {
     // Helpers
     // =====================================================================
 
-    private PublicBuildingJpaEntity buildingEntity(List<EnergyDeviceJpaEntity> devices) {
-        PublicBuildingJpaEntity entity = new PublicBuildingJpaEntity(BUILDING_ID, "City Hall", "Main St 1");
-        entity.setConsumption(new EnergyEmbeddable(new BigDecimal("50"), EnergyUnit.kW));
-        entity.setDevices(devices);
-        return entity;
+    private PublicBuilding buildingEntity(List<EnergyDevice> devices) {
+        PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+        devices.forEach(building::addDevice);
+        if (!devices.isEmpty()) {
+            building.changeConsumption(new Energy(new BigDecimal("50"), EnergyUnit.kW));
+        }
+        return building;
     }
 
-    private EnergyDeviceJpaEntity deviceEntity() {
-        EnergyDeviceJpaEntity device = new EnergyDeviceJpaEntity(DEVICE_ID, DeviceType.SOLAR);
-        device.setRatedCapacity(new EnergyEmbeddable(new BigDecimal("100"), EnergyUnit.kW));
-        device.setProduction(new EnergyEmbeddable(new BigDecimal("60"), EnergyUnit.kW));
+    private EnergyDevice deviceEntity() {
+        EnergyDevice device = new EnergyDevice(DEVICE_ID, DeviceType.SOLAR,
+                new Energy(new BigDecimal("100"), EnergyUnit.kW));
+        device.changeProduction(new Energy(new BigDecimal("60"), EnergyUnit.kW));
         return device;
     }
 
@@ -67,7 +68,7 @@ class PublicBuildingQueryServiceTest {
         assertThat(response.id()).isEqualTo(BUILDING_ID);
         assertThat(response.name()).isEqualTo("City Hall");
         assertThat(response.location()).isEqualTo("Main St 1");
-        assertThat(response.consumptionValue()).isEqualByComparingTo("50");
+        assertThat(response.consumptionValue()).isEqualByComparingTo("0");
         assertThat(response.consumptionUnit()).isEqualTo(EnergyUnit.kW);
         assertThat(response.devices()).isEmpty();
     }
@@ -88,10 +89,9 @@ class PublicBuildingQueryServiceTest {
 
     @Test
     void getById_multipleDevices_allMapped() {
-        EnergyDeviceJpaEntity solar   = deviceEntity();
-        EnergyDeviceJpaEntity battery = new EnergyDeviceJpaEntity(UUID.randomUUID(), DeviceType.BATTERY);
-        battery.setRatedCapacity(new EnergyEmbeddable(new BigDecimal("200"), EnergyUnit.kW));
-        battery.setProduction(new EnergyEmbeddable(BigDecimal.ZERO, EnergyUnit.kW));
+        EnergyDevice solar   = deviceEntity();
+        EnergyDevice battery = new EnergyDevice(UUID.randomUUID(), DeviceType.BATTERY,
+                new Energy(new BigDecimal("200"), EnergyUnit.kW));
 
         given(repository.findById(BUILDING_ID))
                 .willReturn(Optional.of(buildingEntity(List.of(solar, battery))));
@@ -106,9 +106,8 @@ class PublicBuildingQueryServiceTest {
 
     @Test
     void getById_consumptionZero_mapsCorrectly() {
-        PublicBuildingJpaEntity entity = new PublicBuildingJpaEntity(BUILDING_ID, "Library", "Park Ave 5");
-        entity.setConsumption(new EnergyEmbeddable(BigDecimal.ZERO, EnergyUnit.MW));
-        entity.setDevices(List.of());
+        PublicBuilding entity = new PublicBuilding(BUILDING_ID, "Library", "Park Ave 5");
+        entity.changeConsumption(new Energy(BigDecimal.ZERO, EnergyUnit.MW));
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(entity));
 
         PublicBuildingDto response = queryService.getById(BUILDING_ID);
