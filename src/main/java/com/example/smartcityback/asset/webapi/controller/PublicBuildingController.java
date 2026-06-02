@@ -6,12 +6,19 @@ import com.example.smartcityback.asset.application.command.ChangeProductionComma
 import com.example.smartcityback.asset.application.command.CreateBuildingCommand;
 import com.example.smartcityback.asset.application.service.PublicBuildingAppService;
 import com.example.smartcityback.asset.application.service.PublicBuildingQueryService;
+import com.example.smartcityback.asset.webapi.exception.ErrorResponse;
 import com.example.smartcityback.asset.webapi.mapper.BuildingResponseMapper;
 import com.example.smartcityback.asset.webapi.request.AddDeviceRequest;
 import com.example.smartcityback.asset.webapi.request.ChangeConsumptionRequest;
 import com.example.smartcityback.asset.webapi.request.ChangeProductionRequest;
 import com.example.smartcityback.asset.webapi.request.CreateBuildingRequest;
 import com.example.smartcityback.asset.webapi.response.PublicBuildingResponse;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
+import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
@@ -25,6 +32,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/v1/buildings")
 @Slf4j
+@Tag(name = "Public Buildings")
 // @RequiredArgsConstructor
 public class PublicBuildingController {
 
@@ -41,6 +49,11 @@ public class PublicBuildingController {
         return MDC.get("requestId");
     }
 
+    @Operation(summary = "Create a new public building")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "400", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PostMapping
     public ResponseEntity<UUID> create(
             @Valid @RequestBody CreateBuildingRequest request) {
@@ -49,6 +62,13 @@ public class PublicBuildingController {
         return ResponseEntity.ok(id);
     }
 
+    @Operation(summary = "Add an energy device to a building")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "400", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PostMapping("/{id}/devices")
     public ResponseEntity<Void> addDevice(
             @PathVariable UUID id,
@@ -64,6 +84,12 @@ public class PublicBuildingController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "Update energy consumption of a building")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "400", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PutMapping("/{id}/consumption")
     public ResponseEntity<Void> changeConsumption(
             @PathVariable UUID id,
@@ -83,6 +109,12 @@ public class PublicBuildingController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "Update production rate of a device")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "400", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @PatchMapping("/{buildingId}/devices/{deviceId}/production")
     public ResponseEntity<Void> changeProduction(
             @PathVariable UUID buildingId,
@@ -101,13 +133,20 @@ public class PublicBuildingController {
         return ResponseEntity.ok().build();
     }
 
+    @Operation(summary = "Get a public building by ID")
+    @ApiResponses({
+            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
     @GetMapping("/{id}")
     public PublicBuildingResponse get(
             @PathVariable UUID id) {
         return BuildingResponseMapper.toResponse(queryService.getById(id));
     }
 
-    @GetMapping("/all")
+    @Operation(summary = "Get all public buildings")
+    @ApiResponse(responseCode = "200")
+    @GetMapping
     public List<PublicBuildingResponse> getAll() {
         return BuildingResponseMapper.toResponseList(queryService.getAll());
     }
