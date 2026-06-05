@@ -15,10 +15,24 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import java.time.Instant;
 import java.util.List;
 
+// HTTP status tier design:
+//   400 Bad Request          — malformed at protocol level (unparseable JSON, wrong Content-Type,
+//                              missing body); handled automatically by Spring's DefaultHandlerExceptionResolver
+//                              via HttpMessageNotReadableException before reaching this handler
+//   422 Unprocessable Entity — syntactically valid request that fails validation: missing required
+//                              fields (@Valid) or domain structural invariants (ValidationException)
+//   409 Conflict             — valid and parseable request blocked by current resource state:
+//                              domain business rule violation or optimistic lock conflict
 @RestControllerAdvice
 @Slf4j
 public class GlobalExceptionHandler {
 
+    // Every error response carries the requestId so that callers can include it in support
+    // tickets, and so operations teams can correlate the client-facing error with the full
+    // server-side log trace across all layers (RequestIdFilter → controller → service →
+    // repository). The value is written to MDC by RequestIdFilter at the start of each
+    // request and is read here via MDC.get() rather than being passed as a method argument,
+    // to avoid threading it through every exception handler signature.
     private String requestId() {
         return MDC.get("requestId");
     }
@@ -51,7 +65,7 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(
                 ex.getErrorCode().name(),
                 ex.getMessage(),
-                HttpStatus.CONFLICT.value(),  // 409
+                HttpStatus.CONFLICT.value(),  // 409 — valid request, blocked by current domain state
                 Instant.now(),
                 requestId()
         );
@@ -69,12 +83,12 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(
                 ex.getErrorCode().name(),
                 ex.getMessage(),
-                HttpStatus.BAD_REQUEST.value(), // 400
+                HttpStatus.UNPROCESSABLE_ENTITY.value(), // 422 — valid JSON, fails domain structural invariant
                 Instant.now(),
                 requestId()
         );
 
-        return ResponseEntity.badRequest().body(error);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
     }
 
     // ===============================
@@ -103,12 +117,12 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(
                 "VALIDATION_ERROR",
                 message,
-                HttpStatus.BAD_REQUEST.value(),  // 400
+                HttpStatus.UNPROCESSABLE_ENTITY.value(), // 422 — valid JSON, fails @Valid field constraint
                 Instant.now(),
                 requestId()
         );
 
-        return ResponseEntity.badRequest().body(error);
+        return ResponseEntity.status(HttpStatus.UNPROCESSABLE_ENTITY).body(error);
     }
 
     // ===============================
@@ -123,7 +137,7 @@ public class GlobalExceptionHandler {
         ErrorResponse error = new ErrorResponse(
                 "CONCURRENT_MODIFICATION",
                 "The resource was modified by another request. Please retry.",
-                HttpStatus.CONFLICT.value(),  // 409
+                HttpStatus.CONFLICT.value(),  // 409 — valid request, blocked by concurrent modification
                 Instant.now(),
                 requestId()
         );
@@ -138,6 +152,11 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(Exception.class)
     public ResponseEntity<ErrorResponse> handleUnknown(Exception ex) {
 
+        // "Unexpected error" is intentionally vague: returning the real exception message or
+        // a stack trace in a 500 response would expose internal details to callers — JPA class
+        // names, SQL fragments, file paths, or library internals — which is a security risk.
+        // The full exception is always logged server-side via log.error() so nothing is lost
+        // for diagnosis. Callers receive only the requestId to correlate with support.
         ErrorResponse error = new ErrorResponse(
                 "INTERNAL_ERROR",
                 "Unexpected error",

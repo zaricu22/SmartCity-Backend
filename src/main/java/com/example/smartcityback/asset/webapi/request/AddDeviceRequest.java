@@ -12,5 +12,5 @@ import java.math.BigDecimal;
 public record AddDeviceRequest(
         @NotNull DeviceType type,
         @Positive BigDecimal ratedCapacityValue,
-        EnergyUnit ratedCapacityUnit
+        @NotNull EnergyUnit ratedCapacityUnit
 ) {}

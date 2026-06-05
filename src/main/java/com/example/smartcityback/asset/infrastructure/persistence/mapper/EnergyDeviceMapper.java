@@ -11,24 +11,14 @@ public class EnergyDeviceMapper {
     private EnergyDeviceMapper() {}
 
     public static EnergyDevice toDomain(EnergyDeviceJpaEntity entity) {
-
-        EnergyDevice device =
-            new EnergyDevice(
-                    entity.getId(), entity.getType(),
-                    new Energy(
-                            entity.getRatedCapacity().getValue(),
-                            entity.getRatedCapacity().getUnit()
-                    )
-            );
-
-        device.changeProduction(
-                new Energy(
-                        entity.getProduction().getValue(),
-                        entity.getProduction().getUnit()
-                )
+        return EnergyDevice.reconstitute(
+                entity.getId(),
+                entity.getType(),
+                Energy.reconstitute(entity.getRatedCapacity().getValue(),
+                                    entity.getRatedCapacity().getUnit()),
+                Energy.reconstitute(entity.getProduction().getValue(),
+                                    entity.getProduction().getUnit())
         );
-
-        return device;
     }
 
     public static EnergyDeviceJpaEntity toJpa(EnergyDevice device, PublicBuildingJpaEntity building) {

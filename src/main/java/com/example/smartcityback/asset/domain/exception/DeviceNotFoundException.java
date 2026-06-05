@@ -7,7 +7,7 @@ public class DeviceNotFoundException extends NotFoundException {
 
     public DeviceNotFoundException() {
         super(
-                "Energetska jedinica nije pronadjena!",
+                "Device not found!",
                 ErrorCode.DEVICE_NOT_FOUND
         );
     }

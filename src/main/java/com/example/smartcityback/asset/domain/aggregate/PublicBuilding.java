@@ -3,6 +3,7 @@ package com.example.smartcityback.asset.domain.aggregate;
 import com.example.smartcityback.asset.domain.entity.EnergyDevice;
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
+import com.example.smartcityback.asset.domain.event.DomainEvent;
 import com.example.smartcityback.asset.domain.exception.BuildingTotalCapacityExceededException;
 import com.example.smartcityback.asset.domain.exception.DeviceAlreadyExistsException;
 import com.example.smartcityback.asset.domain.exception.DeviceNotFoundException;
@@ -22,13 +23,30 @@ public class PublicBuilding {
     private Energy consumption;
     private List<EnergyDevice> devices;
 
-    private final List<Object> domainEvents = new ArrayList<>();
+    private final List<DomainEvent> domainEvents = new ArrayList<>();
+
+    // Private no-arg constructor for reconstitution from persistence — bypasses validation
+    // because data from the DB is already valid (was validated on write). Fields are not final
+    // so the static factory can assign them directly after instantiation. domainEvents is
+    // final but initialized inline so it is available even with this no-arg constructor.
+    private PublicBuilding() {}
+
+    public static PublicBuilding reconstitute(UUID id, String name, String location,
+                                               List<EnergyDevice> devices, Energy consumption) {
+        PublicBuilding b = new PublicBuilding();
+        b.id = id;
+        b.name = name;
+        b.location = location;
+        b.devices = new ArrayList<>(devices);
+        b.consumption = consumption;
+        return b;
+    }
 
     public PublicBuilding(UUID id, String name, String location) {
         if (name == null || name.isEmpty())
-            throw new ValidationException("Ustanova mora imati naziv!", ErrorCode.BUILDING_NAME_EMPTY);
+            throw new ValidationException("Building must have a name!", ErrorCode.BUILDING_NAME_EMPTY);
         if (location == null || location.isEmpty())
-            throw new ValidationException("Ustanova mora imati adresu!", ErrorCode.BUILDING_ADDRESS_EMPTY);
+            throw new ValidationException("Building must have an address!", ErrorCode.BUILDING_ADDRESS_EMPTY);
 
         // required minimum
         this.id = id;
@@ -39,8 +57,8 @@ public class PublicBuilding {
         this.consumption = new Energy(new BigDecimal(0), EnergyUnit.kW);
     }
 
-    public List<Object> pullEvents() {
-        List<Object> events = List.copyOf(domainEvents);
+    public List<DomainEvent> pullEvents() {
+        List<DomainEvent> events = List.copyOf(domainEvents);
         domainEvents.clear();
         return events;
     }

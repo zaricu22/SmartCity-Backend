@@ -1,9 +1,10 @@
 name: Mutation Testing
 
 on:
+  # Also can be run manually
   workflow_dispatch:
   schedule:
-    - cron: '0 2 * * *'
+    - cron: '0 2 * * 1'
 
 jobs:
   pitest:
@@ -27,6 +28,7 @@ jobs:
           MAVEN_OPTS: "-Xmx1g"
         run: mvn -e test-compile org.pitest:pitest-maven:1.9.11:mutationCoverage -Pmutation-testing
 
+      # if: always() — artifact must be available even when mutation thresholds fail (report shows which mutants survived)
       - name: Upload PIT report
         if: always()
         uses: actions/upload-artifact@v4

@@ -24,6 +24,9 @@ import java.math.BigDecimal;
 import java.util.List;
 import java.util.UUID;
 
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+
+import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -61,11 +64,11 @@ class PublicBuildingControllerAPITest {
     private static final UUID DEVICE_ID   = UUID.fromString("660e8400-e29b-41d4-a716-446655440001");
 
     // =====================================================================
-    // Happy path: valid requests succeed with 200 OK
+    // Happy path: valid requests succeed with expected status codes
     // =====================================================================
 
     @Test
-    void create_validRequest_returns200() throws Exception {
+    void create_validRequest_returns201() throws Exception {
         given(appService.create(any())).willReturn(BUILDING_ID);
 
         mockMvc.perform(post("/v1/buildings")
@@ -73,28 +76,29 @@ class PublicBuildingControllerAPITest {
                         .content("""
                                 {"name": "City Hall", "location": "Main St 1"}
                                 """))
-                .andExpect(status().isOk())
+                .andExpect(status().isCreated())
+                .andExpect(header().string("Location", containsString(BUILDING_ID.toString())))
                 .andExpect(content().string("\"" + BUILDING_ID + "\""));
     }
 
     @Test
-    void addDevice_validRequest_returns200() throws Exception {
+    void addDevice_validRequest_returns204() throws Exception {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
                                 """))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
     }
 
     @Test
-    void changeConsumption_validRequest_returns200() throws Exception {
-        mockMvc.perform(put("/v1/buildings/{id}/consumption", BUILDING_ID)
+    void changeConsumption_validRequest_returns204() throws Exception {
+        mockMvc.perform(patch("/v1/buildings/{id}/consumption", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"consumptionValue": 50, "consumptionUnit": "kW"}
                                 """))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
     }
 
     @Test
@@ -128,103 +132,112 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
-    void changeProduction_validRequest_returns200() throws Exception {
+    void getBuilding_notFound_returns404() throws Exception {
+        given(queryService.getById(BUILDING_ID)).willThrow(new BuildingNotFoundException());
+
+        mockMvc.perform(get("/v1/buildings/{id}", BUILDING_ID))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("BUILDING_NOT_FOUND"));
+    }
+
+    @Test
+    void changeProduction_validRequest_returns204() throws Exception {
         mockMvc.perform(patch("/v1/buildings/{buildingId}/devices/{deviceId}/production",
                         BUILDING_ID, DEVICE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"productionValue": 60, "productionUnit": "kW"}
                                 """))
-                .andExpect(status().isOk());
+                .andExpect(status().isNoContent());
     }
 
     // =====================================================================
-    // Validation path: invalid requests fail with 400 (GlobalExceptionHandler.handleValidation())
+    // Validation path: invalid requests fail with 422 (GlobalExceptionHandler.handleValidation())
     // =====================================================================
 
     @Test
-    void create_domainValidationException_returns400WithDomainErrorCode() throws Exception {
+    void create_domainValidationException_returns422WithDomainErrorCode() throws Exception {
         given(appService.create(any()))
-                .willThrow(new ValidationException("Ustanova mora imati naziv!", ErrorCode.BUILDING_NAME_EMPTY));
+                .willThrow(new ValidationException("Building must have a name!", ErrorCode.BUILDING_NAME_EMPTY));
 
         mockMvc.perform(post("/v1/buildings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"name": "X", "location": "Main St 1"}
                                 """))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.errorCode").value("BUILDING_NAME_EMPTY"));
     }
 
     // =====================================================================
-    // Validation path: invalid requests fail with 400 (GlobalExceptionHandler.handleSpringValidation())
+    // Validation path: invalid requests fail with 422 (GlobalExceptionHandler.handleSpringValidation())
     // =====================================================================
 
     @Test
-    void create_blankName_returns400WithValidationErrorCode() throws Exception {
+    void create_blankName_returns422WithValidationErrorCode() throws Exception {
         mockMvc.perform(post("/v1/buildings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"name": "", "location": "Main St 1"}
                                 """))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"))
-                .andExpect(jsonPath("$.status").value(400));
+                .andExpect(jsonPath("$.status").value(422));
     }
 
     @Test
-    void create_missingLocation_returns400() throws Exception {
+    void create_missingLocation_returns422() throws Exception {
         mockMvc.perform(post("/v1/buildings")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"name": "City Hall"}
                                 """))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
     }
 
     @Test
-    void addDevice_missingType_returns400() throws Exception {
+    void addDevice_missingType_returns422() throws Exception {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"ratedCapacityValue": 50, "ratedCapacityUnit": "kW"}
                                 """))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
     }
 
     @Test
-    void addDevice_negativeCapacity_returns400() throws Exception {
+    void addDevice_negativeCapacity_returns422() throws Exception {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"type": "SOLAR", "ratedCapacityValue": -5, "ratedCapacityUnit": "kW"}
                                 """))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
     }
 
     @Test
-    void changeConsumption_negativeValue_returns400() throws Exception {
-        mockMvc.perform(put("/v1/buildings/{id}/consumption", BUILDING_ID)
+    void changeConsumption_negativeValue_returns422() throws Exception {
+        mockMvc.perform(patch("/v1/buildings/{id}/consumption", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"consumptionValue": -1, "consumptionUnit": "kW"}
                                 """))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
     }
 
     @Test
-    void changeProduction_negativeValue_returns400() throws Exception {
+    void changeProduction_negativeValue_returns422() throws Exception {
         mockMvc.perform(patch("/v1/buildings/{buildingId}/devices/{deviceId}/production",
                         BUILDING_ID, DEVICE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"productionValue": -1, "productionUnit": "kW"}
                                 """))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
     }
 
@@ -249,7 +262,7 @@ class PublicBuildingControllerAPITest {
     void changeConsumption_buildingNotFound_returns404() throws Exception {
         willThrow(new BuildingNotFoundException()).given(appService).changeConsumption(any(), any());
 
-        mockMvc.perform(put("/v1/buildings/{id}/consumption", BUILDING_ID)
+        mockMvc.perform(patch("/v1/buildings/{id}/consumption", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"consumptionValue": 50, "consumptionUnit": "kW"}
@@ -307,7 +320,7 @@ class PublicBuildingControllerAPITest {
     void changeConsumption_exceedsCapacity_returns409() throws Exception {
         willThrow(new BuildingTotalCapacityExceededException()).given(appService).changeConsumption(any(), any());
 
-        mockMvc.perform(put("/v1/buildings/{id}/consumption", BUILDING_ID)
+        mockMvc.perform(patch("/v1/buildings/{id}/consumption", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
                                 {"consumptionValue": 999, "consumptionUnit": "kW"}
@@ -328,6 +341,20 @@ class PublicBuildingControllerAPITest {
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.errorCode").value("DEVICE_CAPACITY_OUT_OF_RANGE"));
+    }
+
+    @Test
+    void optimisticLock_returns409WithConcurrentModification() throws Exception {
+        willThrow(new ObjectOptimisticLockingFailureException("PublicBuildingJpaEntity", BUILDING_ID))
+                .given(appService).addDevice(any());
+
+        mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value("CONCURRENT_MODIFICATION"));
     }
 
     // =====================================================================
@@ -358,10 +385,10 @@ class PublicBuildingControllerAPITest {
                         .content("""
                                 {"name": ""}
                                 """))
-                .andExpect(status().isBadRequest())
+                .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.errorCode").exists())
                 .andExpect(jsonPath("$.message").exists())
-                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.status").value(422))
                 .andExpect(jsonPath("$.timestamp").exists())
                 .andExpect(jsonPath("$.requestId").exists());
     }

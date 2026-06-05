@@ -17,6 +17,12 @@ public class PublicBuildingJpaEntity {
     private UUID id;
 
     @Version
+    // Long (nullable wrapper) rather than primitive long is intentional: Hibernate uses null on
+    // the version field to detect a brand-new entity and skips the optimistic-lock WHERE version=?
+    // check on the very first INSERT. With primitive long (default value 0), Hibernate would treat
+    // every new entity as "version 0 already persisted" and attempt an UPDATE instead of INSERT,
+    // or produce a spurious OptimisticLockException. The @NotNull constraint is applied by Bean
+    // Validation after Hibernate has already initialised the version to 0 on the first flush.
     @NotNull
     private Long version;
 
@@ -36,6 +42,13 @@ public class PublicBuildingJpaEntity {
     @OneToMany(mappedBy = "building", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<EnergyDeviceJpaEntity> devices;
 
+    // equals() and hashCode() are intentionally not overridden.
+    // JPA entities use default Java object-identity equality (same reference = same object).
+    // Implementing equals() based on the database ID is unreliable because the ID field is
+    // null before the first persist — an entity added to a HashSet before saving would be
+    // unfindable after saving because its hash code would change. Hibernate guarantees that
+    // within a single session the same database row always returns the same Java instance,
+    // so reference equality is safe and correct for this use case.
     public PublicBuildingJpaEntity() {
         // JPA requires
     }

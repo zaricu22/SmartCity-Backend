@@ -4,4 +4,4 @@ import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 
 import java.util.UUID;
 
-public record DeviceAddedEvent(UUID buildingId, UUID deviceId, DeviceType deviceType) {}
+public record DeviceAddedEvent(UUID buildingId, UUID deviceId, DeviceType deviceType) implements DomainEvent {}

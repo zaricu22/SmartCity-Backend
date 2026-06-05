@@ -6,7 +6,7 @@ public class BuildingTotalCapacityExceededException extends BusinessRuleViolatio
 
     public BuildingTotalCapacityExceededException() {
         super(
-                "Potrosnja objekta premasuje njegov ukupni energetski kapacitet!",
+                "Building consumption exceeds its total energy capacity!",
                 ErrorCode.TOTAL_CAPACITY_EXCEEDED
         );
     }

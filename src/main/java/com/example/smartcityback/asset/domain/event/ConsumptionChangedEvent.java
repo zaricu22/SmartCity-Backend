@@ -4,4 +4,4 @@ import com.example.smartcityback.asset.domain.valueobject.Energy;
 
 import java.util.UUID;
 
-public record ConsumptionChangedEvent(UUID buildingId, Energy oldConsumption, Energy newConsumption) {}
+public record ConsumptionChangedEvent(UUID buildingId, Energy oldConsumption, Energy newConsumption) implements DomainEvent {}
