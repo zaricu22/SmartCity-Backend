@@ -25,12 +25,12 @@
             "name": "id",
             "in": "path",
             "required": true,
+            "description": "The unique identifier of the public building whose consumption is being updated.",
             "schema": {
               "type": "string",
-              "format": "uuid"
-            },
-            "description": "The unique identifier of the public building whose consumption is to be updated.",
-            "example": "a3f1c2d4-5e6b-7890-abcd-ef1234567890"
+              "format": "uuid",
+              "example": "a3f1c2d4-5e6b-7890-abcd-ef1234567890"
+            }
           }
         ],
         "requestBody": {
@@ -40,8 +40,8 @@
                 "$ref": "#/components/schemas/ChangeConsumptionRequest"
               },
               "example": {
-                "value": 150.75,
-                "unit": "KWH"
+                "consumptionValue": 1250.75,
+                "consumptionUnit": "KWH"
               }
             }
           },
@@ -52,7 +52,7 @@
             "description": "Energy consumption updated successfully for the specified building."
           },
           "400": {
-            "description": "Invalid request payload — e.g. missing required fields, negative consumption value, or unsupported energy unit.",
+            "description": "Invalid request payload. The consumption value may be negative, missing, or the unit is not a recognized energy unit.",
             "content": {
               "*/*": {
                 "schema": {
@@ -60,7 +60,7 @@
                 },
                 "example": {
                   "status": 400,
-                  "message": "Validation failed: consumption value must be positive.",
+                  "message": "Validation failed: consumptionValue must be greater than or equal to 0",
                   "timestamp": "2024-06-01T10:15:30Z"
                 }
               }
@@ -75,7 +75,7 @@
                 },
                 "example": {
                   "status": 404,
-                  "message": "Public building with id 'a3f1c2d4-5e6b-7890-abcd-ef1234567890' not found.",
+                  "message": "Public building with id 'a3f1c2d4-5e6b-7890-abcd-ef1234567890' not found",
                   "timestamp": "2024-06-01T10:15:30Z"
                 }
               }
@@ -105,14 +105,14 @@
         },
         "responses": {
           "200": {
-            "description": "Building successfully created. Returns the UUID of the new public building.",
+            "description": "Public building successfully created. Returns the UUID of the new building.",
             "content": {
               "*/*": {
                 "schema": {
                   "type": "string",
                   "format": "uuid"
                 },
-                "example": "a3f1c2d4-87b6-4e2a-9c3d-1f2e3a4b5c6d"
+                "example": "a3f1c2d4-5e67-4b89-9c01-2d3e4f567890"
               }
             }
           },
@@ -128,6 +128,55 @@
           }
         },
         "x-raw-hash": "88dc7cf464adcbf433bd80c77051a7d5"
+      },
+      "get": {
+        "tags": [
+          "Public Buildings"
+        ],
+        "summary": "Retrieve a list of all registered public buildings",
+        "description": "Returns all public buildings tracked in the smart city system, including their energy consumption details and associated energy devices.",
+        "operationId": "getAll",
+        "responses": {
+          "200": {
+            "description": "List of public buildings successfully retrieved",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PublicBuildingResponse"
+                  }
+                },
+                "example": [
+                  {
+                    "id": "a3f1c2d4-5e6b-7890-abcd-ef1234567890",
+                    "name": "City Hall",
+                    "location": "Main Square 1, Downtown",
+                    "consumptionValue": 1250.75,
+                    "consumptionUnit": "KWH",
+                    "devices": [
+                      {
+                        "id": "b7e2d3f5-6a7c-8901-bcde-f12345678901",
+                        "name": "Solar Panel Array A",
+                        "productionValue": 430.5,
+                        "productionUnit": "KWH"
+                      }
+                    ]
+                  },
+                  {
+                    "id": "c5d6e7f8-9a0b-1234-cdef-012345678902",
+                    "name": "Public Library",
+                    "location": "Knowledge Avenue 12, Westside",
+                    "consumptionValue": 870.0,
+                    "consumptionUnit": "KWH",
+                    "devices": []
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "x-raw-hash": "457ce7acbbf4ef1272a67c2502103c73"
       }
     },
     "/v1/buildings/{id}/devices": {
@@ -136,19 +185,19 @@
           "Public Buildings"
         ],
         "summary": "Add an energy device to a building",
-        "description": "Registers a new energy device (e.g. solar panel, wind turbine, battery) and associates it with the specified public building.",
+        "description": "Registers a new energy device (e.g. solar panel, EV charger, smart meter) and associates it with the specified public building.",
         "operationId": "addDevice",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
+            "description": "Unique identifier of the public building to which the device will be added.",
             "schema": {
               "type": "string",
-              "format": "uuid"
-            },
-            "description": "Unique identifier of the public building to which the device will be added.",
-            "example": "a3f1c2d4-5e6b-7890-abcd-ef1234567890"
+              "format": "uuid",
+              "example": "b3f1c2d4-5e6a-7b8c-9d0e-1f2a3b4c5d6e"
+            }
           }
         ],
         "requestBody": {
@@ -163,43 +212,52 @@
         },
         "responses": {
           "200": {
-            "description": "Device successfully added to the building. Returns the UUID of the newly created energy device.",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "type": "string",
-                  "format": "uuid"
-                },
-                "example": "b7e2d1f3-4a5c-6789-bcde-f01234567891"
-              }
-            }
+            "description": "Energy device successfully added to the building. Returns the newly created device's UUID."
           },
           "400": {
-            "description": "Invalid request payload. This may occur when required device fields are missing, malformed, or contain out-of-range values (e.g. negative production capacity).",
+            "description": "Invalid request payload — e.g. missing required device fields or malformed building ID.",
             "content": {
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 400,
+                  "error": "Bad Request",
+                  "message": "Device type must not be null",
+                  "timestamp": "2024-05-14T10:23:45Z"
                 }
               }
             }
           },
           "404": {
-            "description": "No public building found with the provided identifier. Ensure the building was created before attempting to add a device.",
+            "description": "No public building found with the provided ID.",
             "content": {
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 404,
+                  "error": "Not Found",
+                  "message": "Public building with id 'b3f1c2d4-5e6a-7b8c-9d0e-1f2a3b4c5d6e' does not exist",
+                  "timestamp": "2024-05-14T10:23:45Z"
                 }
               }
             }
           },
           "409": {
-            "description": "A device with the same identifier or name already exists on this building, causing a conflict.",
+            "description": "A device with the same identifier or conflicting properties already exists in this building.",
             "content": {
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 409,
+                  "error": "Conflict",
+                  "message": "A device with the same serial number already exists in building 'b3f1c2d4-5e6a-7b8c-9d0e-1f2a3b4c5d6e'",
+                  "timestamp": "2024-05-14T10:23:45Z"
                 }
               }
             }
@@ -214,7 +272,7 @@
           "Public Buildings"
         ],
         "summary": "Update production rate of a device",
-        "description": "Updates the energy production rate and unit for a specific energy device installed in a public building. Use this endpoint when a device's generation capacity changes, e.g. after a solar panel upgrade or reconfiguration.",
+        "description": "Updates the energy production rate of a specific energy device (e.g. solar panel, wind turbine) within a public building. Returns the device's UUID upon successful update.",
         "operationId": "changeProduction",
         "parameters": [
           {
@@ -225,7 +283,7 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "The unique identifier of the public building that contains the device.",
+            "description": "Unique identifier of the public building that owns the device",
             "example": "a3f1c2d4-5e6b-7890-abcd-ef1234567890"
           },
           {
@@ -236,8 +294,8 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "The unique identifier of the energy device whose production rate is being updated.",
-            "example": "b7e2d3f5-6a7c-8901-bcde-f01234567891"
+            "description": "Unique identifier of the energy device whose production rate will be updated",
+            "example": "d7e2b1a0-3c4f-4812-bcde-9f0123456789"
           }
         ],
         "requestBody": {
@@ -247,7 +305,7 @@
                 "$ref": "#/components/schemas/ChangeProductionRequest"
               },
               "example": {
-                "productionValue": 15.75,
+                "productionValue": 12.5,
                 "productionUnit": "KWH"
               }
             }
@@ -256,10 +314,19 @@
         },
         "responses": {
           "200": {
-            "description": "Production rate successfully updated for the specified device."
+            "description": "Device production rate updated successfully. Returns the UUID of the updated device.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "example": "d7e2b1a0-3c4f-4812-bcde-9f0123456789"
+              }
+            }
           },
           "400": {
-            "description": "Invalid request data. This may occur if the production value is negative, the unit is unrecognized, or required fields are missing.",
+            "description": "Invalid request payload — e.g. missing production value, unsupported energy unit, or malformed UUID path parameter.",
             "content": {
               "*/*": {
                 "schema": {
@@ -269,13 +336,13 @@
                   "status": 400,
                   "error": "Bad Request",
                   "message": "productionValue must be greater than or equal to 0",
-                  "timestamp": "2024-06-15T10:23:45Z"
+                  "path": "/v1/buildings/a3f1c2d4-5e6b-7890-abcd-ef1234567890/devices/d7e2b1a0-3c4f-4812-bcde-9f0123456789/production"
                 }
               }
             }
           },
           "404": {
-            "description": "The specified building or device was not found. Verify that both the buildingId and deviceId correspond to existing resources.",
+            "description": "Building or device not found — no public building exists with the given buildingId, or no device with the given deviceId belongs to that building.",
             "content": {
               "*/*": {
                 "schema": {
@@ -284,8 +351,8 @@
                 "example": {
                   "status": 404,
                   "error": "Not Found",
-                  "message": "Device with id b7e2d3f5-6a7c-8901-bcde-f01234567891 not found in building a3f1c2d4-5e6b-7890-abcd-ef1234567890",
-                  "timestamp": "2024-06-15T10:23:45Z"
+                  "message": "Device with id d7e2b1a0-3c4f-4812-bcde-9f0123456789 not found in building a3f1c2d4-5e6b-7890-abcd-ef1234567890",
+                  "path": "/v1/buildings/a3f1c2d4-5e6b-7890-abcd-ef1234567890/devices/d7e2b1a0-3c4f-4812-bcde-9f0123456789/production"
                 }
               }
             }
@@ -300,24 +367,24 @@
           "Public Buildings"
         ],
         "summary": "Get a public building by ID",
-        "description": "Retrieves the full details of a public building, including its energy consumption, unit, and list of associated energy devices.",
+        "description": "Retrieves detailed information about a specific public building, including its name, location, current energy consumption, and the list of associated energy devices.",
         "operationId": "get",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
+            "description": "The unique identifier (UUID) of the public building to retrieve.",
             "schema": {
               "type": "string",
-              "format": "uuid"
-            },
-            "description": "The unique identifier of the public building to retrieve.",
-            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+              "format": "uuid",
+              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            }
           }
         ],
         "responses": {
           "200": {
-            "description": "The public building was found and its details are returned successfully.",
+            "description": "Public building found and returned successfully.",
             "content": {
               "*/*": {
                 "schema": {
@@ -326,22 +393,20 @@
                 "example": {
                   "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                   "name": "City Hall",
-                  "location": "Main Square 1, Downtown",
-                  "consumptionValue": 1250.75,
+                  "location": "123 Main Street, Downtown",
+                  "consumptionValue": 1450.75,
                   "consumptionUnit": "KWH",
                   "devices": [
                     {
-                      "id": "7cb92a11-1234-4abc-9def-000000000001",
-                      "name": "Solar Panel Array A",
-                      "type": "PRODUCER",
-                      "productionValue": 430.5,
-                      "productionUnit": "KWH"
+                      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+                      "name": "HVAC Unit A",
+                      "consumptionValue": 850.5,
+                      "consumptionUnit": "KWH"
                     },
                     {
-                      "id": "7cb92a11-1234-4abc-9def-000000000002",
-                      "name": "HVAC System",
-                      "type": "CONSUMER",
-                      "consumptionValue": 820.25,
+                      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+                      "name": "LED Lighting System",
+                      "consumptionValue": 600.25,
                       "consumptionUnit": "KWH"
                     }
                   ]
@@ -350,7 +415,7 @@
             }
           },
           "404": {
-            "description": "No public building was found with the provided ID.",
+            "description": "No public building was found with the specified ID.",
             "content": {
               "*/*": {
                 "schema": {
@@ -360,7 +425,7 @@
                   "status": 404,
                   "error": "Not Found",
                   "message": "Public building with ID '3fa85f64-5717-4562-b3fc-2c963f66afa6' does not exist.",
-                  "timestamp": "2024-06-01T10:23:45.123Z"
+                  "requestId": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
                 }
               }
             }
@@ -451,13 +516,13 @@
           "name": {
             "type": "string",
             "minLength": 1,
-            "description": "The unique human-readable name of the building.",
+            "description": "The name of the building.",
             "example": "City Hall"
           },
           "location": {
             "type": "string",
             "minLength": 1,
-            "description": "The physical address or geographic location of the building.",
+            "description": "The physical location or address of the building.",
             "example": "123 Main Street, Downtown District"
           }
         },
@@ -469,7 +534,7 @@
       },
       "AddDeviceRequest": {
         "type": "object",
-        "description": "Request payload for adding a new device to a smart city asset. Specifies the device type and its rated energy capacity.",
+        "description": "Request payload for adding a new device to an asset in the smart city system.",
         "properties": {
           "type": {
             "type": "string",
@@ -478,12 +543,12 @@
               "PUMP",
               "BATTERY"
             ],
-            "description": "The type of device being added. SOLAR for photovoltaic panels, PUMP for energy pumps, BATTERY for energy storage units.",
+            "description": "The type of device being added. Determines the device's role in the energy infrastructure.",
             "example": "SOLAR"
           },
           "ratedCapacityValue": {
             "type": "number",
-            "description": "The rated capacity value of the device. Must be a positive number representing the device's maximum energy output or storage capacity.",
+            "description": "The rated capacity of the device expressed as a positive numeric value. Must be used in conjunction with ratedCapacityUnit.",
             "example": 250.5
           },
           "ratedCapacityUnit": {
@@ -493,7 +558,7 @@
               "MW",
               "GW"
             ],
-            "description": "The unit of measurement for the rated capacity value. Represents the scale of energy: kilowatts (kW), megawatts (MW), or gigawatts (GW).",
+            "description": "The unit of measurement for the rated capacity value (kilowatts, megawatts, or gigawatts).",
             "example": "kW"
           }
         },
@@ -526,7 +591,7 @@
       },
       "EnergyDeviceResponse": {
         "type": "object",
-        "description": "Represents an energy device asset with its rated capacity and production rate specifications.",
+        "description": "Represents an energy device asset in the smart city system, including its type, rated capacity, and production rate.",
         "properties": {
           "id": {
             "type": "string",
@@ -541,12 +606,12 @@
               "PUMP",
               "BATTERY"
             ],
-            "description": "The category of energy device (e.g., solar panel array, pump, or battery storage unit).",
+            "description": "The category of the energy device (e.g., solar panel, pump, or battery storage unit).",
             "example": "SOLAR"
           },
           "ratedCapacityValue": {
             "type": "number",
-            "description": "The maximum rated capacity of the energy device expressed as a numeric value.",
+            "description": "The numeric value of the device's rated capacity, representing its maximum power handling capability.",
             "example": 500.0
           },
           "ratedCapacityUnit": {
@@ -556,12 +621,12 @@
               "MW",
               "GW"
             ],
-            "description": "The unit of measurement for the rated capacity (kilowatts, megawatts, or gigawatts).",
+            "description": "The unit of measurement for the rated capacity value.",
             "example": "kW"
           },
           "productionRateValue": {
             "type": "number",
-            "description": "The current or nominal energy production rate of the device expressed as a numeric value.",
+            "description": "The numeric value of the device's current or nominal energy production rate.",
             "example": 350.75
           },
           "productionRateUnit": {
@@ -571,7 +636,7 @@
               "MW",
               "GW"
             ],
-            "description": "The unit of measurement for the production rate (kilowatts, megawatts, or gigawatts).",
+            "description": "The unit of measurement for the production rate value.",
             "example": "kW"
           }
         },
@@ -609,12 +674,12 @@
               "MW",
               "GW"
             ],
-            "description": "Unit of measurement for the building's energy consumption (kilowatts, megawatts, or gigawatts).",
+            "description": "Unit of measurement for the energy consumption value (kilowatts, megawatts, or gigawatts).",
             "example": "kW"
           },
           "devices": {
             "type": "array",
-            "description": "List of energy devices installed in the public building that contribute to or monitor its energy consumption.",
+            "description": "List of energy devices installed in the public building that contribute to its overall energy consumption.",
             "items": {
               "$ref": "#/components/schemas/EnergyDeviceResponse"
             }
@@ -624,7 +689,7 @@
       },
       "ErrorResponse": {
         "type": "object",
-        "description": "Standard error response returned when an API request fails, containing details about the error code, human-readable message, HTTP status, timestamp, and request identifier for tracing.",
+        "description": "Standard error response returned by the API when a request fails. Contains details about the error code, human-readable message, HTTP status, time of occurrence, and a unique request identifier for tracing.",
         "properties": {
           "errorCode": {
             "type": "string",
@@ -645,7 +710,7 @@
           "timestamp": {
             "type": "string",
             "format": "date-time",
-            "description": "ISO-8601 UTC timestamp indicating when the error occurred.",
+            "description": "ISO 8601 UTC timestamp indicating when the error occurred.",
             "example": "2024-05-15T10:23:47.512Z"
           },
           "requestId": {
