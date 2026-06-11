@@ -136,26 +136,22 @@
                 <groupId>org.jacoco</groupId>
                 <artifactId>jacoco-maven-plugin</artifactId>
                 <version>0.8.12</version>
-                  
                 <executions>
-                    <!-- Attaches JaCoCo agent before tests -->
                     <execution>
-                      <goals>
-                          <goal>prepare-agent</goal>
-                      </goals>
+                        <goals>
+                            <goal>prepare-agent</goal>
+                        </goals>
                     </execution>
-         
-                    <!-- Generates XML/HTML reports after tests -->
                     <execution>
-                      <id>report</id>
-                      <phase>verify</phase>
-                      <goals>
-                          <goal>report</goal>
-                      </goals>
+                        <id>report</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>report</goal>
+                        </goals>
                     </execution>
                 </executions>
             </plugin>
-       </plugins>
+        </plugins>
     </build>
 
     <profiles>
@@ -215,6 +211,110 @@
                             <apiDocsUrl>http://localhost:8080/SmartCityREST/v3/api-docs</apiDocsUrl>
                             <outputFileName>openapi.json</outputFileName>
                             <outputDir>${project.basedir}</outputDir>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+        
+        <!-- Activate with: mvn test-compile org.pitest:pitest-maven:mutationCoverage -Pmutation-testing -->
+        <profile>
+            <id>mutation-testing</id>
+            <build>
+                <plugins>
+                    <!-- Prevent Spring Boot from repackaging into a fat JAR so PIT can scan classes -->
+                    <plugin>
+                        <groupId>org.springframework.boot</groupId>
+                        <artifactId>spring-boot-maven-plugin</artifactId>
+                        <configuration>
+                            <classifier>exec</classifier>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Skip Surefire: PIT runs tests itself; running both wastes memory -->
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+
+                    <!-- Skip JaCoCo: its Java agent conflicts with PIT's bytecode instrumentation -->
+                    <plugin>
+                        <groupId>org.jacoco</groupId>
+                        <artifactId>jacoco-maven-plugin</artifactId>
+                        <configuration>
+                            <skip>true</skip>
+                        </configuration>
+                    </plugin>
+
+                    <plugin>
+                        <groupId>org.pitest</groupId>
+                        <artifactId>pitest-maven</artifactId>
+                        <version>1.9.11</version>
+
+                        <dependencies>
+                            <!-- 1.2.x required: implements OutputDirectoryProvider for JUnit Platform 1.11+ -->
+                            <dependency>
+                                <groupId>org.pitest</groupId>
+                                <artifactId>pitest-junit5-plugin</artifactId>
+                                <version>1.2.2</version>
+                            </dependency>
+                        </dependencies>
+
+                        <configuration>
+                            <targetClasses>
+                                <!-- Domain -->
+                                <param>com.example.smartcityback.asset.domain.aggregate.*</param>
+                                <param>com.example.smartcityback.asset.domain.entity.*</param>
+                                <param>com.example.smartcityback.asset.domain.specification.*</param>
+                                <param>com.example.smartcityback.asset.domain.valueobject.*</param>
+                                <!-- Application -->
+                                <param>com.example.smartcityback.asset.application.service.*</param>
+                            </targetClasses>
+
+                            <threads>1</threads>
+                            <timeoutFactor>2</timeoutFactor>
+                            <timeoutConstant>4000</timeoutConstant>
+
+                            <outputFormats>
+                                <param>HTML</param>
+                                <param>XML</param>
+                            </outputFormats>
+
+                            <timestampedReports>false</timestampedReports>
+
+                            <mutationThreshold>65</mutationThreshold>
+                            <coverageThreshold>75</coverageThreshold>
+
+                            <excludedClasses>
+                                <param>*.dto.*</param>
+                                <param>*.config.*</param>
+                                <param>*.generated.*</param>
+                                <param>*.mapper.*</param>
+                                <param>*.request.*</param>
+                                <param>*.response.*</param>
+                                <param>*.exception.*</param>
+                                <param>*.repository.*</param>
+                            </excludedClasses>
+
+                            <excludedTestClasses>
+                                <param>*IntegrationTest</param>
+                                <param>*TransactionalTest</param>
+                                <param>*WireMockTest</param>
+                                <param>*APITest</param>
+                                <param>*WebSocket*</param>
+                                <param>*FullIntegrationTest</param>
+                                <param>*ApplicationTests</param>
+                                <param>*RepositoryImplTest</param>
+                            </excludedTestClasses>
+
+                            <jvmArgs>
+                                <jvmArg>-Xmx768m</jvmArg>
+                                <jvmArg>--add-opens=java.base/java.lang=ALL-UNNAMED</jvmArg>
+                                <jvmArg>--add-opens=java.base/java.util=ALL-UNNAMED</jvmArg>
+                            </jvmArgs>
                         </configuration>
                     </plugin>
                 </plugins>
