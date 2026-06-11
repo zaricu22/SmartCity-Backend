@@ -8,7 +8,7 @@ on:
     paths-ignore:
       - 'src/main/resources/static/openapi/**'
   pull_request:
-    branches: [dev, main]
+    branches: [main]
 
 # 3. The JOBS: What should it do?
 jobs:
@@ -99,8 +99,9 @@ jobs:
           format: "HTML"
           out: "reports"
 
-      # GitHub Action Artifact: Saves the HTML report as a downloadable artifact
+      # if: always() — artifact must be available even when the scan step fails (e.g. vulnerability found, NVD download error)
       - name: Upload OWASP report
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: owasp-report
@@ -147,7 +148,7 @@ jobs:
           fail_ci_if_error: true
           verbose: true
 
-      # Saves raw Surefire reports for debugging failures
+      # if: always() — artifact must be available even when tests fail (Surefire reports are most useful for diagnosing failures)
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v4
@@ -261,7 +262,21 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
 
+      # Skip all expensive steps if no API-contract files changed
+      - name: Check if OpenAPI-relevant files changed
+        id: filter
+        uses: dorny/paths-filter@v3
+        with:
+          filters: |
+            openapi:
+              - 'src/main/java/**/webapi/controller/**'
+              - 'src/main/java/**/webapi/request/**'
+              - 'src/main/java/**/webapi/response/**'
+              - 'src/main/java/**/webapi/exception/ErrorResponse.java'
+              - 'src/main/resources/application*.properties'
+
       - uses: actions/setup-java@v4
+        if: steps.filter.outputs.openapi == 'true'
         with:
           java-version: '17'
           distribution: 'temurin'
@@ -269,36 +284,43 @@ jobs:
 
       # Setup Python
       - uses: actions/setup-python@v5
+        if: steps.filter.outputs.openapi == 'true'
         with:
           python-version: '3.12'
 
       # Install Claude SDK
       - name: Install Python dependencies
+        if: steps.filter.outputs.openapi == 'true'
         run: pip install anthropic
 
       # Start app with H2 (ci profile), hit /v3/api-docs, write openapi.json, stop app
       - name: Generate OpenAPI schema locally
+        if: steps.filter.outputs.openapi == 'true'
         run: mvn verify -Pgenerate-openapi -DskipTests
 
       # Run Claude enrichment
       - name: Enrich OpenAPI schema with Claude
+        if: steps.filter.outputs.openapi == 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python scripts/enrich_openapi.py
 
       # Install Node
       - uses: actions/setup-node@v4
+        if: steps.filter.outputs.openapi == 'true'
         with:
           node-version: '22'
 
       # Validate enriched OpenAPI schema
       - name: Validate enriched OpenAPI
+        if: steps.filter.outputs.openapi == 'true'
         run: |
           npx @apidevtools/swagger-cli validate \
             src/main/resources/static/openapi/enhanced-openapi.json
 
       # Commit enriched schema
       - name: Commit enriched OpenAPI
+        if: steps.filter.outputs.openapi == 'true'
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com

@@ -6,7 +6,7 @@ public class DeviceAlreadyExistsException extends BusinessRuleViolationException
 
     public DeviceAlreadyExistsException() {
         super(
-                "Energetska jedinica vec postoji u okviru javnog objekta!",
+                "Device already exists in this building!",
                 ErrorCode.DEVICE_ALREADY_EXISTS
         );
     }

@@ -7,8 +7,13 @@ public class BuildingNotFoundException extends NotFoundException {
 
     public BuildingNotFoundException() {
         super(
-                "Javni objekat nije pronadjen!",
+                "Building not found!",
                 ErrorCode.BUILDING_NOT_FOUND
         );
     }
 }
+
+
+
+
+

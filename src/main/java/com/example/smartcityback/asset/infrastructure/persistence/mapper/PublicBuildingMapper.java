@@ -1,6 +1,7 @@
 package com.example.smartcityback.asset.infrastructure.persistence.mapper;
 
 import com.example.smartcityback.asset.domain.aggregate.PublicBuilding;
+import com.example.smartcityback.asset.domain.entity.EnergyDevice;
 import com.example.smartcityback.asset.domain.valueobject.Energy;
 import com.example.smartcityback.asset.infrastructure.persistence.embedded.EnergyEmbeddable;
 import com.example.smartcityback.asset.infrastructure.persistence.entity.EnergyDeviceJpaEntity;
@@ -15,26 +16,20 @@ public class PublicBuildingMapper {
 
     public static PublicBuilding toDomain(PublicBuildingJpaEntity entity) {
 
-        PublicBuilding building =
-                new PublicBuilding(
-                        entity.getId(),
-                        entity.getName(),
-                        entity.getLocation()
-                );
+        List<EnergyDevice> devices = entity.getDevices().stream()
+                .map(EnergyDeviceMapper::toDomain)
+                .toList();
 
-        entity.getDevices()
-                .forEach(device -> building.addDevice(
-                        EnergyDeviceMapper.toDomain(device)
-                ));
-
-        building.changeConsumption(
-                new Energy(
+        return PublicBuilding.reconstitute(
+                entity.getId(),
+                entity.getName(),
+                entity.getLocation(),
+                devices,
+                Energy.reconstitute(
                         entity.getConsumption().getValue(),
                         entity.getConsumption().getUnit()
                 )
         );
-
-        return building;
     }
 
     public static PublicBuildingJpaEntity toJpa(PublicBuilding building) {

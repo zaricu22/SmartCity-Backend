@@ -6,7 +6,7 @@ public class DeviceCapacityLimitException extends BusinessRuleViolationException
 
     public DeviceCapacityLimitException() {
         super(
-                "Zatrazena proizvodnja energije premasuje oprativni opseg jedinice!",
+                "Requested energy production exceeds the device's operational range!",
                 ErrorCode.DEVICE_CAPACITY_OUT_OF_RANGE
         );
     }

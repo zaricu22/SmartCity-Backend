@@ -70,7 +70,7 @@ class PublicBuildingFullIntegrationTest {
                 .when()
                 .post("/v1/buildings")
                 .then()
-                .statusCode(200)
+                .statusCode(201)
                 .extract().as(UUID.class);
     }
 
@@ -85,17 +85,17 @@ class PublicBuildingFullIntegrationTest {
                 .when()
                 .post("/v1/buildings/{id}/devices", buildingId)
                 .then()
-                .statusCode(200);
+                .statusCode(204);
 
         return buildingId;
     }
 
     // =====================================================================
-    // Happy path: valid requests succeed with 200 OK
+    // Happy path: valid requests succeed with correct status codes
     // =====================================================================
 
     @Test
-    void createBuilding_validRequest_returns200() {
+    void createBuilding_validRequest_returns201() {
         given()
                 .contentType(ContentType.JSON)
                 .body("""
@@ -104,12 +104,12 @@ class PublicBuildingFullIntegrationTest {
                 .when()
                 .post("/v1/buildings")
                 .then()
-                .statusCode(200)
+                .statusCode(201)
                 .body(notNullValue());
     }
 
     @Test
-    void addDevice_validRequest_returns200() {
+    void addDevice_validRequest_returns204() {
         UUID buildingId = createBuilding();
 
         given()
@@ -120,11 +120,11 @@ class PublicBuildingFullIntegrationTest {
                 .when()
                 .post("/v1/buildings/{id}/devices", buildingId)
                 .then()
-                .statusCode(200);
+                .statusCode(204);
     }
 
     @Test
-    void changeConsumption_validRequest_returns200() {
+    void changeConsumption_validRequest_returns204() {
         UUID buildingId = createBuildingWithDevice();
 
         given()
@@ -133,13 +133,13 @@ class PublicBuildingFullIntegrationTest {
                     { "consumptionValue": 50, "consumptionUnit": "kW" }
                     """)
                 .when()
-                .put("/v1/buildings/{id}/consumption", buildingId)
+                .patch("/v1/buildings/{id}/consumption", buildingId)
                 .then()
-                .statusCode(200);
+                .statusCode(204);
     }
 
     @Test
-    void changeProduction_validRequest_returns200() {
+    void changeProduction_validRequest_returns204() {
         UUID buildingId = createBuildingWithDevice();
         UUID deviceId = given()
                 .when()
@@ -156,7 +156,7 @@ class PublicBuildingFullIntegrationTest {
                 .when()
                 .patch("/v1/buildings/{buildingId}/devices/{deviceId}/production", buildingId, deviceId)
                 .then()
-                .statusCode(200);
+                .statusCode(204);
     }
 
 }

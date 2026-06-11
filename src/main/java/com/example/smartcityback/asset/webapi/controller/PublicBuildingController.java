@@ -24,7 +24,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
+import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
@@ -33,7 +35,6 @@ import java.util.UUID;
 @RequestMapping("/v1/buildings")
 @Slf4j
 @Tag(name = "Public Buildings")
-// @RequiredArgsConstructor
 public class PublicBuildingController {
 
     private final PublicBuildingAppService service;
@@ -51,7 +52,8 @@ public class PublicBuildingController {
 
     @Operation(summary = "Create a new public building")
     @ApiResponses({
-            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "201"),
+            @ApiResponse(responseCode = "422", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "400", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PostMapping
@@ -59,12 +61,18 @@ public class PublicBuildingController {
             @Valid @RequestBody CreateBuildingRequest request) {
 
         UUID id = service.create(new CreateBuildingCommand(request.name(), request.location()));
-        return ResponseEntity.ok(id);
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
+                .buildAndExpand(id)
+                .toUri();
+        return ResponseEntity.created(location).body(id);
     }
 
     @Operation(summary = "Add an energy device to a building")
     @ApiResponses({
-            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "204"),
+            @ApiResponse(responseCode = "422", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "400", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "409", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
@@ -74,6 +82,9 @@ public class PublicBuildingController {
             @PathVariable UUID id,
             @Valid @RequestBody AddDeviceRequest request) {
 
+        log.info("RequestReceived endpoint=POST /buildings/{id}/devices id={} type={} capacity={} {} requestId={}",
+                id, request.type(), request.ratedCapacityValue(), request.ratedCapacityUnit(), requestId());
+
         service.addDevice(new AddDeviceCommand(
                 id,
                 request.type(),
@@ -81,16 +92,18 @@ public class PublicBuildingController {
                 request.ratedCapacityUnit()
         ));
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Update energy consumption of a building")
     @ApiResponses({
-            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "204"),
+            @ApiResponse(responseCode = "422", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "400", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
-    @PutMapping("/{id}/consumption")
+    @PatchMapping("/{id}/consumption")
     public ResponseEntity<Void> changeConsumption(
             @PathVariable UUID id,
             @Valid @RequestBody ChangeConsumptionRequest request) {
@@ -106,20 +119,25 @@ public class PublicBuildingController {
                 )
         );
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Update production rate of a device")
     @ApiResponses({
-            @ApiResponse(responseCode = "200"),
+            @ApiResponse(responseCode = "204"),
+            @ApiResponse(responseCode = "422", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
             @ApiResponse(responseCode = "400", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
-            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @PatchMapping("/{buildingId}/devices/{deviceId}/production")
     public ResponseEntity<Void> changeProduction(
             @PathVariable UUID buildingId,
             @PathVariable UUID deviceId,
             @Valid @RequestBody ChangeProductionRequest request) {
+
+        log.info("RequestReceived endpoint=PATCH /buildings/{buildingId}/devices/{deviceId}/production buildingId={} deviceId={} value={} {} requestId={}",
+                buildingId, deviceId, request.productionValue(), request.productionUnit(), requestId());
 
         service.changeProduction(
                 buildingId,
@@ -130,7 +148,7 @@ public class PublicBuildingController {
                 )
         );
 
-        return ResponseEntity.ok().build();
+        return ResponseEntity.noContent().build();
     }
 
     @Operation(summary = "Get a public building by ID")

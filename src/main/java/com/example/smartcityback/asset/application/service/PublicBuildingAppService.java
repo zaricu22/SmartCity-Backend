@@ -43,8 +43,14 @@ public class PublicBuildingAppService {
     }
 
     public void addDevice(AddDeviceCommand cmd) {
+        log.info("CommandReceived command=AddDevice aggregate=PublicBuilding buildingId={} type={} capacity={} {}",
+                cmd.buildingId(), cmd.type(), cmd.ratedCapacityValue(), cmd.ratedCapacityUnit());
+
         PublicBuilding building = repository.findById(cmd.buildingId())
-                .orElseThrow(BuildingNotFoundException::new);
+                .orElseThrow(() -> {
+                    log.warn("BuildingNotFound buildingId={}", cmd.buildingId());
+                    return new BuildingNotFoundException();
+                });
 
         building.addDevice(
                 new EnergyDevice(
@@ -55,6 +61,8 @@ public class PublicBuildingAppService {
 
         repository.save(building);
         building.pullEvents().forEach(eventPublisher::publishEvent);
+
+        log.info("DeviceAdded buildingId={}", cmd.buildingId());
 
         // NOTE: DDD Specification pattern can be used here
         //
@@ -94,13 +102,21 @@ public class PublicBuildingAppService {
     }
 
     public void changeProduction(UUID buildingId, UUID deviceId, ChangeProductionCommand cmd) {
+        log.info("CommandReceived command=ChangeProduction aggregate=PublicBuilding buildingId={} deviceId={} value={} {}",
+                buildingId, deviceId, cmd.productionValue(), cmd.productionUnit());
+
         PublicBuilding building = repository.findById(buildingId)
-                .orElseThrow(BuildingNotFoundException::new);
+                .orElseThrow(() -> {
+                    log.warn("BuildingNotFound buildingId={}", buildingId);
+                    return new BuildingNotFoundException();
+                });
 
         Energy production = new Energy(cmd.productionValue(), cmd.productionUnit());
 
         building.changeDeviceProduction(deviceId, production);
 
         repository.save(building);
+
+        log.info("ProductionChanged buildingId={} deviceId={}", buildingId, deviceId);
     }
 }

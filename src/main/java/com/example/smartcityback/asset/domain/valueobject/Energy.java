@@ -14,17 +14,29 @@ public class Energy {
     private final BigDecimal value;
     private final EnergyUnit unit;
 
+    // Private constructor for reconstitution from persistence — bypasses validation because
+    // data from the DB is already valid (was validated on write). Final fields require a
+    // constructor overload since they cannot be assigned outside a constructor.
+    private Energy(BigDecimal value, EnergyUnit unit, boolean fromPersistence) {
+        this.value = value;
+        this.unit = unit;
+    }
+
+    public static Energy reconstitute(BigDecimal value, EnergyUnit unit) {
+        return new Energy(value, unit, true);
+    }
+
     public Energy(BigDecimal value, EnergyUnit unit) {
         if (value == null) {
-            throw new ValidationException("Energija mora imati vrednost!", ErrorCode.ENERGY_VALUE_REQURIED);
+            throw new ValidationException("Energy must have a value!", ErrorCode.ENERGY_VALUE_REQURIED);
         }
 
         if (unit == null) {
-            throw new ValidationException("Energija mora imati jedinicu!", ErrorCode.ENERGY_UNIT_REQUIRED);
+            throw new ValidationException("Energy must have a unit!", ErrorCode.ENERGY_UNIT_REQUIRED);
         }
 
         if (value.compareTo(BigDecimal.ZERO) < 0) {
-            throw new ValidationException("Energija ne moze biti negativna!", ErrorCode.ENERGY_NEGATIVE);
+            throw new ValidationException("Energy value cannot be negative!", ErrorCode.ENERGY_NEGATIVE);
         }
 
         this.value = value;

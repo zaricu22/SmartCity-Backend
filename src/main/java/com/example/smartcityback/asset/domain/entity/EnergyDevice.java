@@ -18,13 +18,28 @@ public class EnergyDevice {
     private final Energy deviceRatedCapacity;
     private Energy productionRate;
 
+    // Private constructor for reconstitution from persistence — bypasses validation because
+    // data from the DB is already valid (was validated on write). deviceRatedCapacity is final
+    // so a constructor overload is required; a private no-arg constructor cannot assign final fields.
+    private EnergyDevice(UUID id, DeviceType type, Energy deviceRatedCapacity, Energy productionRate) {
+        this.id = id;
+        this.type = type;
+        this.deviceRatedCapacity = deviceRatedCapacity;
+        this.productionRate = productionRate;
+    }
+
+    public static EnergyDevice reconstitute(UUID id, DeviceType type,
+                                             Energy ratedCapacity, Energy productionRate) {
+        return new EnergyDevice(id, type, ratedCapacity, productionRate);
+    }
+
     public EnergyDevice(UUID id, DeviceType type, Energy deviceRatedCapacity) {
         this.id = id;
         if (type == null) {
-            throw new ValidationException("Tip je obavezan!", ErrorCode.DEVICE_TYPE_REQUIRED);
+            throw new ValidationException("Device type is required!", ErrorCode.DEVICE_TYPE_REQUIRED);
         }
         if (deviceRatedCapacity == null) {
-            throw new ValidationException("Instalirani kapacitet je obavezan!", ErrorCode.DEVICE_CAPACITY_REQUIRED);
+            throw new ValidationException("Device rated capacity is required!", ErrorCode.DEVICE_CAPACITY_REQUIRED);
         }
 
         // required minimum
