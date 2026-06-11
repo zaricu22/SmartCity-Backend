@@ -98,6 +98,15 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    void getAll_returns200WithList() throws Exception {
+        given(queryService.getAll()).willReturn(List.of());
+
+        mockMvc.perform(get("/v1/buildings"))
+                .andExpect(status().isOk())
+                .andExpect(content().json("[]"));
+    }
+
+    @Test
     void getBuilding_found_returns200WithBody() throws Exception {
         PublicBuildingDto response = new PublicBuildingDto(
                 BUILDING_ID, "City Hall", "Main St 1",
