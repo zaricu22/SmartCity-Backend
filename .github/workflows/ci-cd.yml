@@ -233,7 +233,12 @@ jobs:
           name: jacoco-report
           path: target/site/jacoco
 
-      # SonarCloud: In-depth analysis of technical debt and code smells
+      # SonarCloud: In-depth analysis of technical debt and code smells.
+      # qualitygate.wait=true — makes the step block until SonarCloud processes results
+      # and fails CI if the quality gate is not met. Without this flag the step always
+      # passes regardless of gate outcome. The built-in "Sonar way" quality gate enforces:
+      # 80% coverage on new code (stricter than the project floor), no new bugs,
+      # no new vulnerabilities, no new security hotspots.
       - name: SonarCloud Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
@@ -243,6 +248,7 @@ jobs:
           -Dsonar.host.url=https://sonarcloud.io
           -Dsonar.token=${{ secrets.SONAR_TOKEN }}
           -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml
+          -Dsonar.qualitygate.wait=true
 
   # -------------------------------------------------------------------------
   # JOB 5: OPENAPI AI ENRICHMENT

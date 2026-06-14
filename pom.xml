@@ -155,6 +155,53 @@
                             <goal>report</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>check</id>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                        <configuration>
+                            <rules>
+                                <rule>
+                                    <!-- BUNDLE = whole project as one unit, not per-class or per-package.
+                                         Per-class rules cause false failures on small utility classes;
+                                         bundle-level reflects overall test suite health. -->
+                                    <element>BUNDLE</element>
+                                    <limits>
+                                        <limit>
+                                            <counter>LINE</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <!-- 70%: push-gate floor for the main pipeline. Intentionally below
+                                                 PIT's 75% coverageThreshold — PIT and JaCoCo measure differently
+                                                 (PIT counts only lines reachable by the test-compile scope).
+                                                 Modest floor; not a ceiling. Raise when test suite matures. -->
+                                            <minimum>0.70</minimum>
+                                        </limit>
+                                        <limit>
+                                            <counter>BRANCH</counter>
+                                            <value>COVEREDRATIO</value>
+                                            <!-- 60%: branch coverage is structurally harder to reach than line
+                                                 coverage — error paths, guard clauses, and exception branches
+                                                 often require specific integration or Testcontainers setup.
+                                                 Set lower than line to avoid forcing trivial tests. -->
+                                            <minimum>0.60</minimum>
+                                        </limit>
+                                    </limits>
+                                </rule>
+                            </rules>
+                            <!-- Pure data carriers and framework wiring have no logic to test.
+                                 Mutating a getter or a field assignment produces surviving mutants
+                                 that indicate nothing about correctness — same exclusion list as PIT. -->
+                            <excludes>
+                                <exclude>**/*Dto.*</exclude>
+                                <exclude>**/*Request.*</exclude>
+                                <exclude>**/*Response.*</exclude>
+                                <exclude>**/*Mapper.*</exclude>
+                                <exclude>**/*Exception.*</exclude>
+                                <exclude>**/config/**</exclude>
+                            </excludes>
+                        </configuration>
+                    </execution>
                 </executions>
             </plugin>
         </plugins>
