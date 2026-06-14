@@ -1,0 +1,22 @@
+coverage:
+  status:
+    project:
+      default:
+        # 70%: overall project coverage floor — matches JaCoCo line threshold.
+        # Applies to the entire codebase across all commits on the branch.
+        target: 70%
+        # 2%: allows small legitimate drops (e.g. adding a new untested config class)
+        # without triggering false failures on every push.
+        threshold: 2%
+    patch:
+      default:
+        # 80%: stricter than the project floor — new and changed lines added in a PR
+        # must be well tested. Enforces the discipline that every PR covers what it adds.
+        target: 80%
+        # 5%: allows flexibility for PRs that touch hard-to-cover paths (error handling,
+        # infrastructure wiring) without blocking legitimate work.
+        threshold: 5%
+
+comment:
+  layout: "reach,diff,flags,files"
+  behavior: default
