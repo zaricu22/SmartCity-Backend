@@ -19,14 +19,17 @@ Closes #<!-- issue number -->
 - [ ] `area: database`
 - [ ] `area: devops`
 - [ ] `area: security`
+- [ ] `area: testing`
+- [ ] `area: docs`
+- [ ] `area: config`
 
 ---
 
 ## How to Test
 <!-- Steps a reviewer should follow to verify this change locally -->
-1. 
-2. 
-3. 
+1.
+2.
+3.
 
 ---
 
@@ -34,16 +37,20 @@ Closes #<!-- issue number -->
 - [ ] Change is confined to the correct bounded context
 - [ ] No domain logic leaked into application/infrastructure layer
 - [ ] Domain events raised where appropriate
+- [ ] Reconstitution uses `reconstitute()` factory, not mutation methods (ADR-0013)
+- [ ] Aggregate references other aggregates by ID only, not by object reference
 
 ## Quality Checklist
 - [ ] Tested locally
 - [ ] New/updated tests included
 - [ ] No lint or compiler warnings
 - [ ] No secrets committed
+- [ ] Commit message follows conventional commits format
 
 ## Backend *(delete if frontend PR)*
 - [ ] DB migrations are backward-compatible
 - [ ] API contract unchanged or versioned
+- [ ] `@Transactional` boundaries correct — writes in `AppService`, reads in `QueryService` (ADR-0015)
 
 ## Frontend *(delete if backend PR)*
 - [ ] Renders correctly on mobile and desktop
