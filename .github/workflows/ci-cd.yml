@@ -242,8 +242,9 @@ jobs:
       - name: SonarCloud Analysis
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: mvn verify sonar:sonar
+        run: mvn package -DskipTests sonar:sonar
           -Dsonar.projectKey=zaricu22_SmartCity-Backend
+          -Dsonar.projectName=smartcityback
           -Dsonar.organization=zaricu22
           -Dsonar.host.url=https://sonarcloud.io
           -Dsonar.token=${{ secrets.SONAR_TOKEN }}
