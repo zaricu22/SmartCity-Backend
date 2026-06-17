@@ -12,8 +12,12 @@ import com.example.smartcityback.asset.domain.exception.ValidationException;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
 import com.example.smartcityback.asset.domain.shared.enums.ErrorCode;
 import com.example.smartcityback.asset.application.service.PublicBuildingQueryService;
+import com.example.smartcityback.auth.infrastructure.JwtTokenService;
+import com.example.smartcityback.auth.infrastructure.TokenBlacklist;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
+import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.http.MediaType;
@@ -46,7 +50,10 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  */
 
 
-@WebMvcTest(PublicBuildingController.class)
+@WebMvcTest(
+        value = PublicBuildingController.class,
+        excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
+)
 @ActiveProfiles("test")
 class PublicBuildingControllerAPITest {
 
@@ -59,6 +66,14 @@ class PublicBuildingControllerAPITest {
 
     @MockitoBean
     private PublicBuildingQueryService queryService;
+
+    // JwtAuthFilter and RateLimitFilter are @Component Filter beans — @WebMvcTest picks them up.
+    // Mock their dependencies so the context loads; neither is ever invoked for /v1/buildings/* requests.
+    @MockitoBean
+    private JwtTokenService jwtTokenService;
+
+    @MockitoBean
+    private TokenBlacklist tokenBlacklist;
 
     private static final UUID BUILDING_ID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
     private static final UUID DEVICE_ID   = UUID.fromString("660e8400-e29b-41d4-a716-446655440001");

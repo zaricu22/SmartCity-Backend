@@ -135,6 +135,9 @@ jobs:
           DB_URL: ${{ secrets.DB_URL }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          TEST_JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
+          TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
+          TEST_VIEWER_PASSWORD: ${{ secrets.TEST_VIEWER_PASSWORD }}
 
       # GitHub Action Artifact: Upload jacoco report to be used by SonarCloud and Codecov
       - name: Upload JaCoCo report

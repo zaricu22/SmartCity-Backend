@@ -1,9 +1,12 @@
 package com.example.smartcityback.asset.webapi.integration;
 
 import io.restassured.RestAssured;
+import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
+import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.web.server.LocalServerPort;
 import org.springframework.test.context.ActiveProfiles;
@@ -49,12 +52,31 @@ class PublicBuildingFullIntegrationTest {
     @LocalServerPort
     private int port;
 
-    // RestAssured needs it configured before each test to know where to send requests.
+    @Value("${app.security.admin.password}")
+    private String adminPassword;
+
+    private RequestSpecification asAdmin;
+
     @BeforeEach
     void setUp() {
         RestAssured.port        = port;
         RestAssured.basePath    = "/SmartCityREST";
         RestAssured.enableLoggingOfRequestAndResponseIfValidationFails();
+
+        String token = given()
+                .contentType(ContentType.JSON)
+                .body("""
+                    { "username": "admin", "password": "%s" }
+                    """.formatted(adminPassword))
+                .when()
+                .post("/v1/auth/login")
+                .then()
+                .statusCode(200)
+                .extract().jsonPath().getString("token");
+
+        asAdmin = new RequestSpecBuilder()
+                .addHeader("Authorization", "Bearer " + token)
+                .build();
     }
 
     // =====================================================================
@@ -62,7 +84,7 @@ class PublicBuildingFullIntegrationTest {
     // =====================================================================
 
     private UUID createBuilding() {
-        return given()
+        return given(asAdmin)
                 .contentType(ContentType.JSON)
                 .body("""
                     { "name": "City Hall", "location": "Main St 1" }
@@ -77,7 +99,7 @@ class PublicBuildingFullIntegrationTest {
     private UUID createBuildingWithDevice() {
         UUID buildingId = createBuilding();
 
-        given()
+        given(asAdmin)
                 .contentType(ContentType.JSON)
                 .body("""
                     { "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW" }
@@ -96,7 +118,7 @@ class PublicBuildingFullIntegrationTest {
 
     @Test
     void createBuilding_validRequest_returns201() {
-        given()
+        given(asAdmin)
                 .contentType(ContentType.JSON)
                 .body("""
                     { "name": "City Hall", "location": "Main St 1" }
@@ -112,7 +134,7 @@ class PublicBuildingFullIntegrationTest {
     void addDevice_validRequest_returns204() {
         UUID buildingId = createBuilding();
 
-        given()
+        given(asAdmin)
                 .contentType(ContentType.JSON)
                 .body("""
                     { "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW" }
@@ -127,7 +149,7 @@ class PublicBuildingFullIntegrationTest {
     void changeConsumption_validRequest_returns204() {
         UUID buildingId = createBuildingWithDevice();
 
-        given()
+        given(asAdmin)
                 .contentType(ContentType.JSON)
                 .body("""
                     { "consumptionValue": 50, "consumptionUnit": "kW" }
@@ -141,14 +163,14 @@ class PublicBuildingFullIntegrationTest {
     @Test
     void changeProduction_validRequest_returns204() {
         UUID buildingId = createBuildingWithDevice();
-        UUID deviceId = given()
+        UUID deviceId = given(asAdmin)
                 .when()
                 .get("/v1/buildings/{id}", buildingId)
                 .then()
                 .statusCode(200)
                 .extract().jsonPath().getUUID("devices[0].id");
 
-        given()
+        given(asAdmin)
                 .contentType(ContentType.JSON)
                 .body("""
                     { "productionValue": 60, "productionUnit": "kW" }
