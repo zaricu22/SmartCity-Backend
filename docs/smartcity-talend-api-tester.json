@@ -1,0 +1,340 @@
+{
+  "info": {
+    "_postman_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "name": "SmartCity Backend API",
+    "description": "REST API collection for SmartCity Backend — https://smartcity-backend-9g09.onrender.com/SmartCityREST",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Buildings",
+      "item": [
+        {
+          "name": "GET All Buildings",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/buildings",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "buildings"]
+            },
+            "description": "Returns all public buildings. Response: 200 OK — array of building objects."
+          },
+          "response": []
+        },
+        {
+          "name": "GET Building by ID",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/buildings/00000000-0000-0000-0000-000000000001",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001"]
+            },
+            "description": "Returns a single building by UUID. Replace the last path segment with a real building ID. Response: 200 OK | 404 Not Found."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Create Building",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"City Hall\",\n  \"location\": \"Main Square 1\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/buildings",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "buildings"]
+            },
+            "description": "Creates a new public building. Response: 201 Created — body contains UUID; Location header points to new resource. Errors: 400 | 422."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Create Building — 400 Validation Error",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"location\": \"\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/buildings",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "buildings"]
+            },
+            "description": "Triggers 400 Bad Request — blank fields fail @NotBlank validation."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Devices",
+      "item": [
+        {
+          "name": "POST Add SOLAR Device",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"SOLAR\",\n  \"ratedCapacityValue\": 50.0,\n  \"ratedCapacityUnit\": \"kW\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/buildings/00000000-0000-0000-0000-000000000001/devices",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001", "devices"]
+            },
+            "description": "Adds a SOLAR device to a building. Replace building UUID in path. Response: 204 No Content. Errors: 400 | 404 | 409 | 422."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Add PUMP Device",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"PUMP\",\n  \"ratedCapacityValue\": 1.5,\n  \"ratedCapacityUnit\": \"MW\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/buildings/00000000-0000-0000-0000-000000000001/devices",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001", "devices"]
+            },
+            "description": "Adds a PUMP device to a building. Replace building UUID in path. Response: 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Add BATTERY Device",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"BATTERY\",\n  \"ratedCapacityValue\": 0.5,\n  \"ratedCapacityUnit\": \"GW\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/buildings/00000000-0000-0000-0000-000000000001/devices",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001", "devices"]
+            },
+            "description": "Adds a BATTERY storage device to a building. Replace building UUID in path. Response: 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Add Device — 404 Not Found",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"type\": \"SOLAR\",\n  \"ratedCapacityValue\": 10.0,\n  \"ratedCapacityUnit\": \"kW\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/buildings/00000000-0000-0000-0000-999999999999/devices",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-999999999999", "devices"]
+            },
+            "description": "Triggers 404 — non-existent building UUID."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Consumption",
+      "item": [
+        {
+          "name": "PATCH Update Consumption (kW)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consumptionValue\": 30.5,\n  \"consumptionUnit\": \"kW\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/buildings/00000000-0000-0000-0000-000000000001/consumption",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001", "consumption"]
+            },
+            "description": "Updates building energy consumption in kW. Replace building UUID in path. Response: 204 No Content. Errors: 400 | 404 | 409 | 422."
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Update Consumption (MW)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consumptionValue\": 0.5,\n  \"consumptionUnit\": \"MW\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/buildings/00000000-0000-0000-0000-000000000001/consumption",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001", "consumption"]
+            },
+            "description": "Updates building energy consumption in MW — backend converts to kW internally. Response: 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Update Consumption — 404 Not Found",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"consumptionValue\": 10.0,\n  \"consumptionUnit\": \"kW\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/buildings/00000000-0000-0000-0000-999999999999/consumption",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-999999999999", "consumption"]
+            },
+            "description": "Triggers 404 — non-existent building UUID."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
+      "name": "Production",
+      "item": [
+        {
+          "name": "PATCH Update Device Production (kW)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productionValue\": 25.0,\n  \"productionUnit\": \"kW\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/buildings/00000000-0000-0000-0000-000000000001/devices/00000000-0000-0000-0000-000000000002/production",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001", "devices", "00000000-0000-0000-0000-000000000002", "production"]
+            },
+            "description": "Updates production rate of an energy device in kW. Replace both UUIDs in path. Response: 204 No Content. Errors: 400 | 404 | 409 | 422."
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Update Device Production (MW)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productionValue\": 1.2,\n  \"productionUnit\": \"MW\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/buildings/00000000-0000-0000-0000-000000000001/devices/00000000-0000-0000-0000-000000000002/production",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001", "devices", "00000000-0000-0000-0000-000000000002", "production"]
+            },
+            "description": "Updates device production in MW — backend converts to kW internally. Response: 204 No Content."
+          },
+          "response": []
+        },
+        {
+          "name": "PATCH Update Device Production — 404 Not Found",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"productionValue\": 10.0,\n  \"productionUnit\": \"kW\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/buildings/00000000-0000-0000-0000-000000000001/devices/00000000-0000-0000-0000-999999999999/production",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001", "devices", "00000000-0000-0000-0000-999999999999", "production"]
+            },
+            "description": "Triggers 404 — non-existent device UUID."
+          },
+          "response": []
+        }
+      ]
+    }
+  ]
+}
