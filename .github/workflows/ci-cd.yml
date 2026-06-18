@@ -135,6 +135,9 @@ jobs:
           DB_URL: ${{ secrets.DB_URL }}
           DB_USERNAME: ${{ secrets.DB_USERNAME }}
           DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          TEST_JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
+          TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
+          TEST_VIEWER_PASSWORD: ${{ secrets.TEST_VIEWER_PASSWORD }}
 
       # GitHub Action Artifact: Upload jacoco report to be used by SonarCloud and Codecov
       - name: Upload JaCoCo report
@@ -307,6 +310,10 @@ jobs:
       # Start app with H2 (ci profile), hit /v3/api-docs, write openapi.json, stop app
       - name: Generate OpenAPI schema locally
         if: steps.filter.outputs.openapi == 'true'
+        env:
+          JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
+          ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
+          VIEWER_PASSWORD: ${{ secrets.TEST_VIEWER_PASSWORD }}
         run: mvn verify -Pgenerate-openapi -DskipTests
 
       # Run Claude enrichment

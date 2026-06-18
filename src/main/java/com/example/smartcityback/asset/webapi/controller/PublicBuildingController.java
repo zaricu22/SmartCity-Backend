@@ -23,6 +23,7 @@ import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
@@ -30,7 +31,6 @@ import java.net.URI;
 import java.util.List;
 import java.util.UUID;
 
-@CrossOrigin(origins = {"http://localhost:4200", "https://zaricu22.github.io"})
 @RestController
 @RequestMapping("/v1/buildings")
 @Slf4j
@@ -50,6 +50,7 @@ public class PublicBuildingController {
         return MDC.get("requestId");
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Create a new public building")
     @ApiResponses({
             @ApiResponse(responseCode = "201"),
@@ -69,6 +70,7 @@ public class PublicBuildingController {
         return ResponseEntity.created(location).body(id);
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Add an energy device to a building")
     @ApiResponses({
             @ApiResponse(responseCode = "204"),
@@ -95,6 +97,7 @@ public class PublicBuildingController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update energy consumption of a building")
     @ApiResponses({
             @ApiResponse(responseCode = "204"),
@@ -122,6 +125,7 @@ public class PublicBuildingController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
     @Operation(summary = "Update production rate of a device")
     @ApiResponses({
             @ApiResponse(responseCode = "204"),
@@ -151,6 +155,7 @@ public class PublicBuildingController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasAnyRole('VIEWER', 'ADMIN')")
     @Operation(summary = "Get a public building by ID")
     @ApiResponses({
             @ApiResponse(responseCode = "200"),
@@ -162,6 +167,7 @@ public class PublicBuildingController {
         return BuildingResponseMapper.toResponse(queryService.getById(id));
     }
 
+    @PreAuthorize("hasAnyRole('VIEWER', 'ADMIN')")
     @Operation(summary = "Get all public buildings")
     @ApiResponse(responseCode = "200")
     @GetMapping
