@@ -8,7 +8,7 @@ import org.hibernate.annotations.JdbcTypeCode;
 import java.util.UUID;
 
 @Entity
-@Table(name = "energy_device")
+@Table(name = "energy_device", schema = "public", catalog = "smartcity")
 public class EnergyDeviceJpaEntity {
 
     @Id

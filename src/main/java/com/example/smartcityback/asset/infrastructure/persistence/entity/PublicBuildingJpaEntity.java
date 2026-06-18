@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.UUID;
 
 @Entity
-@Table(name = "public_building")
+@Table(name = "public_building", schema = "public", catalog = "smartcity")
 public class PublicBuildingJpaEntity {
     @Id
     @JdbcTypeCode(java.sql.Types.CHAR)  // MySQL does not have a native UUID type, so we store it as CHAR(36)
