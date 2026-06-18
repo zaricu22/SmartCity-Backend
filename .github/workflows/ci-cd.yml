@@ -22,7 +22,7 @@ jobs:
   security-static:
     name: Security Scan - Static
     # GitHub-hosted runner, maintained by GitHub
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
 
     # 4. The STEPS: The individual commands
     steps:
@@ -52,7 +52,7 @@ jobs:
 
   security-snyk-dependencies:
     name: SNYK Dependency Check
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
     steps:
       # Clones the repo into the runner
       - uses: actions/checkout@v4
@@ -82,7 +82,7 @@ jobs:
 
   security-owasp-dependencies:
     name: OWASP Dependency Check
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
     steps:
       # Clones the repo into the runner
       - uses: actions/checkout@v4
@@ -116,7 +116,7 @@ jobs:
   # -------------------------------------------------------------------------
   test:
     name: Build and Test
-    runs-on: ubuntu-latest 
+    runs-on: ubuntu-latest
     needs: [ security-static, security-snyk-dependencies, security-owasp-dependencies ]
     steps:
       # Clones the repo into the runner
@@ -132,9 +132,8 @@ jobs:
       - name: Run tests with coverage
         run: mvn verify -e
         env:
-          DB_URL: ${{ secrets.DB_URL }}
-          DB_USERNAME: ${{ secrets.DB_USERNAME }}
-          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          # TEST_ prefix distinguishes these from prod secrets; they are repo-level (github actions secrets)
+          # so all jobs can access them without the "Render - production" environment scope
           TEST_JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
           TEST_ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
           TEST_VIEWER_PASSWORD: ${{ secrets.TEST_VIEWER_PASSWORD }}
@@ -260,8 +259,6 @@ jobs:
   # schema, enriches it with Claude, and commits it back. Render then pulls
   # this commit when the deploy hook fires, so the fresh enriched JSON is
   # baked into the JAR that actually gets deployed.
-  # The commit uses "docs:" prefix and the trigger has paths-ignore on the
-  # openapi directory, so it never re-triggers the pipeline.
   # -------------------------------------------------------------------------
   openapi-ai-enrichment:
     name: OpenAPI AI Enrichment
@@ -276,69 +273,81 @@ jobs:
           fetch-depth: 0
           token: ${{ secrets.GH_TOKEN }}
 
-      # Skip all expensive steps if no API-contract files changed
-      - name: Check if OpenAPI-relevant files changed
-        id: filter
-        uses: dorny/paths-filter@v3
-        with:
-          filters: |
-            openapi:
-              - 'src/main/java/**/webapi/controller/**'
-              - 'src/main/java/**/webapi/request/**'
-              - 'src/main/java/**/webapi/response/**'
-              - 'src/main/java/**/webapi/exception/ErrorResponse.java'
-              - 'src/main/resources/application*.properties'
+      # Check if any API-contract files changed since the last enrichment commit.
+      # Compares against the last "docs: update enriched OpenAPI" commit so multi-commit
+      # pushes are handled correctly — any API change since last enrichment triggers a re-run.
+      - name: Check if API files changed since last enrichment
+        id: api_changed
+        run: |
+          LAST=$(git log --format="%H" --grep="docs: update enriched OpenAPI" -1)
+          if [ -z "$LAST" ]; then
+            echo "No previous enrichment commit found — running enrichment."
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            DIFF=$(git diff --name-only "$LAST" HEAD -- \
+              'src/main/java/**/webapi/controller/**' \
+              'src/main/java/**/webapi/request/**' \
+              'src/main/java/**/webapi/response/**' \
+              'src/main/java/**/webapi/exception/ErrorResponse.java')
+            if [ -n "$DIFF" ]; then
+              echo "API files changed since last enrichment:"
+              echo "$DIFF"
+              echo "changed=true" >> $GITHUB_OUTPUT
+            else
+              echo "No API files changed since last enrichment — skipping."
+              echo "changed=false" >> $GITHUB_OUTPUT
+            fi
+          fi
 
       - uses: actions/setup-java@v4
-        if: steps.filter.outputs.openapi == 'true'
+        if: steps.api_changed.outputs.changed == 'true'
         with:
           java-version: '17'
           distribution: 'temurin'
           cache: 'maven'
 
-      # Setup Python
       - uses: actions/setup-python@v5
-        if: steps.filter.outputs.openapi == 'true'
+        if: steps.api_changed.outputs.changed == 'true'
         with:
           python-version: '3.12'
 
-      # Install Claude SDK
       - name: Install Python dependencies
-        if: steps.filter.outputs.openapi == 'true'
+        if: steps.api_changed.outputs.changed == 'true'
         run: pip install anthropic
 
       # Start app with H2 (ci profile), hit /v3/api-docs, write openapi.json, stop app
+      # Uses TEST_ secrets (from repo-level/github actions) not environment-scoped to "Render - production"
+      # app.jwt.secret in application-ci.properties maps to JWT_SECRET (from github actions)
       - name: Generate OpenAPI schema locally
-        if: steps.filter.outputs.openapi == 'true'
+        if: steps.api_changed.outputs.changed == 'true'
         env:
           JWT_SECRET: ${{ secrets.TEST_JWT_SECRET }}
           ADMIN_PASSWORD: ${{ secrets.TEST_ADMIN_PASSWORD }}
           VIEWER_PASSWORD: ${{ secrets.TEST_VIEWER_PASSWORD }}
         run: mvn verify -Pgenerate-openapi -DskipTests
 
-      # Run Claude enrichment
       - name: Enrich OpenAPI schema with Claude
-        if: steps.filter.outputs.openapi == 'true'
+        if: steps.api_changed.outputs.changed == 'true'
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python scripts/enrich_openapi.py
 
       # Install Node
       - uses: actions/setup-node@v4
-        if: steps.filter.outputs.openapi == 'true'
+        if: steps.api_changed.outputs.changed == 'true'
         with:
           node-version: '22'
 
       # Validate enriched OpenAPI schema
       - name: Validate enriched OpenAPI
-        if: steps.filter.outputs.openapi == 'true'
+        if: steps.api_changed.outputs.changed == 'true'
         run: |
           npx @apidevtools/swagger-cli validate \
             src/main/resources/static/openapi/enhanced-openapi.json
 
       # Commit enriched schema
       - name: Commit enriched OpenAPI
-        if: steps.filter.outputs.openapi == 'true'
+        if: steps.api_changed.outputs.changed == 'true'
         run: |
           git config user.name github-actions
           git config user.email github-actions@github.com
@@ -355,6 +364,8 @@ jobs:
     name: Semantic Release & Deploy
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
+    # "Render - production" environment gates access to JWT_SECRET, ADMIN_PASSWORD,
+    # VIEWER_PASSWORD, RENDER_DEPLOY_HOOK_URL, RENDER_API_KEY — add new prod secrets there
     environment: Render - production
     needs: [test, code-quality, openapi-ai-enrichment]
     steps:
@@ -370,7 +381,64 @@ jobs:
         with:
           node-version: '20'
 
-      # Semantic Release: Automates SemVer versioning and creates GitHub Releases
+      # Service ID is embedded in the hook URL (format: .../deploy/srv-xxxxx?key=...)
+      # and is needed later to poll the Render API — RENDER_DEPLOY_HOOK_URL must keep this format
+      - name: Trigger Render deployment
+        id: deploy
+        run: |
+          HOOK_URL="${{ secrets.RENDER_DEPLOY_HOOK_URL }}"
+          SERVICE_ID=$(echo "$HOOK_URL" | grep -oP '(?<=deploy/)[^?]+')
+          echo "Service ID: $SERVICE_ID"
+          echo "service_id=$SERVICE_ID" >> $GITHUB_OUTPUT
+          curl -s -X POST "$HOOK_URL"
+          echo "Deploy hook triggered."
+
+      # RENDER_API_KEY (Render → Account Settings → API Keys) stored in the "Render - production" environment.
+      # It authenticates GET /v1/services/{id}/deploys/{deployId} which returns the status of the
+      # specific deploy we triggered (live / build_failed / update_failed).
+      # Without it we can only ping old successful deployment which always returns 200 (success running),
+      # even though new deploy crashes or still waiting,
+      # because Render don't change old one before new deployment success.
+      - name: Smoke Test - Wait for deployment
+        run: |
+          SERVICE_ID="${{ steps.deploy.outputs.service_id }}"
+          echo "Waiting 10s for deploy to register on Render..."
+          sleep 10
+          DEPLOYS_RESPONSE=$(curl -s \
+            -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+            "https://api.render.com/v1/services/$SERVICE_ID/deploys?limit=1")
+          echo "Deploys API response: $DEPLOYS_RESPONSE"
+          DEPLOY_ID=$(echo "$DEPLOYS_RESPONSE" | jq -r '.[0].deploy.id // .[0].id')
+          echo "Polling deploy $DEPLOY_ID (every 20s, up to 10 min)..."
+          for i in {1..30}; do
+            DEPLOY_RESPONSE=$(curl -s \
+              -H "Authorization: Bearer ${{ secrets.RENDER_API_KEY }}" \
+              "https://api.render.com/v1/services/$SERVICE_ID/deploys/$DEPLOY_ID")
+            STATUS=$(echo "$DEPLOY_RESPONSE" | jq -r '.deploy.status // .status')
+            echo "Attempt $i/30: status=$STATUS"
+            case "$STATUS" in
+              live)
+                echo "Deployment is live!"
+                exit 0
+                ;;
+              build_failed|update_failed|canceled|pre_deploy_failed)
+                echo "Deployment failed with status: $STATUS"
+                exit 1
+                ;;
+            esac
+            sleep 20
+          done
+          echo "Timeout: deployment did not reach live status within 600 seconds"
+          exit 1
+
+      # Pull latest main before semantic-release: openapi-ai-enrichment may have pushed a commit
+      # ("docs: update enriched OpenAPI") after this job's checkout. Without this pull, semantic-release
+      # sees the local branch as behind remote and skips the release entirely.
+      - name: Pull latest main
+        run: git pull origin main --rebase
+
+      # Semantic Release: runs only after deploy is confirmed live — prevents stranded
+      # tags/releases when a deploy fails (old order created the tag/release before knowing the deploy outcome)
       - name: Run Semantic Release
         env:
           GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
@@ -384,22 +452,3 @@ jobs:
             --plugins @semantic-release/commit-analyzer \
             --plugins @semantic-release/release-notes-generator \
             --plugins @semantic-release/github
-
-      # Deployment: Triggers Render to pull latest main (includes enriched schema) and build
-      - name: Trigger Render deployment
-        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK_URL }}
-
-      # Smoke Test: Pings the live URL every 20s to confirm successful deploy
-      - name: Smoke Test - Health Check
-        run: |
-          echo "Waiting for Render to deploy (checking every 20s)..."
-          for i in {1..20}; do
-            if curl --fail --silent https://smartcity-backend-9g09.onrender.com/SmartCityREST/actuator/health; then
-              echo "App is LIVE and healthy!"
-              exit 0
-            fi
-            echo "Not ready yet, retrying in 20 seconds..."
-            sleep 20
-          done
-          echo "Timeout: App failed to start in 400 seconds."
-          exit 1
