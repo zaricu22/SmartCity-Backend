@@ -2,6 +2,7 @@ package com.example.smartcityback.asset.application.eventhandler;
 
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
+import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -30,5 +31,14 @@ public class AuditLogEventHandler {
                 event.buildingId(),
                 event.oldConsumption(),
                 event.newConsumption());
+    }
+
+    @EventListener
+    public void onProductionChanged(ProductionChangedEvent event) {
+        log.info("AUDIT ProductionChanged buildingId={} deviceId={} from={} to={}",
+                event.buildingId(),
+                event.deviceId(),
+                event.oldProduction(),
+                event.newProduction());
     }
 }

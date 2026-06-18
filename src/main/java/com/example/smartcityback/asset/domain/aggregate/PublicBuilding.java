@@ -3,6 +3,7 @@ package com.example.smartcityback.asset.domain.aggregate;
 import com.example.smartcityback.asset.domain.entity.EnergyDevice;
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
+import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DomainEvent;
 import com.example.smartcityback.asset.domain.exception.BuildingTotalCapacityExceededException;
 import com.example.smartcityback.asset.domain.exception.DeviceAlreadyExistsException;
@@ -111,7 +112,9 @@ public class PublicBuilding {
                 .findFirst()
                 .orElseThrow(DeviceNotFoundException::new);
 
+        Energy old = device.getProductionRate();
         device.changeProduction(production);
+        domainEvents.add(new ProductionChangedEvent(id, deviceId, old, production));
     }
 
     // Immutable getters

@@ -2,6 +2,7 @@ package com.example.smartcityback.asset.webapi.websocket;
 
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
+import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
 import com.example.smartcityback.asset.domain.valueobject.Energy;
@@ -107,5 +108,51 @@ class BuildingWebSocketEventHandlerTest {
         assertThat(message.buildingId()).isEqualTo(BUILDING_ID);
         assertThat(message.deviceId()).isEqualTo(DEVICE_ID);
         assertThat(message.deviceType()).isEqualTo(DeviceType.BATTERY);
+    }
+
+    // =====================================================================
+    // ProductionChangedEvent
+    // =====================================================================
+
+    @Test
+    void onProductionChanged_publishesToCorrectTopic() {
+        ProductionChangedEvent event = new ProductionChangedEvent(
+                BUILDING_ID,
+                DEVICE_ID,
+                new Energy(BigDecimal.ZERO, EnergyUnit.kW),
+                new Energy(new BigDecimal("60"), EnergyUnit.kW)
+        );
+
+        handler.onProductionChanged(event);
+
+        verify(messagingTemplate).convertAndSend(
+                eq("/topic/buildings/" + BUILDING_ID + "/production"),
+                any(ProductionUpdateMessage.class)
+        );
+    }
+
+    @Test
+    void onProductionChanged_messageContainsCorrectValues() {
+        ProductionChangedEvent event = new ProductionChangedEvent(
+                BUILDING_ID,
+                DEVICE_ID,
+                new Energy(BigDecimal.ZERO, EnergyUnit.kW),
+                new Energy(new BigDecimal("60"), EnergyUnit.kW)
+        );
+
+        ArgumentCaptor<ProductionUpdateMessage> captor =
+                ArgumentCaptor.forClass(ProductionUpdateMessage.class);
+
+        handler.onProductionChanged(event);
+
+        verify(messagingTemplate).convertAndSend(any(String.class), captor.capture());
+
+        ProductionUpdateMessage message = captor.getValue();
+        assertThat(message.buildingId()).isEqualTo(BUILDING_ID);
+        assertThat(message.deviceId()).isEqualTo(DEVICE_ID);
+        assertThat(message.oldValue()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(message.oldUnit()).isEqualTo(EnergyUnit.kW);
+        assertThat(message.newValue()).isEqualByComparingTo("60");
+        assertThat(message.newUnit()).isEqualTo(EnergyUnit.kW);
     }
 }

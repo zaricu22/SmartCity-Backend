@@ -1,6 +1,10 @@
 package com.example.smartcityback.asset.domain.aggregate;
 
 import com.example.smartcityback.asset.domain.entity.EnergyDevice;
+import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
+import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
+import com.example.smartcityback.asset.domain.event.DomainEvent;
+import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import com.example.smartcityback.asset.domain.exception.BuildingTotalCapacityExceededException;
 import com.example.smartcityback.asset.domain.exception.DeviceAlreadyExistsException;
 import com.example.smartcityback.asset.domain.exception.DeviceNotFoundException;
@@ -11,6 +15,7 @@ import com.example.smartcityback.asset.domain.valueobject.Energy;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
@@ -220,6 +225,72 @@ class PublicBuildingTest {
 
         assertThat(building.getDevices().get(0).getProductionRate().value())
                 .isEqualByComparingTo("60");
+    }
+
+    // =====================================================================
+    // Domain events
+    // =====================================================================
+
+    @Test
+    void addDevice_firesDeviceAddedEvent() {
+        PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+        building.addDevice(new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW));
+
+        List<DomainEvent> events = building.pullEvents();
+
+        assertThat(events).hasSize(1);
+        assertThat(events.get(0)).isInstanceOf(DeviceAddedEvent.class);
+        DeviceAddedEvent event = (DeviceAddedEvent) events.get(0);
+        assertThat(event.buildingId()).isEqualTo(BUILDING_ID);
+        assertThat(event.deviceId()).isEqualTo(DEVICE_ID);
+        assertThat(event.deviceType()).isEqualTo(DeviceType.SOLAR);
+    }
+
+    @Test
+    void changeConsumption_firesConsumptionChangedEvent() {
+        PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+        building.addDevice(new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW));
+        building.pullEvents(); // clear DeviceAddedEvent
+
+        Energy newConsumption = new Energy(new BigDecimal("50"), EnergyUnit.kW);
+        building.changeConsumption(newConsumption);
+
+        List<DomainEvent> events = building.pullEvents();
+        assertThat(events).hasSize(1);
+        assertThat(events.get(0)).isInstanceOf(ConsumptionChangedEvent.class);
+        ConsumptionChangedEvent event = (ConsumptionChangedEvent) events.get(0);
+        assertThat(event.buildingId()).isEqualTo(BUILDING_ID);
+        assertThat(event.oldConsumption().value()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(event.newConsumption().value()).isEqualByComparingTo("50");
+    }
+
+    @Test
+    void changeDeviceProduction_existingDevice_firesProductionChangedEvent() {
+        PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+        building.addDevice(new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW));
+        building.pullEvents(); // clear DeviceAddedEvent
+
+        Energy newProduction = new Energy(new BigDecimal("60"), EnergyUnit.kW);
+        building.changeDeviceProduction(DEVICE_ID, newProduction);
+
+        List<DomainEvent> events = building.pullEvents();
+        assertThat(events).hasSize(1);
+        assertThat(events.get(0)).isInstanceOf(ProductionChangedEvent.class);
+        ProductionChangedEvent event = (ProductionChangedEvent) events.get(0);
+        assertThat(event.buildingId()).isEqualTo(BUILDING_ID);
+        assertThat(event.deviceId()).isEqualTo(DEVICE_ID);
+        assertThat(event.oldProduction().value()).isEqualByComparingTo(BigDecimal.ZERO);
+        assertThat(event.newProduction().value()).isEqualByComparingTo("60");
+    }
+
+    @Test
+    void pullEvents_clearsEventList() {
+        PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+        building.addDevice(new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW));
+
+        building.pullEvents();
+
+        assertThat(building.pullEvents()).isEmpty();
     }
 
     // =====================================================================

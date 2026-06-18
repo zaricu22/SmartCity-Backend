@@ -116,6 +116,7 @@ public class PublicBuildingAppService {
         building.changeDeviceProduction(deviceId, production);
 
         repository.save(building);
+        building.pullEvents().forEach(eventPublisher::publishEvent);
 
         log.info("ProductionChanged buildingId={} deviceId={}", buildingId, deviceId);
     }
