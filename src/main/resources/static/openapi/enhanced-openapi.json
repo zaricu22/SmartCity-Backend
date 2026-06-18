@@ -90,19 +90,19 @@
           "Public Buildings"
         ],
         "summary": "Update energy consumption of a building",
-        "description": "Updates the energy consumption value and unit for a specific public building. The building must exist and the provided consumption data must be valid.",
+        "description": "Updates the energy consumption value and unit for a specific public building. Requires ADMIN role. Returns no content on success.",
         "operationId": "changeConsumption",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "Unique identifier of the public building whose consumption is being updated",
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-            }
+              "format": "uuid"
+            },
+            "description": "Unique identifier of the public building whose consumption is to be updated",
+            "example": "a3f1c2d4-5e6b-7890-abcd-ef1234567890"
           }
         ],
         "requestBody": {
@@ -121,10 +121,10 @@
         },
         "responses": {
           "204": {
-            "description": "Energy consumption updated successfully. No content is returned."
+            "description": "Energy consumption updated successfully. No content returned."
           },
           "422": {
-            "description": "Unprocessable Entity – The consumption value or unit is semantically invalid (e.g. negative consumption value or unsupported energy unit).",
+            "description": "Unprocessable Entity – The provided consumption value or unit is semantically invalid (e.g., negative consumption value or unsupported energy unit).",
             "content": {
               "*/*": {
                 "schema": {
@@ -133,8 +133,8 @@
                 "example": {
                   "status": 422,
                   "error": "Unprocessable Entity",
-                  "message": "Consumption value must be greater than or equal to zero.",
-                  "timestamp": "2024-06-15T10:30:00Z"
+                  "message": "Consumption value must be greater than zero.",
+                  "requestId": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
                 }
               }
             }
@@ -149,14 +149,14 @@
                 "example": {
                   "status": 400,
                   "error": "Bad Request",
-                  "message": "consumptionValue must not be null",
-                  "timestamp": "2024-06-15T10:30:00Z"
+                  "message": "consumptionUnit must not be null.",
+                  "requestId": "c12de34f-89ab-4567-bcde-f01234567890"
                 }
               }
             }
           },
           "404": {
-            "description": "Not Found – No public building exists with the provided identifier.",
+            "description": "Not Found – No public building exists with the specified ID.",
             "content": {
               "*/*": {
                 "schema": {
@@ -165,14 +165,14 @@
                 "example": {
                   "status": 404,
                   "error": "Not Found",
-                  "message": "Public building with id '3fa85f64-5717-4562-b3fc-2c963f66afa6' was not found.",
-                  "timestamp": "2024-06-15T10:30:00Z"
+                  "message": "Public building with id 'a3f1c2d4-5e6b-7890-abcd-ef1234567890' was not found.",
+                  "requestId": "b98765fe-dcba-4321-9876-543210fedcba"
                 }
               }
             }
           },
           "409": {
-            "description": "Conflict – The consumption update conflicts with the current state of the building (e.g. concurrent modification detected).",
+            "description": "Conflict – The consumption update conflicts with the current state of the building (e.g., concurrent modification detected).",
             "content": {
               "*/*": {
                 "schema": {
@@ -181,8 +181,8 @@
                 "example": {
                   "status": 409,
                   "error": "Conflict",
-                  "message": "The building consumption was modified by another request. Please retry.",
-                  "timestamp": "2024-06-15T10:30:00Z"
+                  "message": "Building consumption was modified by another request. Please retry.",
+                  "requestId": "e11223dd-4455-6677-8899-aabbccddeeff"
                 }
               }
             }
@@ -197,7 +197,7 @@
           "Public Buildings"
         ],
         "summary": "Create a new public building",
-        "description": "Registers a new public building in the smart city system with a name and location. Returns the UUID of the newly created building.",
+        "description": "Creates a new public building asset in the smart city system. Requires ADMIN role. Returns the UUID of the newly created building.",
         "operationId": "create",
         "requestBody": {
           "content": {
@@ -211,7 +211,7 @@
         },
         "responses": {
           "201": {
-            "description": "Public building successfully created. The response body contains the UUID of the new building.",
+            "description": "Public building successfully created. Returns the unique identifier of the new building.",
             "content": {
               "*/*": {
                 "schema": {
@@ -254,7 +254,7 @@
         "operationId": "getAll",
         "responses": {
           "200": {
-            "description": "A list of all public buildings was successfully retrieved",
+            "description": "A list of all public buildings was successfully retrieved.",
             "content": {
               "*/*": {
                 "schema": {
@@ -265,20 +265,20 @@
                 },
                 "example": [
                   {
-                    "id": "a3f1c2d4-5e6b-7890-abcd-ef1234567890",
+                    "id": "a3f1c2d4-1234-4b5e-9abc-def012345678",
                     "name": "City Hall",
                     "location": "Main Square 1, Downtown",
                     "consumptionValue": 1250.75,
                     "consumptionUnit": "KWH",
                     "devices": [
                       {
-                        "id": "b1e2f3a4-6c7d-8901-bcde-fa2345678901",
+                        "id": "b7e2d3f5-5678-4c6f-8bcd-ef1234567890",
                         "name": "HVAC Unit A",
                         "consumptionValue": 430.5,
                         "consumptionUnit": "KWH"
                       },
                       {
-                        "id": "c2d3e4f5-7a8b-9012-cdef-ab3456789012",
+                        "id": "c9f4e5a6-9012-4d7g-9cde-f01234567891",
                         "name": "LED Lighting System",
                         "consumptionValue": 820.25,
                         "consumptionUnit": "KWH"
@@ -286,14 +286,14 @@
                     ]
                   },
                   {
-                    "id": "d4e5f6a7-8b9c-0123-defa-bc4567890123",
+                    "id": "d5a6b7c8-3456-4e8h-0def-012345678902",
                     "name": "Public Library",
-                    "location": "Knowledge Avenue 15, Westside",
+                    "location": "Knowledge Avenue 42, Midtown",
                     "consumptionValue": 640.0,
                     "consumptionUnit": "KWH",
                     "devices": [
                       {
-                        "id": "e5f6a7b8-9c0d-1234-efab-cd5678901234",
+                        "id": "e1b2c3d4-7890-4f9i-1efg-123456789013",
                         "name": "Air Conditioning Unit",
                         "consumptionValue": 640.0,
                         "consumptionUnit": "KWH"
@@ -341,10 +341,10 @@
         },
         "responses": {
           "204": {
-            "description": "Energy device successfully added to the building. No content is returned."
+            "description": "Device successfully added to the building. No content is returned."
           },
           "422": {
-            "description": "Unprocessable Entity – The request body is syntactically valid but contains semantic errors, such as an unsupported device type or an invalid energy unit value.",
+            "description": "Unprocessable Entity – the request body is syntactically valid but contains semantic errors, such as an unsupported device type or an invalid energy unit combination.",
             "content": {
               "*/*": {
                 "schema": {
@@ -353,14 +353,14 @@
                 "example": {
                   "status": 422,
                   "error": "Unprocessable Entity",
-                  "message": "Device type 'UNKNOWN_TYPE' is not supported.",
+                  "message": "Device type 'UNKNOWN' is not supported for public buildings.",
                   "timestamp": "2024-06-15T10:45:00Z"
                 }
               }
             }
           },
           "400": {
-            "description": "Bad Request – The request body is missing required fields or contains malformed data (e.g. null device name, invalid UUID format).",
+            "description": "Bad Request – one or more required fields are missing or fail validation constraints (e.g. blank device name, null energy unit).",
             "content": {
               "*/*": {
                 "schema": {
@@ -376,7 +376,7 @@
             }
           },
           "404": {
-            "description": "Not Found – No public building exists with the provided identifier.",
+            "description": "Not Found – no public building exists with the provided identifier.",
             "content": {
               "*/*": {
                 "schema": {
@@ -392,7 +392,7 @@
             }
           },
           "409": {
-            "description": "Conflict – A device with the same identifier or name already exists within this building.",
+            "description": "Conflict – a device with the same identifier or name already exists within this building.",
             "content": {
               "*/*": {
                 "schema": {
@@ -417,7 +417,7 @@
           "Public Buildings"
         ],
         "summary": "Update production rate of a device",
-        "description": "Updates the energy production rate and unit for a specific device within a public building. Use this endpoint when a device's production capacity changes, such as after maintenance or reconfiguration of a solar panel or generator.",
+        "description": "Updates the energy production rate of a specific device within a public building. The device must belong to the specified building and must be a production-capable device (e.g., solar panel, wind turbine).",
         "operationId": "changeProduction",
         "parameters": [
           {
@@ -427,20 +427,20 @@
             "description": "Unique identifier of the public building that owns the device",
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "example": "a3f1c2d4-5e6b-7890-abcd-ef1234567890"
-            }
+              "format": "uuid"
+            },
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
           },
           {
             "name": "deviceId",
             "in": "path",
             "required": true,
-            "description": "Unique identifier of the energy device whose production rate is being updated",
+            "description": "Unique identifier of the energy-producing device to update",
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "example": "b7e2d3f5-6a7c-8901-bcde-f01234567891"
-            }
+              "format": "uuid"
+            },
+            "example": "7cb94e21-1a3b-4d8e-9f02-abc123def456"
           }
         ],
         "requestBody": {
@@ -450,7 +450,7 @@
                 "$ref": "#/components/schemas/ChangeProductionRequest"
               },
               "example": {
-                "productionValue": 5.75,
+                "productionValue": 12.5,
                 "productionUnit": "KWH"
               }
             }
@@ -459,10 +459,10 @@
         },
         "responses": {
           "204": {
-            "description": "Device production rate updated successfully. No content is returned."
+            "description": "Production rate updated successfully. No content is returned."
           },
           "422": {
-            "description": "The provided production value or unit is semantically invalid, such as a negative production value or an unsupported energy unit.",
+            "description": "Unprocessable Entity — the provided production value or unit is semantically invalid (e.g., negative production value or unsupported energy unit for this device type).",
             "content": {
               "*/*": {
                 "schema": {
@@ -471,13 +471,14 @@
                 "example": {
                   "status": 422,
                   "message": "Production value must be greater than zero",
+                  "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
                   "timestamp": "2024-06-15T10:30:00Z"
                 }
               }
             }
           },
           "400": {
-            "description": "The request body is malformed or contains missing required fields such as productionValue or productionUnit.",
+            "description": "Bad Request — the request body is malformed or contains missing required fields such as productionValue or productionUnit.",
             "content": {
               "*/*": {
                 "schema": {
@@ -486,13 +487,14 @@
                 "example": {
                   "status": 400,
                   "message": "productionValue must not be null",
-                  "timestamp": "2024-06-15T10:30:00Z"
+                  "requestId": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+                  "timestamp": "2024-06-15T10:31:00Z"
                 }
               }
             }
           },
           "404": {
-            "description": "No public building or device was found matching the provided buildingId and deviceId combination.",
+            "description": "Not Found — no public building exists with the given buildingId, or no device with the given deviceId belongs to that building.",
             "content": {
               "*/*": {
                 "schema": {
@@ -500,14 +502,15 @@
                 },
                 "example": {
                   "status": 404,
-                  "message": "Device with id b7e2d3f5-6a7c-8901-bcde-f01234567891 not found in building a3f1c2d4-5e6b-7890-abcd-ef1234567890",
-                  "timestamp": "2024-06-15T10:30:00Z"
+                  "message": "Device with id '7cb94e21-1a3b-4d8e-9f02-abc123def456' not found in building '3fa85f64-5717-4562-b3fc-2c963f66afa6'",
+                  "requestId": "c3d4e5f6-a7b8-9012-cdef-123456789012",
+                  "timestamp": "2024-06-15T10:32:00Z"
                 }
               }
             }
           },
           "409": {
-            "description": "The requested production update conflicts with the current state of the device, such as attempting to set production on a consumption-only device.",
+            "description": "Conflict — the device is not a production-capable device and cannot have a production rate assigned, or a concurrent update conflict was detected.",
             "content": {
               "*/*": {
                 "schema": {
@@ -515,8 +518,9 @@
                 },
                 "example": {
                   "status": 409,
-                  "message": "Device does not support production rate updates in its current configuration",
-                  "timestamp": "2024-06-15T10:30:00Z"
+                  "message": "Device '7cb94e21-1a3b-4d8e-9f02-abc123def456' does not support energy production",
+                  "requestId": "d4e5f6a7-b8c9-0123-defa-234567890123",
+                  "timestamp": "2024-06-15T10:33:00Z"
                 }
               }
             }
@@ -531,19 +535,19 @@
           "Public Buildings"
         ],
         "summary": "Get a public building by ID",
-        "description": "Retrieves the full details of a public building, including its energy consumption data and list of associated energy devices, identified by its unique UUID.",
+        "description": "Retrieves detailed information about a specific public building, including its energy consumption data and associated energy devices.",
         "operationId": "get",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "The unique identifier (UUID) of the public building to retrieve.",
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-            }
+              "format": "uuid"
+            },
+            "description": "The unique identifier of the public building to retrieve.",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
           }
         ],
         "responses": {
@@ -558,19 +562,19 @@
                   "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                   "name": "City Hall",
                   "location": "123 Main Street, Downtown",
-                  "consumptionValue": 1450.75,
+                  "consumptionValue": 4750.25,
                   "consumptionUnit": "KWH",
                   "devices": [
                     {
                       "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
                       "name": "HVAC Unit A",
-                      "consumptionValue": 850.5,
+                      "consumptionValue": 2100.0,
                       "consumptionUnit": "KWH"
                     },
                     {
                       "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
-                      "name": "LED Lighting System",
-                      "consumptionValue": 600.25,
+                      "name": "Lighting System B",
+                      "consumptionValue": 2650.25,
                       "consumptionUnit": "KWH"
                     }
                   ]
@@ -579,7 +583,7 @@
             }
           },
           "404": {
-            "description": "No public building was found with the provided UUID.",
+            "description": "No public building was found with the specified ID.",
             "content": {
               "*/*": {
                 "schema": {
@@ -588,9 +592,8 @@
                 "example": {
                   "status": 404,
                   "error": "Not Found",
-                  "message": "Public building with id '3fa85f64-5717-4562-b3fc-2c963f66afa6' does not exist.",
-                  "requestId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
-                  "timestamp": "2024-06-15T10:23:45.123Z"
+                  "message": "Public building with ID '3fa85f64-5717-4562-b3fc-2c963f66afa6' does not exist.",
+                  "requestId": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
                 }
               }
             }
@@ -648,6 +651,114 @@
         },
         "x-raw-hash": "457ce7acbbf4ef1272a67c2502103c73"
       }
+    },
+    "/v1/auth/refresh": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Exchange a refresh token for a new JWT + new refresh token",
+        "description": "Accepts a valid refresh token and issues a new short-lived JWT access token together with a rotated refresh token. The previous refresh token is invalidated immediately after use. Use this endpoint to silently renew a session without requiring the user to re-enter credentials.",
+        "operationId": "refresh",
+        "requestBody": {
+          "description": "The refresh token previously issued during login or a prior token refresh.",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RefreshRequest"
+              },
+              "example": {
+                "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzEyMyIsInR5cGUiOiJyZWZyZXNoIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDI1OTIwMDB9.dummyRefreshSignature"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Token refresh successful. Returns a new JWT access token and a rotated refresh token. The client should replace both stored tokens immediately.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                },
+                "example": {
+                  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzEyMyIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwMDM2MDB9.newAccessSignature",
+                  "refreshToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzEyMyIsInR5cGUiOiJyZWZyZXNoIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDI1OTIwMDB9.newRefreshSignature",
+                  "tokenType": "Bearer",
+                  "expiresIn": 3600
+                }
+              }
+            }
+          }
+        },
+        "x-raw-hash": "869f9b2b503e2f8539dcda11d8e28a22"
+      }
+    },
+    "/v1/auth/logout": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Revoke the current JWT and its refresh token",
+        "description": "Invalidates the provided JWT access token and its associated refresh token, effectively ending the user's session. After a successful logout, both tokens are blacklisted and can no longer be used for authentication.",
+        "operationId": "logout",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LogoutRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Session successfully terminated. The JWT access token and its associated refresh token have been revoked and are no longer valid."
+          }
+        },
+        "x-raw-hash": "cf0a887528fd18c0aac4e6895c1d6fe8"
+      }
+    },
+    "/v1/auth/login": {
+      "post": {
+        "tags": [
+          "Authentication"
+        ],
+        "summary": "Authenticate and receive a JWT + refresh token",
+        "operationId": "login",
+        "requestBody": {
+          "description": "User credentials required to authenticate and obtain access tokens",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "Authentication successful. Returns a signed JWT access token and a refresh token for session management.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginResponse"
+                },
+                "example": {
+                  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyXzEyMyIsImVtYWlsIjoidXNlckBleGFtcGxlLmNvbSIsInJvbGUiOiJVU0VSIiwiaWF0IjoxNzAwMDAwMDAwLCJleHAiOjE3MDAwMDM2MDB9.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c",
+                  "refreshToken": "dGhpcyBpcyBhIHNlY3VyZSByZWZyZXNoIHRva2VuIGV4YW1wbGU",
+                  "tokenType": "Bearer",
+                  "expiresIn": 3600
+                }
+              }
+            }
+          }
+        },
+        "x-raw-hash": "6fd2cb4bef41834678ccee6ed530e183"
+      }
     }
   },
   "components": {
@@ -668,7 +779,7 @@
               "MW",
               "GW"
             ],
-            "description": "The unit of energy measurement corresponding to the consumption value.",
+            "description": "The unit of measurement for the energy consumption value.",
             "example": "kW"
           }
         },
@@ -699,7 +810,7 @@
       },
       "AddDeviceRequest": {
         "type": "object",
-        "description": "Request payload for adding a new device to an asset, specifying the device type and its rated capacity.",
+        "description": "Request payload for adding a new device to a smart city asset. Specifies the device type and its rated energy capacity.",
         "properties": {
           "type": {
             "type": "string",
@@ -708,12 +819,12 @@
               "PUMP",
               "BATTERY"
             ],
-            "description": "The type of device being added to the asset.",
+            "description": "The type of device being added. SOLAR for photovoltaic panels, PUMP for energy pumps, BATTERY for energy storage units.",
             "example": "SOLAR"
           },
           "ratedCapacityValue": {
             "type": "number",
-            "description": "The numeric value of the device's rated capacity. Must be a positive number.",
+            "description": "The rated capacity value of the device. Must be a positive number representing the device's maximum energy output or storage capacity.",
             "example": 250.5
           },
           "ratedCapacityUnit": {
@@ -723,7 +834,7 @@
               "MW",
               "GW"
             ],
-            "description": "The unit of measurement for the device's rated capacity.",
+            "description": "The unit of measurement for the rated capacity value. Represents the scale of energy capacity (kilowatts, megawatts, or gigawatts).",
             "example": "kW"
           }
         },
@@ -757,13 +868,13 @@
       },
       "EnergyDeviceResponse": {
         "type": "object",
-        "description": "Represents an energy device asset with its rated capacity and production rate specifications.",
+        "description": "Represents an energy device asset within the smart city infrastructure, including its type, rated capacity, and production rate.",
         "properties": {
           "id": {
             "type": "string",
             "format": "uuid",
             "description": "Unique identifier of the energy device.",
-            "example": "b3f1c2d4-5e6a-7b8c-9d0e-1f2a3b4c5d6e"
+            "example": "b3f1c2d4-8a7e-4f2b-9c1d-0e5a6b7c8d9e"
           },
           "type": {
             "type": "string",
@@ -772,12 +883,12 @@
               "PUMP",
               "BATTERY"
             ],
-            "description": "The category of the energy device (e.g., solar panel, pump, or battery storage).",
+            "description": "The category of the energy device (e.g., solar panel array, pump, or battery storage unit).",
             "example": "SOLAR"
           },
           "ratedCapacityValue": {
             "type": "number",
-            "description": "The maximum power capacity the device is rated to handle, expressed in the corresponding unit.",
+            "description": "The maximum rated capacity of the energy device expressed as a numeric value.",
             "example": 500.0
           },
           "ratedCapacityUnit": {
@@ -787,12 +898,12 @@
               "MW",
               "GW"
             ],
-            "description": "The unit of measurement for the rated capacity value.",
+            "description": "The unit of measurement for the rated capacity of the energy device.",
             "example": "kW"
           },
           "productionRateValue": {
             "type": "number",
-            "description": "The current or nominal rate at which the device produces or consumes energy, expressed in the corresponding unit.",
+            "description": "The current or nominal energy production rate of the device expressed as a numeric value.",
             "example": 350.75
           },
           "productionRateUnit": {
@@ -802,7 +913,7 @@
               "MW",
               "GW"
             ],
-            "description": "The unit of measurement for the production rate value.",
+            "description": "The unit of measurement for the energy production rate of the device.",
             "example": "kW"
           }
         },
@@ -810,13 +921,13 @@
       },
       "PublicBuildingResponse": {
         "type": "object",
-        "description": "Represents a public building asset with its energy consumption details and associated energy devices.",
+        "description": "Represents a public building asset in the smart city system, including its energy consumption details and associated energy devices.",
         "properties": {
           "id": {
             "type": "string",
             "format": "uuid",
             "description": "Unique identifier of the public building.",
-            "example": "a3f1c2d4-5e6b-7890-abcd-ef1234567890"
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
           },
           "name": {
             "type": "string",
@@ -855,7 +966,7 @@
       },
       "ErrorResponse": {
         "type": "object",
-        "description": "Standard error response returned when an API request fails, containing details about the error code, human-readable message, HTTP status, timestamp, and request identifier for tracing.",
+        "description": "Standard error response returned by the API when a request fails. Contains details about the error code, human-readable message, HTTP status, time of occurrence, and a unique request identifier for tracing.",
         "properties": {
           "errorCode": {
             "type": "string",
@@ -876,7 +987,7 @@
           "timestamp": {
             "type": "string",
             "format": "date-time",
-            "description": "ISO-8601 UTC timestamp indicating when the error occurred.",
+            "description": "ISO 8601 UTC timestamp indicating when the error occurred.",
             "example": "2024-05-15T10:23:47.512Z"
           },
           "requestId": {
@@ -886,6 +997,89 @@
           }
         },
         "x-raw-hash": "84248b4755fa0f66aebb72534e82e39e"
+      },
+      "RefreshRequest": {
+        "type": "object",
+        "description": "Request payload containing a refresh token used to obtain a new access token",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The refresh token previously issued during authentication",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNjk4NzY1NDMyLCJleHAiOjE3MDE0NDM4MzJ9.dGhpcyBpcyBhIHNhbXBsZSByZWZyZXNoIHRva2Vu"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ],
+        "x-raw-hash": "2ae079fe71bd97be9523acdd8cbbafa0"
+      },
+      "LoginResponse": {
+        "type": "object",
+        "description": "Response returned upon successful authentication, containing the JWT access token, user role, token expiry duration, and a refresh token.",
+        "properties": {
+          "token": {
+            "type": "string",
+            "description": "JWT access token to be included in the Authorization header for subsequent requests.",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyQGV4YW1wbGUuY29tIiwicm9sZSI6IkFETUlOIiwiaWF0IjoxNzAwMDAwMDAwfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
+          },
+          "role": {
+            "type": "string",
+            "description": "Role assigned to the authenticated user, determining their access level within the Smart City platform.",
+            "example": "ADMIN"
+          },
+          "expiresInMs": {
+            "type": "integer",
+            "format": "int64",
+            "description": "Duration in milliseconds until the access token expires, starting from the moment of issuance.",
+            "example": 3600000
+          },
+          "refreshToken": {
+            "type": "string",
+            "description": "Opaque refresh token used to obtain a new access token once the current one has expired, without requiring re-authentication.",
+            "example": "dGhpcyBpcyBhIHNhbXBsZSByZWZyZXNoIHRva2Vu"
+          }
+        },
+        "x-raw-hash": "1daf58e12b3479f974cb493ef34cd24a"
+      },
+      "LogoutRequest": {
+        "type": "object",
+        "description": "Request payload for logging out a user by invalidating their refresh token",
+        "properties": {
+          "refreshToken": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The refresh token issued during authentication that should be invalidated on logout",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNjk4NzY4MDAwLCJleHAiOjE2OTkzNzI4MDB9.abc123def456"
+          }
+        },
+        "required": [
+          "refreshToken"
+        ],
+        "x-raw-hash": "2ae079fe71bd97be9523acdd8cbbafa0"
+      },
+      "LoginRequest": {
+        "type": "object",
+        "description": "Credentials required to authenticate a user and obtain an access token.",
+        "properties": {
+          "username": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The unique username of the registered user.",
+            "example": "john.doe"
+          },
+          "password": {
+            "type": "string",
+            "minLength": 1,
+            "description": "The password associated with the user account.",
+            "example": "P@ssw0rd123"
+          }
+        },
+        "required": [
+          "password",
+          "username"
+        ],
+        "x-raw-hash": "2d6b409d07dc22bb58c5c0d0b8a5d851"
       }
     }
   }
