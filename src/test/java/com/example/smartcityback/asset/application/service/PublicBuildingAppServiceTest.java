@@ -2,6 +2,7 @@ package com.example.smartcityback.asset.application.service;
 
 import com.example.smartcityback.asset.application.command.*;
 import com.example.smartcityback.asset.application.exception.BuildingNotFoundException;
+import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import com.example.smartcityback.asset.domain.aggregate.PublicBuilding;
 import com.example.smartcityback.asset.domain.entity.EnergyDevice;
 import com.example.smartcityback.asset.domain.repository.PublicBuildingRepository;
@@ -156,6 +157,17 @@ class PublicBuildingAppServiceTest {
         then(repository).should().save(building);
         assertThat(building.getDevices().get(0).getProductionRate().value())
                 .isEqualByComparingTo("60");
+    }
+
+    @Test
+    void changeProduction_success_publishesProductionChangedEvent() {
+        PublicBuilding building = buildingWithOneDevice();
+        given(repository.findById(BUILDING_ID)).willReturn(Optional.of(building));
+
+        service.changeProduction(BUILDING_ID, DEVICE_ID,
+                new ChangeProductionCommand(new BigDecimal("60"), EnergyUnit.kW));
+
+        then(eventPublisher).should().publishEvent(any(ProductionChangedEvent.class));
     }
 
     @Test

@@ -2,6 +2,7 @@ package com.example.smartcityback.asset.application.eventhandler;
 
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
+import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
 import com.example.smartcityback.asset.domain.valueobject.Energy;
@@ -76,6 +77,36 @@ class AuditLogEventHandlerTest {
         );
 
         assertThatCode(() -> handler.onConsumptionChanged(event))
+                .doesNotThrowAnyException();
+    }
+
+    // =====================================================================
+    // ProductionChangedEvent
+    // =====================================================================
+
+    @Test
+    void onProductionChanged_validEvent_doesNotThrow() {
+        ProductionChangedEvent event = new ProductionChangedEvent(
+                BUILDING_ID,
+                DEVICE_ID,
+                new Energy(BigDecimal.ZERO, EnergyUnit.kW),
+                new Energy(new BigDecimal("60"), EnergyUnit.kW)
+        );
+
+        assertThatCode(() -> handler.onProductionChanged(event))
+                .doesNotThrowAnyException();
+    }
+
+    @Test
+    void onProductionChanged_zeroToZero_doesNotThrow() {
+        ProductionChangedEvent event = new ProductionChangedEvent(
+                BUILDING_ID,
+                DEVICE_ID,
+                new Energy(BigDecimal.ZERO, EnergyUnit.kW),
+                new Energy(BigDecimal.ZERO, EnergyUnit.kW)
+        );
+
+        assertThatCode(() -> handler.onProductionChanged(event))
                 .doesNotThrowAnyException();
     }
 }

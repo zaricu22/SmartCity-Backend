@@ -2,6 +2,7 @@ package com.example.smartcityback.asset.webapi.websocket;
 
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
+import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
@@ -16,6 +17,7 @@ import org.springframework.stereotype.Component;
  * Topics:
  *   /topic/buildings/{buildingId}/consumption  — consumption change updates
  *   /topic/buildings/{buildingId}/devices      — device addition updates
+ *   /topic/buildings/{buildingId}/production   — device production rate updates
  *
  * This handler lives in webapi because it depends on SimpMessagingTemplate,
  * which is a web/infrastructure concern. Domain events remain pure — they have
@@ -69,5 +71,24 @@ public class BuildingWebSocketEventHandler {
 
         log.debug("WebSocket pushed DeviceAdded buildingId={} topic={}",
                 event.buildingId(), topic);
+    }
+
+    @EventListener
+    public void onProductionChanged(ProductionChangedEvent event) {
+        String topic = "/topic/buildings/" + event.buildingId() + "/production";
+
+        ProductionUpdateMessage message = new ProductionUpdateMessage(
+                event.buildingId(),
+                event.deviceId(),
+                event.oldProduction().value(),
+                event.oldProduction().unit(),
+                event.newProduction().value(),
+                event.newProduction().unit()
+        );
+
+        messagingTemplate.convertAndSend(topic, message);
+
+        log.debug("WebSocket pushed ProductionUpdate buildingId={} deviceId={} topic={}",
+                event.buildingId(), event.deviceId(), topic);
     }
 }
