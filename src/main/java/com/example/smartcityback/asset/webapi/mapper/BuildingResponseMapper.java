@@ -1,7 +1,9 @@
 package com.example.smartcityback.asset.webapi.mapper;
 
 import com.example.smartcityback.asset.application.dto.PublicBuildingDto;
+import com.example.smartcityback.asset.shared.PagedResult;
 import com.example.smartcityback.asset.webapi.response.EnergyDeviceResponse;
+import com.example.smartcityback.asset.webapi.response.PagedResponse;
 import com.example.smartcityback.asset.webapi.response.PublicBuildingResponse;
 
 import java.util.List;
@@ -35,6 +37,16 @@ public class BuildingResponseMapper {
         return dtos.stream()
                 .map(BuildingResponseMapper::toResponse)
                 .toList();
+    }
+
+    public static PagedResponse<PublicBuildingResponse> toResponsePage(PagedResult<PublicBuildingDto> paged) {
+        return new PagedResponse<>(
+                toResponseList(paged.content()),
+                paged.totalElements(),
+                paged.totalPages(),
+                paged.pageNumber(),
+                paged.pageSize()
+        );
     }
 }
 

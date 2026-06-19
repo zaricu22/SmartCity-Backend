@@ -5,10 +5,10 @@ import com.example.smartcityback.asset.application.exception.BuildingNotFoundExc
 import com.example.smartcityback.asset.application.mapper.BuildingDtoMapper;
 import com.example.smartcityback.asset.domain.aggregate.PublicBuilding;
 import com.example.smartcityback.asset.domain.repository.PublicBuildingRepository;
+import com.example.smartcityback.asset.shared.PagedResult;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -28,12 +28,15 @@ public class PublicBuildingQueryService {
         return BuildingDtoMapper.toDto(building);
     }
 
-    public List<PublicBuildingDto> getAll() {
-        List<PublicBuilding> buildings = repository.findAll();
-
-        return buildings.stream()
-                .map(BuildingDtoMapper::toDto)
-                .toList();
+    public PagedResult<PublicBuildingDto> getAll(int page, int size, String sortBy, String sortDir) {
+        PagedResult<PublicBuilding> paged = repository.findAll(page, size, sortBy, sortDir);
+        return new PagedResult<>(
+                paged.content().stream().map(BuildingDtoMapper::toDto).toList(),
+                paged.totalElements(),
+                paged.totalPages(),
+                paged.pageNumber(),
+                paged.pageSize()
+        );
     }
 }
 

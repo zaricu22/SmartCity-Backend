@@ -8,6 +8,7 @@ import com.example.smartcityback.asset.domain.repository.PublicBuildingRepositor
 import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
 import com.example.smartcityback.asset.domain.valueobject.Energy;
+import com.example.smartcityback.asset.shared.PagedResult;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -114,6 +115,55 @@ class PublicBuildingQueryServiceTest {
 
         assertThat(response.consumptionValue()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(response.consumptionUnit()).isEqualTo(EnergyUnit.MW);
+    }
+
+    // =====================================================================
+    // getAll — pagination field mapping
+    // =====================================================================
+
+    @Test
+    void getAll_mapsAllPaginationFields() {
+        given(repository.findAll(0, 10, "name", "asc"))
+                .willReturn(new PagedResult<>(List.of(), 42L, 5, 0, 10));
+
+        PagedResult<PublicBuildingDto> result = queryService.getAll(0, 10, "name", "asc");
+
+        assertThat(result.totalElements()).isEqualTo(42L);
+        assertThat(result.totalPages()).isEqualTo(5);
+        assertThat(result.pageNumber()).isEqualTo(0);
+        assertThat(result.pageSize()).isEqualTo(10);
+    }
+
+    @Test
+    void getAll_forwardsAllParamsToRepository() {
+        given(repository.findAll(2, 7, "location", "desc"))
+                .willReturn(new PagedResult<>(List.of(), 0L, 0, 2, 7));
+
+        queryService.getAll(2, 7, "location", "desc");
+
+        then(repository).should().findAll(2, 7, "location", "desc");
+    }
+
+    @Test
+    void getAll_emptyPage_returnsEmptyContent() {
+        given(repository.findAll(0, 10, "name", "asc"))
+                .willReturn(new PagedResult<>(List.of(), 0L, 0, 0, 10));
+
+        PagedResult<PublicBuildingDto> result = queryService.getAll(0, 10, "name", "asc");
+
+        assertThat(result.content()).isEmpty();
+    }
+
+    @Test
+    void getAll_withBuildings_mapsContentToDtos() {
+        given(repository.findAll(0, 10, "name", "asc"))
+                .willReturn(new PagedResult<>(List.of(buildingEntity(List.of())), 1L, 1, 0, 10));
+
+        PagedResult<PublicBuildingDto> result = queryService.getAll(0, 10, "name", "asc");
+
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).id()).isEqualTo(BUILDING_ID);
+        assertThat(result.content().get(0).name()).isEqualTo("City Hall");
     }
 
     // =====================================================================
