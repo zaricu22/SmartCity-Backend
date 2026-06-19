@@ -12,7 +12,7 @@ package com.example.smartcityback.asset;
  *      webapi.exception may access domain.exception (GlobalExceptionHandler must catch domain exceptions),
  *      webapi.websocket may access domain.event + domain.valueobject (WebSocket event handler)
  *  2.  Controllers only access Application layer
- *  3.  No Spring annotations in Domain (@Service, @Component, @Repository)
+ *  3.  No Spring annotations in Domain (@Service, @Component, @Repository, @Transactional)
  *  4.  No JPA annotations in Domain (@Entity, @Table, @MappedSuperclass)
  *  5.  JPA @Entity only in infrastructure.persistence.entity
  *  6.  Repository interfaces only in domain.repository (Spring Data JPA repos in infrastructure excluded)
@@ -29,7 +29,18 @@ package com.example.smartcityback.asset;
  * 16.  Naming conventions: *Service, *Controller, *Repository,
  *      *EventHandler, *Specification in their correct packages
  * 17.  Domain exceptions must reside in domain.exception
- *      (application.exception excluded — BuildingNotFoundException is an application workflow concern)
+ *      Exception: application.exception may extend NotFoundException (a domain type) because
+ *      BuildingNotFoundException is an application workflow concern that uses the shared
+ *      NotFoundException base for GlobalExceptionHandler's single @ExceptionHandler(NotFoundException.class)
+ * 18.  Command classes (*Command) must reside in application.command
+ * 19.  DTO classes (*Dto) must reside in application.dto
+ * 20.  Request classes (*Request) must reside in webapi.request
+ * 21.  Response classes (*Response) must reside in webapi.response
+ * 22.  Domain event classes (*Event) must reside in domain.event
+ * 23.  All classes in domain.event must implement DomainEvent
+ * 24.  All classes in domain.exception must extend DomainException
+ * 25.  Application services must not depend on other application services
+ * 26.  Shared kernel (asset.shared) must not depend on any layer
  *
  * CANNOT be enforced (runtime / behavioral):
  *  1.  Constructor validates mandatory fields and invariants
@@ -48,6 +59,7 @@ package com.example.smartcityback.asset;
  * ============================================================
  */
 
+import com.example.smartcityback.asset.domain.event.DomainEvent;
 import com.example.smartcityback.asset.domain.exception.DomainException;
 import com.tngtech.archunit.core.domain.JavaClass;
 import com.tngtech.archunit.core.importer.ImportOption;
@@ -72,6 +84,7 @@ class DddArchitectureTest {
     private static final String APPLICATION    = "com.example.smartcityback.asset.application..";
     private static final String INFRASTRUCTURE = "com.example.smartcityback.asset.infrastructure..";
     private static final String WEBAPI         = "com.example.smartcityback.asset.webapi..";
+    private static final String SHARED         = "com.example.smartcityback.asset.shared..";
 
     // ----------------------------------------------------------------
     // 1. LAYER DEPENDENCIES
@@ -114,6 +127,17 @@ class DddArchitectureTest {
             .should().beAnnotatedWith(org.springframework.stereotype.Service.class)
             .orShould().beAnnotatedWith(org.springframework.stereotype.Component.class)
             .orShould().beAnnotatedWith(org.springframework.stereotype.Repository.class);
+
+    @ArchTest
+    static final ArchRule noTransactionalInDomain = noClasses()
+            .that().resideInAPackage(DOMAIN)
+            .should().beAnnotatedWith(org.springframework.transaction.annotation.Transactional.class);
+
+    @ArchTest
+    static final ArchRule domainEventsMustImplementDomainEvent = classes()
+            .that().resideInAPackage("..domain.event..")
+            .and().areNotInterfaces()
+            .should().implement(DomainEvent.class);
 
     @ArchTest
     static final ArchRule noJpaAnnotationsInDomain = noClasses()
@@ -248,6 +272,31 @@ class DddArchitectureTest {
             .that().resideInAPackage("..domain.specification..")
             .should().haveSimpleNameEndingWith("Specification");
 
+    @ArchTest
+    static final ArchRule commandPlacement = classes()
+            .that().haveSimpleNameEndingWith("Command")
+            .should().resideInAPackage("..application.command..");
+
+    @ArchTest
+    static final ArchRule dtoPlacement = classes()
+            .that().haveSimpleNameEndingWith("Dto")
+            .should().resideInAPackage("..application.dto..");
+
+    @ArchTest
+    static final ArchRule requestPlacement = classes()
+            .that().haveSimpleNameEndingWith("Request")
+            .should().resideInAPackage("..webapi.request..");
+
+    @ArchTest
+    static final ArchRule responsePlacement = classes()
+            .that().haveSimpleNameEndingWith("Response")
+            .should().resideInAPackage("..webapi.response..");
+
+    @ArchTest
+    static final ArchRule eventPlacement = classes()
+            .that().haveSimpleNameEndingWith("Event")
+            .should().resideInAPackage("..domain.event..");
+
     // ----------------------------------------------------------------
     // 13. DOMAIN EXCEPTIONS
     // ----------------------------------------------------------------
@@ -258,14 +307,38 @@ class DddArchitectureTest {
             .and().resideOutsideOfPackage("..application.exception..")
             .should().resideInAPackage("..domain.exception..");
 
+    @ArchTest
+    static final ArchRule domainExceptionsMustExtendDomainException = classes()
+            .that().resideInAPackage("..domain.exception..")
+            .should().beAssignableTo(DomainException.class);
+
     // ----------------------------------------------------------------
-    // 14. NO CYCLES BETWEEN LAYERS
+    // 14. APPLICATION SERVICE ISOLATION
+    // ----------------------------------------------------------------
+
+    @ArchTest
+    static final ArchRule appServicesMustNotDependOnEachOther = noClasses()
+            .that().resideInAPackage("..application.service..")
+            .should().dependOnClassesThat().resideInAPackage("..application.service..");
+
+    // ----------------------------------------------------------------
+    // 15. NO CYCLES BETWEEN LAYERS
     // ----------------------------------------------------------------
 
     @ArchTest
     static final ArchRule noCyclesBetweenLayers = slices()
             .matching("com.example.smartcityback.asset.(*)..")
             .should().beFreeOfCycles();
+
+    // ----------------------------------------------------------------
+    // 16. SHARED KERNEL ISOLATION
+    // ----------------------------------------------------------------
+
+    @ArchTest
+    static final ArchRule sharedMustNotDependOnAnyLayer = noClasses()
+            .that().resideInAPackage(SHARED)
+            .should().dependOnClassesThat()
+            .resideInAnyPackage(DOMAIN, APPLICATION, INFRASTRUCTURE, WEBAPI);
 
     // ----------------------------------------------------------------
     // Custom conditions

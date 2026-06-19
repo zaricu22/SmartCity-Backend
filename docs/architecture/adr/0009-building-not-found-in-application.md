@@ -1,46 +1,41 @@
 # ADR-0009: BuildingNotFoundException in Application Layer
 
 **Status:** Accepted  
-**Date:** 2026-06-03
+**Date:** 2026-06-03  
+**Updated:** 2026-06-19
 
 ## Context
 
-`BuildingNotFoundException` extends `NotFoundException` (a domain exception) but is
-thrown by `PublicBuildingAppService` and `PublicBuildingQueryService` when a repository
-lookup returns empty.
+`BuildingNotFoundException` is thrown by `PublicBuildingAppService` and
+`PublicBuildingQueryService` when a repository lookup returns empty.
 
-The ArchUnit rule `domainExceptionsLocation` flags all `DomainException` subclasses
-that live outside `domain.exception`. The question is: where does this exception belong?
+The question is: where does this exception belong, and what should it extend?
 
 ## Decision
 
-Keep `BuildingNotFoundException` in **`application.exception`**.
+Keep `BuildingNotFoundException` in **`application.exception`**, extending
+**`NotFoundException`** (a domain base class).
 
-"Building not found" is an **application workflow concern**, not a domain invariant:
-- The domain aggregate `PublicBuilding` never throws "building not found" — it has
-  no knowledge of persistence or the existence of other buildings
-- The exception is thrown by the application service when orchestrating a repository
-  lookup — that is an application-layer responsibility
-- Domain exceptions (`DeviceAlreadyExistsException`, `BuildingTotalCapacityExceededException`)
-  are thrown by domain objects enforcing their own invariants — a fundamentally different concept
+`NotFoundException` is shared by both application-layer exceptions
+(`BuildingNotFoundException`) and domain-layer exceptions (`DeviceNotFoundException`).
+Using a single base class allows `GlobalExceptionHandler` to map all not-found cases
+to HTTP 404 with a single `@ExceptionHandler(NotFoundException.class)` — no per-subclass
+handler duplication.
 
-The `domainExceptionsLocation` ArchUnit rule excludes `application.exception`, 
-because some `domain.exception` subclasses can be reasonable located in `application.exception`,
-with a comment explaining this design intention.
+The ArchUnit rule `domainExceptionsLocation` carries an explicit exclusion for
+`application.exception`, permitting `BuildingNotFoundException` to extend a domain
+type while living in the application layer. The reason is documented in the rule
+comment in `DddArchitectureTest.java`.
 
 ## Consequences
 
 **Positive:**
-- The distinction between domain invariant exceptions and application workflow exceptions
-  is explicit and enforced by package location
-- `application.exception` can grow with other workflow exceptions without polluting `domain.exception`
+- Single `@ExceptionHandler(NotFoundException.class)` covers all not-found cases
+- `application.exception` can grow with other workflow exceptions without adding
+  new handler methods in `GlobalExceptionHandler`
+- `BuildingNotFoundException` stays in the application layer where it is thrown
 
 **Negative:**
-- `BuildingNotFoundException extends NotFoundException` (a domain base class) — the inheritance
-  crosses the layer boundary, which is a type inconsistency
-- `ApplicationException` already exists as an abstract base class in `application.exception`
-  and would be the correct parent. The reason `BuildingNotFoundException` still extends
-  `NotFoundException` is that `GlobalExceptionHandler.handleNotFound()` maps all
-  `NotFoundException` subclasses to HTTP 404. Switching the parent to `ApplicationException`
-  would require adding a dedicated `@ExceptionHandler(ApplicationException.class)` in
-  `GlobalExceptionHandler` — deferred as unnecessary complexity for the current single exception
+- `BuildingNotFoundException` extends a domain type (`NotFoundException`) while
+  living in the application layer — a deliberate, documented exception to the
+  strict layer rule
