@@ -2,13 +2,16 @@ package com.example.smartcityback.asset.infrastructure.persistence.implementatio
 
 import com.example.smartcityback.asset.domain.aggregate.PublicBuilding;
 import com.example.smartcityback.asset.domain.repository.PublicBuildingRepository;
+import com.example.smartcityback.asset.shared.PagedResult;
 import com.example.smartcityback.asset.infrastructure.persistence.entity.PublicBuildingJpaEntity;
 import com.example.smartcityback.asset.infrastructure.persistence.interfaces.PublicBuildingJpaRepository;
 import com.example.smartcityback.asset.infrastructure.persistence.mapper.PublicBuildingMapper;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Repository;
 
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
@@ -29,10 +32,16 @@ public class PublicBuildingRepositoryImpl implements PublicBuildingRepository {
     }
 
     @Override
-    public List<PublicBuilding> findAll() {
-        return jpaRepository.findAll().stream()
-                .map(PublicBuildingMapper::toDomain)
-                .toList();
+    public PagedResult<PublicBuilding> findAll(int page, int size, String sortBy, String sortDir) {
+        Sort.Direction direction = "desc".equalsIgnoreCase(sortDir) ? Sort.Direction.DESC : Sort.Direction.ASC;
+        Page<PublicBuildingJpaEntity> jpaPage = jpaRepository.findAll(PageRequest.of(page, size, Sort.by(direction, sortBy)));
+        return new PagedResult<>(
+                jpaPage.getContent().stream().map(PublicBuildingMapper::toDomain).toList(),
+                jpaPage.getTotalElements(),
+                jpaPage.getTotalPages(),
+                jpaPage.getNumber(),
+                jpaPage.getSize()
+        );
     }
 
     @Override

@@ -31,7 +31,7 @@ import java.util.UUID;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import static org.hamcrest.Matchers.containsString;
-import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.BDDMockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
@@ -117,12 +117,39 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
-    void getAll_returns200WithList() throws Exception {
-        given(queryService.getAll()).willReturn(List.of());
+    void getAll_returns200WithPagedResult() throws Exception {
+        given(queryService.getAll(anyInt(), anyInt(), anyString(), anyString()))
+                .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
 
         mockMvc.perform(get("/v1/buildings"))
                 .andExpect(status().isOk())
-                .andExpect(content().json("[]"));
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.totalElements").value(0))
+                .andExpect(jsonPath("$.totalPages").value(0))
+                .andExpect(jsonPath("$.pageNumber").value(0))
+                .andExpect(jsonPath("$.pageSize").value(20));
+    }
+
+    @Test
+    void getAll_sortDesc_passesDescDirectionToService() throws Exception {
+        given(queryService.getAll(anyInt(), anyInt(), anyString(), anyString()))
+                .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
+
+        mockMvc.perform(get("/v1/buildings").param("sort", "name,desc"))
+                .andExpect(status().isOk());
+
+        then(queryService).should().getAll(anyInt(), anyInt(), eq("name"), eq("desc"));
+    }
+
+    @Test
+    void getAll_sortAsc_passesAscDirectionToService() throws Exception {
+        given(queryService.getAll(anyInt(), anyInt(), anyString(), anyString()))
+                .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
+
+        mockMvc.perform(get("/v1/buildings").param("sort", "name,asc"))
+                .andExpect(status().isOk());
+
+        then(queryService).should().getAll(anyInt(), anyInt(), eq("name"), eq("asc"));
     }
 
     @Test
