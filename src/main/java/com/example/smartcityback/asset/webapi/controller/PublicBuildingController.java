@@ -12,6 +12,7 @@ import com.example.smartcityback.asset.webapi.request.AddDeviceRequest;
 import com.example.smartcityback.asset.webapi.request.ChangeConsumptionRequest;
 import com.example.smartcityback.asset.webapi.request.ChangeProductionRequest;
 import com.example.smartcityback.asset.webapi.request.CreateBuildingRequest;
+import com.example.smartcityback.asset.webapi.response.PagedResponse;
 import com.example.smartcityback.asset.webapi.response.PublicBuildingResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -22,13 +23,16 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
+import org.springdoc.core.annotations.ParameterObject;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -171,7 +175,14 @@ public class PublicBuildingController {
     @Operation(summary = "Get all public buildings")
     @ApiResponse(responseCode = "200")
     @GetMapping
-    public List<PublicBuildingResponse> getAll() {
-        return BuildingResponseMapper.toResponseList(queryService.getAll());
+    public PagedResponse<PublicBuildingResponse> getAll(
+            @ParameterObject @PageableDefault(size = 20, sort = "name") Pageable pageable) {
+        Sort.Order order = pageable.getSort().stream().findFirst().orElse(Sort.Order.asc("name"));
+        return BuildingResponseMapper.toResponsePage(queryService.getAll(
+                pageable.getPageNumber(),
+                pageable.getPageSize(),
+                order.getProperty(),
+                order.isAscending() ? "asc" : "desc"
+        ));
     }
 }

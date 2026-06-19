@@ -1,14 +1,14 @@
 package com.example.smartcityback.asset.domain.repository;
 
 import com.example.smartcityback.asset.domain.aggregate.PublicBuilding;
+import com.example.smartcityback.asset.shared.PagedResult;
 
-import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
 public interface PublicBuildingRepository {
     Optional<PublicBuilding> findById(UUID id);
-    List<PublicBuilding> findAll();
+    PagedResult<PublicBuilding> findAll(int page, int size, String sortBy, String sortDir);
     void save(PublicBuilding building);
     void delete(UUID building);
 }

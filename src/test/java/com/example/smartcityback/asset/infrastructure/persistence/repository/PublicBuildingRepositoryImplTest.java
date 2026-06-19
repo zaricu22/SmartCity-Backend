@@ -6,6 +6,7 @@ import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
 import com.example.smartcityback.asset.domain.valueobject.Energy;
 import com.example.smartcityback.asset.infrastructure.persistence.implementation.PublicBuildingRepositoryImpl;
+import com.example.smartcityback.asset.shared.PagedResult;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -176,6 +177,71 @@ class PublicBuildingRepositoryImplTest {
 
         assertThat(production.value()).isEqualByComparingTo("60");
         assertThat(production.unit()).isEqualTo(EnergyUnit.kW);
+    }
+
+    // =====================================================================
+    // findAll — pagination
+    // =====================================================================
+
+    @Test
+    void findAll_returnsCorrectPaginationFields() {
+        repository.save(new PublicBuilding(UUID.randomUUID(), "Alpha", "Addr 1"));
+        repository.save(new PublicBuilding(UUID.randomUUID(), "Beta",  "Addr 2"));
+        repository.save(new PublicBuilding(UUID.randomUUID(), "Gamma", "Addr 3"));
+        em.flush();
+        em.clear();
+
+        PagedResult<PublicBuilding> result = repository.findAll(0, 2, "name", "asc");
+
+        assertThat(result.content()).hasSize(2);
+        assertThat(result.totalElements()).isEqualTo(3L);
+        assertThat(result.totalPages()).isEqualTo(2);
+        assertThat(result.pageNumber()).isEqualTo(0);
+        assertThat(result.pageSize()).isEqualTo(2);
+    }
+
+    @Test
+    void findAll_secondPage_returnsCorrectPageNumberAndRemainingItems() {
+        repository.save(new PublicBuilding(UUID.randomUUID(), "Alpha", "Addr 1"));
+        repository.save(new PublicBuilding(UUID.randomUUID(), "Beta",  "Addr 2"));
+        repository.save(new PublicBuilding(UUID.randomUUID(), "Gamma", "Addr 3"));
+        em.flush();
+        em.clear();
+
+        PagedResult<PublicBuilding> result = repository.findAll(1, 2, "name", "asc");
+
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.pageNumber()).isEqualTo(1);
+    }
+
+    @Test
+    void findAll_sortAsc_returnsItemsInAscendingOrder() {
+        repository.save(new PublicBuilding(UUID.randomUUID(), "Gamma", "Addr 3"));
+        repository.save(new PublicBuilding(UUID.randomUUID(), "Alpha", "Addr 1"));
+        repository.save(new PublicBuilding(UUID.randomUUID(), "Beta",  "Addr 2"));
+        em.flush();
+        em.clear();
+
+        PagedResult<PublicBuilding> result = repository.findAll(0, 10, "name", "asc");
+
+        assertThat(result.content())
+                .extracting(PublicBuilding::getName)
+                .containsExactly("Alpha", "Beta", "Gamma");
+    }
+
+    @Test
+    void findAll_sortDesc_returnsItemsInDescendingOrder() {
+        repository.save(new PublicBuilding(UUID.randomUUID(), "Gamma", "Addr 3"));
+        repository.save(new PublicBuilding(UUID.randomUUID(), "Alpha", "Addr 1"));
+        repository.save(new PublicBuilding(UUID.randomUUID(), "Beta",  "Addr 2"));
+        em.flush();
+        em.clear();
+
+        PagedResult<PublicBuilding> result = repository.findAll(0, 10, "name", "desc");
+
+        assertThat(result.content())
+                .extracting(PublicBuilding::getName)
+                .containsExactly("Gamma", "Beta", "Alpha");
     }
 
     // =====================================================================
