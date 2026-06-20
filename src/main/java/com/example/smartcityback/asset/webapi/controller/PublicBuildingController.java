@@ -6,7 +6,7 @@ import com.example.smartcityback.asset.application.command.ChangeProductionComma
 import com.example.smartcityback.asset.application.command.CreateBuildingCommand;
 import com.example.smartcityback.asset.application.service.PublicBuildingAppService;
 import com.example.smartcityback.asset.application.service.PublicBuildingQueryService;
-import com.example.smartcityback.asset.webapi.exception.ErrorResponse;
+import com.example.smartcityback.asset.webapi.response.ErrorResponse;
 import com.example.smartcityback.asset.webapi.mapper.BuildingResponseMapper;
 import com.example.smartcityback.asset.webapi.request.AddDeviceRequest;
 import com.example.smartcityback.asset.webapi.request.ChangeConsumptionRequest;

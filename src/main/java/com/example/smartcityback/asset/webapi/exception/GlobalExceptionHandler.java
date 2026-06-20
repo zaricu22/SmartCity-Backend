@@ -3,6 +3,7 @@ package com.example.smartcityback.asset.webapi.exception;
 import com.example.smartcityback.asset.domain.exception.BusinessRuleViolationException;
 import com.example.smartcityback.asset.domain.exception.NotFoundException;
 import com.example.smartcityback.asset.domain.exception.ValidationException;
+import com.example.smartcityback.asset.webapi.response.ErrorResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.MDC;
 import org.springframework.http.HttpStatus;
