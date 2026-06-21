@@ -1,5 +1,7 @@
 package com.example.smartcityback.auth.webapi;
 
+import com.example.smartcityback.auth.infrastructure.EmailAlreadyRegisteredException;
+import com.example.smartcityback.auth.infrastructure.InMemoryUserRegistry;
 import com.example.smartcityback.auth.infrastructure.JwtAuthDetails;
 import com.example.smartcityback.auth.infrastructure.JwtTokenService;
 import com.example.smartcityback.auth.infrastructure.RefreshTokenStore;
@@ -7,6 +9,7 @@ import com.example.smartcityback.auth.infrastructure.TokenBlacklist;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration;
 import org.springframework.boot.autoconfigure.security.servlet.SecurityFilterAutoConfiguration;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -27,12 +30,13 @@ import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.BDDMockito.willDoNothing;
+import static org.mockito.BDDMockito.willThrow;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(
         value = AuthController.class,
-        excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class}
+        excludeAutoConfiguration = {SecurityAutoConfiguration.class, SecurityFilterAutoConfiguration.class, OAuth2ClientAutoConfiguration.class}
 )
 @ActiveProfiles("test")
 class AuthControllerTest {
@@ -42,6 +46,7 @@ class AuthControllerTest {
     @MockitoBean JwtTokenService jwtTokenService;
     @MockitoBean RefreshTokenStore refreshTokenStore;
     @MockitoBean TokenBlacklist tokenBlacklist;
+    @MockitoBean InMemoryUserRegistry userRegistry;
 
     @AfterEach
     void clearSecurityContext() {
@@ -122,6 +127,55 @@ class AuthControllerTest {
                             { "refreshToken": "bad-token" }
                             """))
                 .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void register_newEmail_returns201WithToken() throws Exception {
+        given(jwtTokenService.generate(anyString(), anyString())).willReturn("jwt-token");
+        given(refreshTokenStore.issue(anyString(), anyString())).willReturn("refresh-token");
+
+        mockMvc.perform(post("/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            { "email": "new@example.com", "password": "password123" }
+                            """))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.token").value("jwt-token"))
+                .andExpect(jsonPath("$.role").value("VIEWER"))
+                .andExpect(jsonPath("$.refreshToken").value("refresh-token"));
+    }
+
+    @Test
+    void register_duplicateEmail_returns409() throws Exception {
+        willThrow(new EmailAlreadyRegisteredException("existing@example.com"))
+                .given(userRegistry).register(anyString(), anyString());
+
+        mockMvc.perform(post("/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            { "email": "existing@example.com", "password": "password123" }
+                            """))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void register_invalidEmail_returns422() throws Exception {
+        mockMvc.perform(post("/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            { "email": "not-an-email", "password": "password123" }
+                            """))
+                .andExpect(status().isUnprocessableEntity());
+    }
+
+    @Test
+    void register_passwordTooShort_returns422() throws Exception {
+        mockMvc.perform(post("/v1/auth/register")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                            { "email": "user@example.com", "password": "short" }
+                            """))
+                .andExpect(status().isUnprocessableEntity());
     }
 
     @Test
