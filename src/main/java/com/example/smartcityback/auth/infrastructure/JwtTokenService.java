@@ -21,6 +21,10 @@ public class JwtTokenService {
     public JwtTokenService(
             @Value("${app.jwt.secret}") String secret,
             @Value("${app.jwt.expiration-ms}") long expirationMs) {
+        // The secret env var is BASE64-encoded raw bytes, not a plain string.
+        // HMAC keys are binary material; BASE64 is the standard way to store them in
+        // an env var without charset or encoding ambiguity. Keys.hmacShaKeyFor() also
+        // enforces a minimum of 256 bits (32 bytes) — the JWT spec minimum for HS256.
         this.key = Keys.hmacShaKeyFor(Decoders.BASE64.decode(secret));
         this.expirationMs = expirationMs;
     }
@@ -37,6 +41,9 @@ public class JwtTokenService {
     }
 
     public Claims validate(String token) throws JwtException {
+        // parseSignedClaims throws JwtException for any failure: expired, bad signature,
+        // malformed, or wrong key. JwtAuthFilter catches all of these as one case and
+        // leaves the SecurityContext empty, which the framework resolves as 401.
         return Jwts.parser()
                 .verifyWith(key)
                 .build()

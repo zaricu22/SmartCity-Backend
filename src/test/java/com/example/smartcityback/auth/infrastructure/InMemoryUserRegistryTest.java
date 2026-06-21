@@ -1,0 +1,111 @@
+package com.example.smartcityback.auth.infrastructure;
+
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.mock;
+
+class InMemoryUserRegistryTest {
+
+    private final PasswordEncoder encoder = mock(PasswordEncoder.class);
+    private InMemoryUserRegistry registry;
+
+    @BeforeEach
+    void setUp() {
+        given(encoder.encode(any())).willAnswer(inv -> "hashed:" + inv.getArgument(0));
+        registry = new InMemoryUserRegistry(encoder, "admin123", "viewer123");
+    }
+
+    // -------------------------------------------------------------------------
+    // loadUserByUsername
+    // -------------------------------------------------------------------------
+
+    @Test
+    void loadUserByUsername_seededAdmin_returnsAdminRole() {
+        UserDetails details = registry.loadUserByUsername("admin");
+        assertThat(details.getUsername()).isEqualTo("admin");
+        assertThat(details.getAuthorities()).extracting("authority").containsExactly("ROLE_ADMIN");
+    }
+
+    @Test
+    void loadUserByUsername_seededViewer_returnsViewerRole() {
+        UserDetails details = registry.loadUserByUsername("viewer");
+        assertThat(details.getAuthorities()).extracting("authority").containsExactly("ROLE_VIEWER");
+    }
+
+    @Test
+    void loadUserByUsername_unknownUser_throwsUsernameNotFoundException() {
+        assertThatThrownBy(() -> registry.loadUserByUsername("nobody@example.com"))
+                .isInstanceOf(UsernameNotFoundException.class);
+    }
+
+    @Test
+    void loadUserByUsername_googleUser_returnsEmptyPassword() {
+        registry.findOrRegisterOAuth("google@example.com");
+        UserDetails details = registry.loadUserByUsername("google@example.com");
+        // Empty string prevents DaoAuthenticationProvider from matching any raw password
+        assertThat(details.getPassword()).isEqualTo("");
+    }
+
+    // -------------------------------------------------------------------------
+    // register
+    // -------------------------------------------------------------------------
+
+    @Test
+    void register_newEmail_userIsLoadableAfterwards() {
+        registry.register("new@example.com", "password123");
+        UserDetails details = registry.loadUserByUsername("new@example.com");
+        assertThat(details.getUsername()).isEqualTo("new@example.com");
+        assertThat(details.getAuthorities()).extracting("authority").containsExactly("ROLE_VIEWER");
+    }
+
+    @Test
+    void register_newEmail_passwordIsHashed() {
+        registry.register("new@example.com", "password123");
+        UserDetails details = registry.loadUserByUsername("new@example.com");
+        assertThat(details.getPassword()).isEqualTo("hashed:password123");
+    }
+
+    @Test
+    void register_duplicateEmail_throwsEmailAlreadyRegisteredException() {
+        registry.register("dup@example.com", "password123");
+        assertThatThrownBy(() -> registry.register("dup@example.com", "other"))
+                .isInstanceOf(EmailAlreadyRegisteredException.class);
+    }
+
+    // -------------------------------------------------------------------------
+    // findOrRegisterOAuth
+    // -------------------------------------------------------------------------
+
+    @Test
+    void findOrRegisterOAuth_newEmail_createsGoogleUserWithViewerRole() {
+        RegisteredUser user = registry.findOrRegisterOAuth("google@example.com");
+        assertThat(user.email()).isEqualTo("google@example.com");
+        assertThat(user.role()).isEqualTo("VIEWER");
+        assertThat(user.provider()).isEqualTo(RegisteredUser.AuthProvider.GOOGLE);
+        assertThat(user.hashedPassword()).isNull();
+    }
+
+    @Test
+    void findOrRegisterOAuth_existingLocalEmail_returnsExistingUserWithoutOverwriting() {
+        registry.register("local@example.com", "password123");
+        RegisteredUser user = registry.findOrRegisterOAuth("local@example.com");
+        // Must return the existing LOCAL account, not replace it with a GOOGLE entry
+        assertThat(user.provider()).isEqualTo(RegisteredUser.AuthProvider.LOCAL);
+        assertThat(user.hashedPassword()).isNotNull();
+    }
+
+    @Test
+    void findOrRegisterOAuth_calledTwice_returnsSameUser() {
+        RegisteredUser first = registry.findOrRegisterOAuth("google@example.com");
+        RegisteredUser second = registry.findOrRegisterOAuth("google@example.com");
+        assertThat(first).isEqualTo(second);
+    }
+}

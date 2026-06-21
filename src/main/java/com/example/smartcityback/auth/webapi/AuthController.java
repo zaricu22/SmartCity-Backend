@@ -1,5 +1,7 @@
 package com.example.smartcityback.auth.webapi;
 
+import com.example.smartcityback.auth.infrastructure.EmailAlreadyRegisteredException;
+import com.example.smartcityback.auth.infrastructure.InMemoryUserRegistry;
 import com.example.smartcityback.auth.infrastructure.JwtAuthDetails;
 import com.example.smartcityback.auth.infrastructure.JwtTokenService;
 import com.example.smartcityback.auth.infrastructure.RefreshTokenStore;
@@ -7,6 +9,7 @@ import com.example.smartcityback.auth.infrastructure.TokenBlacklist;
 import com.example.smartcityback.auth.webapi.request.LoginRequest;
 import com.example.smartcityback.auth.webapi.request.LogoutRequest;
 import com.example.smartcityback.auth.webapi.request.RefreshRequest;
+import com.example.smartcityback.auth.webapi.request.RegisterRequest;
 import com.example.smartcityback.auth.webapi.response.LoginResponse;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -34,18 +37,38 @@ public class AuthController {
     private final JwtTokenService jwtTokenService;
     private final RefreshTokenStore refreshTokenStore;
     private final TokenBlacklist tokenBlacklist;
+    private final InMemoryUserRegistry userRegistry;
     private final long expirationMs;
 
     public AuthController(AuthenticationManager authManager,
                           JwtTokenService jwtTokenService,
                           RefreshTokenStore refreshTokenStore,
                           TokenBlacklist tokenBlacklist,
+                          InMemoryUserRegistry userRegistry,
                           @Value("${app.jwt.expiration-ms}") long expirationMs) {
         this.authManager = authManager;
         this.jwtTokenService = jwtTokenService;
         this.refreshTokenStore = refreshTokenStore;
         this.tokenBlacklist = tokenBlacklist;
+        this.userRegistry = userRegistry;
         this.expirationMs = expirationMs;
+    }
+
+    @Operation(summary = "Register a new account with email and password")
+    @PostMapping("/register")
+    public ResponseEntity<LoginResponse> register(@Valid @RequestBody RegisterRequest request) {
+        try {
+            userRegistry.register(request.email(), request.password());
+            // Issue a token immediately instead of returning 201 with no body and requiring
+            // a subsequent login. The credentials are trivially valid — we just stored them —
+            // so running them through AuthenticationManager would be a redundant round-trip.
+            String token = jwtTokenService.generate(request.email(), "VIEWER");
+            String refreshToken = refreshTokenStore.issue(request.email(), "VIEWER");
+            return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(new LoginResponse(token, "VIEWER", expirationMs, refreshToken));
+        } catch (EmailAlreadyRegisteredException e) {
+            return ResponseEntity.status(HttpStatus.CONFLICT).build();
+        }
     }
 
     @Operation(summary = "Authenticate and receive a JWT + refresh token")
@@ -89,6 +112,9 @@ public class AuthController {
     }
 
     private String extractRole(Authentication auth) {
+        // Strip the ROLE_ prefix that Spring adds so the token carries bare role names
+        // (e.g. "ADMIN" not "ROLE_ADMIN"). The fallback to VIEWER is defensive — every user
+        // in InMemoryUserRegistry has an explicit role, so this branch should never be reached.
         return auth.getAuthorities().stream()
                 .map(GrantedAuthority::getAuthority)
                 .filter(a -> a.startsWith("ROLE_"))

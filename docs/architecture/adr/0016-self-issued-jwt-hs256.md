@@ -57,7 +57,16 @@ Reasons for choosing HS256 over RS256:
 - HS256 secret must be shared if another service ever needs to verify tokens —
   at that point, migrate to RS256 or an OIDC provider
 - Key rotation requires a coordinated restart (all in-flight tokens are invalidated)
-- Credential storage is currently in-memory (`InMemoryUserDetailsManager`) —
+- Credential storage is currently in-memory (`InMemoryUserRegistry`) —
   a DB-backed `UserDetailsService` is required before production use
 - The app is its own identity provider — password reset, MFA, and account lockout
   must be implemented from scratch if needed; an OIDC provider gives these for free
+
+## Amendment — 2026-06-20
+
+Google OAuth2 social login has been added (`spring-boot-starter-oauth2-client`).
+This does not change the token format: `OAuth2SuccessHandler` calls the same
+`JwtTokenService.generate()` after a successful Google redirect, so the JWT issued
+to the Angular frontend is identical regardless of whether the user authenticated
+via password or via Google. The decision to self-issue HS256 tokens stands — Google
+is used only as an identity verification mechanism, not as a token issuer.
