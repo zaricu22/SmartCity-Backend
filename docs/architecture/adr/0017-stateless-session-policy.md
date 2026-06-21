@@ -63,3 +63,22 @@ The JWT must be sent with every request via `Authorization: Bearer <token>`.
   WebSocket handler (`BuildingWebSocketEventHandler`) operates without auth.
 - Access tokens have a fixed expiry window (1 hour by default). Shortening this
   reduces the revocation window but increases refresh frequency.
+
+## Amendment — 2026-06-20: Changed from STATELESS to IF_REQUIRED
+
+**Status:** Superseded in part
+
+`SessionCreationPolicy` has been changed from `STATELESS` to `IF_REQUIRED`.
+
+**Reason:** The OAuth2 Authorization Code flow (added in ADR-0019) requires a brief
+HTTP session to store the `state` nonce — a random value Spring Security generates
+before redirecting the browser to Google, and verifies when Google redirects back.
+Without it, the CSRF protection built into the OAuth2 handshake cannot function.
+`STATELESS` prevents session creation entirely, which breaks this handshake.
+
+**Scope of the change:** `IF_REQUIRED` means Spring _may_ create a session when
+needed, not that it always does. All JWT API requests are unaffected — `JwtAuthFilter`
+populates `SecurityContextHolder` from the token and Spring never reads back from
+a session for API calls. A session is created only during the `/oauth2/authorization/google`
+→ Google → `/login/oauth2/code/google` redirect dance, and is abandoned immediately
+after `OAuth2SuccessHandler` issues the JWT and redirects to the Angular frontend.

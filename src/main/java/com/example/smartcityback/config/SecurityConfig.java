@@ -1,8 +1,8 @@
 package com.example.smartcityback.config;
 
+import com.example.smartcityback.auth.webapi.OAuth2SuccessHandler;
 import com.example.smartcityback.auth.webapi.filter.JwtAuthFilter;
 import com.example.smartcityback.auth.webapi.filter.RateLimitFilter;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
@@ -12,11 +12,8 @@ import org.springframework.security.config.annotation.method.configuration.Enabl
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
@@ -44,7 +41,7 @@ import java.util.List;
  *   -> AuthController.login(LoginRequest)
  *       -> AuthenticationManager.authenticate(UsernamePasswordAuthenticationToken(credentials))
  *           -> DaoAuthenticationProvider.authenticate()     (auto-configured)
- *               -> InMemoryUserDetailsManager.loadUserByUsername()   — loads UserDetails
+ *               -> InMemoryUserRegistry.loadUserByUsername()   — loads UserDetails
  *               -> BCryptPasswordEncoder.matches()                   — verifies password hash
  *           <- Authentication(Principal + Authorities)
  *       -> JwtTokenService.generate(username, role)         — signs JWT with role claim
@@ -68,9 +65,16 @@ public class SecurityConfig {
         this.rateLimitFilter = rateLimitFilter;
     }
 
+    // OAuth2SuccessHandler is a method parameter, not a constructor field, to break the
+    // potential circular dependency: SecurityConfig → OAuth2SuccessHandler →
+    // InMemoryUserRegistry → PasswordEncoder (a @Bean defined in SecurityConfig).
+    // Constructor injection would require SecurityConfig to be fully constructed before
+    // PasswordEncoder is available. Method-parameter injection lets Spring create
+    // PasswordEncoder first, then InMemoryUserRegistry, then OAuth2SuccessHandler,
+    // and only then call filterChain() — no cycle.
     @Bean
     @SuppressWarnings("java:S4502") // Stateless JWT API — Authorization header is never auto-sent cross-origin, so CSRF has no attack surface
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, OAuth2SuccessHandler oAuth2SuccessHandler) throws Exception {
         return http
                 // Stateless JWT Bearer-token API: auth lives in the Authorization header, not cookies.
                 // Browsers never auto-send Authorization headers cross-origin, so CSRF has no attack surface.
@@ -78,9 +82,13 @@ public class SecurityConfig {
                 // triggering CodeQL java/spring-disabled-csrf-protection (which only checks for .disable() calls).
                 .csrf(csrf -> csrf.requireCsrfProtectionMatcher(request -> false))
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                // IF_REQUIRED instead of STATELESS: Spring's OAuth2 client needs a brief HTTP session
+                // to store the 'state' nonce during the 3-leg handshake. JWT requests never read the
+                // session — this only affects the /oauth2/authorization/** redirect dance.
+                .sessionManagement(s -> s.sessionCreationPolicy(SessionCreationPolicy.IF_REQUIRED))
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/v1/auth/login", "/v1/auth/refresh").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/v1/auth/login", "/v1/auth/refresh", "/v1/auth/register").permitAll()
+                        .requestMatchers("/oauth2/authorization/**", "/login/oauth2/code/**").permitAll()
                         // DEV ONLY — restrict to ADMIN or move to a separate management port in production
                         .requestMatchers("/actuator/health", "/actuator/info").permitAll()
                         // DEV ONLY — restrict to hasAnyRole("VIEWER","ADMIN") in production
@@ -98,6 +106,11 @@ public class SecurityConfig {
                                 "img-src 'self' data:; " +
                                 "frame-ancestors 'none'"
                         ))
+                )
+                .oauth2Login(oauth2 -> oauth2
+                        .authorizationEndpoint(authz -> authz.baseUri("/oauth2/authorization"))
+                        .redirectionEndpoint(redir -> redir.baseUri("/login/oauth2/code/*"))
+                        .successHandler(oAuth2SuccessHandler)
                 )
                 // Order matters: jwtAuthFilter must be registered first so Spring Security's
                 // FilterOrderRegistration knows JwtAuthFilter.class when rateLimitFilter references it.
@@ -117,17 +130,6 @@ public class SecurityConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", config);
         return source;
-    }
-
-    @Bean
-    public UserDetailsService userDetailsService(
-            @Value("${app.security.admin.password}") String adminPwd,
-            @Value("${app.security.viewer.password}") String viewerPwd,
-            PasswordEncoder encoder) {
-        return new InMemoryUserDetailsManager(
-                User.builder().username("admin").password(encoder.encode(adminPwd)).roles("ADMIN").build(),
-                User.builder().username("viewer").password(encoder.encode(viewerPwd)).roles("VIEWER").build()
-        );
     }
 
     @Bean

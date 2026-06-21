@@ -3,9 +3,11 @@ package com.example.smartcityback.auth.webapi.filter;
 /*
  * RATE LIMITING — Design decisions
  *
- * Applied to: POST /v1/auth/login and POST /v1/auth/refresh only.
- *   - Login:   primary brute-force vector (password guessing per IP).
- *   - Refresh: token rotation abuse.
+ * Applied to: POST /v1/auth/login, /v1/auth/refresh, and /v1/auth/register.
+ *   - Login:    primary brute-force vector (password guessing per IP).
+ *   - Refresh:  token rotation abuse.
+ *   - Register: without this, an attacker can enumerate whether emails exist (via 409)
+ *               or exhaust CPU with BCrypt hashing at scale.
  *   - Logout requires a valid JWT — already guarded by authentication.
  *
  * Per-IP bucket: each client IP gets its own Bucket4j token bucket.
@@ -48,7 +50,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class RateLimitFilter extends OncePerRequestFilter {
 
     private static final Set<String> RATE_LIMITED_PATHS = Set.of(
-            "/v1/auth/login", "/v1/auth/refresh"
+            "/v1/auth/login", "/v1/auth/refresh", "/v1/auth/register"
     );
 
     private final Map<String, Bucket> buckets = new ConcurrentHashMap<>();
