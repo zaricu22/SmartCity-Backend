@@ -124,7 +124,7 @@
             "description": "Energy consumption updated successfully. No content is returned."
           },
           "422": {
-            "description": "Unprocessable Entity — The consumption value or unit is semantically invalid (e.g. negative consumption value or unsupported energy unit).",
+            "description": "Unprocessable Entity — The consumption value or unit is semantically invalid (e.g., negative consumption value or unsupported energy unit).",
             "content": {
               "*/*": {
                 "schema": {
@@ -134,7 +134,7 @@
                   "status": 422,
                   "error": "Unprocessable Entity",
                   "message": "Consumption value must be greater than or equal to zero.",
-                  "path": "/v1/buildings/3fa85f64-5717-4562-b3fc-2c963f66afa6/consumption"
+                  "timestamp": "2024-06-01T10:30:00Z"
                 }
               }
             }
@@ -150,7 +150,7 @@
                   "status": 400,
                   "error": "Bad Request",
                   "message": "consumptionValue must not be null",
-                  "path": "/v1/buildings/3fa85f64-5717-4562-b3fc-2c963f66afa6/consumption"
+                  "timestamp": "2024-06-01T10:28:00Z"
                 }
               }
             }
@@ -166,13 +166,13 @@
                   "status": 404,
                   "error": "Not Found",
                   "message": "Public building with id '3fa85f64-5717-4562-b3fc-2c963f66afa6' was not found.",
-                  "path": "/v1/buildings/3fa85f64-5717-4562-b3fc-2c963f66afa6/consumption"
+                  "timestamp": "2024-06-01T10:29:00Z"
                 }
               }
             }
           },
           "409": {
-            "description": "Conflict — The consumption update conflicts with the current state of the building (e.g. concurrent modification detected).",
+            "description": "Conflict — The consumption update conflicts with the current state of the building (e.g., concurrent modification detected).",
             "content": {
               "*/*": {
                 "schema": {
@@ -181,8 +181,8 @@
                 "example": {
                   "status": 409,
                   "error": "Conflict",
-                  "message": "Building consumption was modified by another request. Please retry.",
-                  "path": "/v1/buildings/3fa85f64-5717-4562-b3fc-2c963f66afa6/consumption"
+                  "message": "The building consumption was modified by another request. Please retry.",
+                  "timestamp": "2024-06-01T10:31:00Z"
                 }
               }
             }
@@ -293,7 +293,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Successfully retrieved the paginated list of public buildings.",
+            "description": "Paginated list of public buildings successfully retrieved.",
             "content": {
               "*/*": {
                 "schema": {
@@ -364,12 +364,12 @@
             "name": "id",
             "in": "path",
             "required": true,
+            "description": "Unique identifier of the public building to which the device will be added.",
             "schema": {
               "type": "string",
-              "format": "uuid"
-            },
-            "description": "Unique identifier of the public building to which the device will be added",
-            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+              "format": "uuid",
+              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+            }
           }
         ],
         "requestBody": {
@@ -384,10 +384,10 @@
         },
         "responses": {
           "204": {
-            "description": "Energy device successfully added to the building. No content is returned."
+            "description": "Device successfully added to the building. No content is returned."
           },
           "422": {
-            "description": "The device data is syntactically valid but fails business rule validation (e.g. unsupported device type or invalid capacity value).",
+            "description": "The request body is syntactically valid but contains semantic errors, such as an unsupported device type or an invalid energy unit combination.",
             "content": {
               "*/*": {
                 "schema": {
@@ -396,15 +396,14 @@
                 "example": {
                   "status": 422,
                   "error": "Unprocessable Entity",
-                  "message": "Device capacity must be a positive value.",
-                  "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-                  "timestamp": "2024-06-15T10:45:00Z"
+                  "message": "Device type 'UNKNOWN_TYPE' is not supported for public buildings.",
+                  "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890"
                 }
               }
             }
           },
           "400": {
-            "description": "The request body is malformed or contains missing/invalid fields (e.g. null device name or invalid energy unit).",
+            "description": "The request is malformed or contains invalid field values, such as a missing required device name or a null energy capacity.",
             "content": {
               "*/*": {
                 "schema": {
@@ -414,8 +413,7 @@
                   "status": 400,
                   "error": "Bad Request",
                   "message": "Field 'deviceName' must not be blank.",
-                  "requestId": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
-                  "timestamp": "2024-06-15T10:46:00Z"
+                  "requestId": "b2c3d4e5-f6a7-8901-bcde-f12345678901"
                 }
               }
             }
@@ -431,14 +429,13 @@
                   "status": 404,
                   "error": "Not Found",
                   "message": "Public building with id '3fa85f64-5717-4562-b3fc-2c963f66afa6' does not exist.",
-                  "requestId": "c3d4e5f6-a7b8-9012-cdef-123456789012",
-                  "timestamp": "2024-06-15T10:47:00Z"
+                  "requestId": "c3d4e5f6-a7b8-9012-cdef-123456789012"
                 }
               }
             }
           },
           "409": {
-            "description": "A device with the same identifier or name is already registered to this building.",
+            "description": "The device is already associated with this building and cannot be added again.",
             "content": {
               "*/*": {
                 "schema": {
@@ -447,9 +444,8 @@
                 "example": {
                   "status": 409,
                   "error": "Conflict",
-                  "message": "A device named 'Solar Panel A' is already associated with this building.",
-                  "requestId": "d4e5f6a7-b8c9-0123-defa-234567890123",
-                  "timestamp": "2024-06-15T10:48:00Z"
+                  "message": "Device with id 'd4e5f6a7-b8c9-0123-defa-234567890123' is already registered to building '3fa85f64-5717-4562-b3fc-2c963f66afa6'.",
+                  "requestId": "d4e5f6a7-b8c9-0123-defa-234567890123"
                 }
               }
             }
@@ -471,7 +467,7 @@
             "name": "buildingId",
             "in": "path",
             "required": true,
-            "description": "Unique identifier of the public building that contains the device",
+            "description": "Unique identifier of the public building that owns the device",
             "schema": {
               "type": "string",
               "format": "uuid",
@@ -482,7 +478,7 @@
             "name": "deviceId",
             "in": "path",
             "required": true,
-            "description": "Unique identifier of the energy-producing device whose production rate will be updated",
+            "description": "Unique identifier of the energy-producing device to update",
             "schema": {
               "type": "string",
               "format": "uuid",
@@ -495,10 +491,6 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ChangeProductionRequest"
-              },
-              "example": {
-                "productionValue": 12.5,
-                "productionUnit": "KWH"
               }
             }
           },
@@ -509,65 +501,65 @@
             "description": "Device production rate updated successfully. No content is returned."
           },
           "422": {
-            "description": "The provided production value or unit is semantically invalid (e.g., negative production value or unsupported energy unit).",
+            "description": "The provided production value is semantically invalid, for example a negative production rate or an unsupported energy unit for this device type.",
             "content": {
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "requestId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
                   "status": 422,
+                  "error": "Unprocessable Entity",
                   "message": "Production value must be greater than zero",
-                  "timestamp": "2024-06-01T10:30:00Z"
+                  "requestId": "f3a1b2c4-d5e6-7890-abcd-ef1234567890"
                 }
               }
             }
           },
           "400": {
-            "description": "The request body is malformed or contains invalid field types (e.g., non-numeric production value).",
+            "description": "The request body is malformed or contains invalid field values such as a missing production value or an unrecognized energy unit.",
             "content": {
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "requestId": "c12de34f-89ab-4567-cdef-0123456789ab",
                   "status": 400,
-                  "message": "Invalid request body: 'productionValue' must be a valid number",
-                  "timestamp": "2024-06-01T10:28:00Z"
+                  "error": "Bad Request",
+                  "message": "Field 'productionValue' must not be null",
+                  "requestId": "c1d2e3f4-a5b6-7890-abcd-ef1234567892"
                 }
               }
             }
           },
           "404": {
-            "description": "The specified building or device was not found. Either the buildingId or deviceId does not correspond to an existing resource.",
+            "description": "The specified building or device was not found. Either the buildingId does not correspond to an existing public building, or the deviceId does not belong to that building.",
             "content": {
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "requestId": "d89ef012-34ab-5678-cdef-1234567890cd",
                   "status": 404,
+                  "error": "Not Found",
                   "message": "Device with id 'b7e2d3f5-6a7c-8901-bcde-f01234567891' not found in building 'a3f1c2d4-5e6b-7890-abcd-ef1234567890'",
-                  "timestamp": "2024-06-01T10:29:00Z"
+                  "requestId": "d4e5f6a7-b8c9-0123-abcd-ef1234567893"
                 }
               }
             }
           },
           "409": {
-            "description": "A conflict occurred while updating the device production rate, such as a concurrent modification to the same device.",
+            "description": "A conflict occurred while updating the device production rate, for example a concurrent modification was detected on the same device.",
             "content": {
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "requestId": "e90fg123-45bc-6789-def0-234567890def",
                   "status": 409,
-                  "message": "Conflict: the device production rate was modified by another request. Please retry.",
-                  "timestamp": "2024-06-01T10:31:00Z"
+                  "error": "Conflict",
+                  "message": "Device state was modified by another request. Please retry.",
+                  "requestId": "e5f6a7b8-c9d0-1234-abcd-ef1234567894"
                 }
               }
             }
@@ -589,12 +581,12 @@
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "The unique identifier (UUID) of the public building to retrieve.",
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
-            }
+              "format": "uuid"
+            },
+            "description": "The unique identifier of the public building to retrieve.",
+            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
           }
         ],
         "responses": {
@@ -608,20 +600,20 @@
                 "example": {
                   "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
                   "name": "City Hall",
-                  "location": "123 Main Street, Downtown District",
-                  "consumptionValue": 1450.75,
+                  "location": "123 Main Street, Downtown",
+                  "consumptionValue": 4750.25,
                   "consumptionUnit": "KWH",
                   "devices": [
                     {
-                      "id": "7cb92a11-3e4d-4a1b-9f02-1a2b3c4d5e6f",
+                      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
                       "name": "HVAC Unit A",
-                      "consumptionValue": 850.5,
+                      "consumptionValue": 2100.0,
                       "consumptionUnit": "KWH"
                     },
                     {
-                      "id": "9de04b22-5f6e-4b2c-af13-2b3c4d5e6f7a",
-                      "name": "Solar Panel Array",
-                      "consumptionValue": 600.25,
+                      "id": "b2c3d4e5-f6a7-8901-bcde-f12345678901",
+                      "name": "LED Lighting System",
+                      "consumptionValue": 650.75,
                       "consumptionUnit": "KWH"
                     }
                   ]
@@ -630,7 +622,7 @@
             }
           },
           "404": {
-            "description": "No public building was found with the specified ID.",
+            "description": "No public building found with the specified ID.",
             "content": {
               "*/*": {
                 "schema": {
@@ -638,9 +630,9 @@
                 },
                 "example": {
                   "status": 404,
-                  "message": "Public building with id '3fa85f64-5717-4562-b3fc-2c963f66afa6' not found.",
-                  "requestId": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-                  "timestamp": "2024-06-15T10:23:45.123Z"
+                  "error": "Not Found",
+                  "message": "Public building with ID '3fa85f64-5717-4562-b3fc-2c963f66afa6' does not exist.",
+                  "requestId": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
                 }
               }
             }
@@ -834,7 +826,7 @@
         },
         "responses": {
           "200": {
-            "description": "Account successfully created. Returns an authentication token along with basic user information.",
+            "description": "Account successfully created. Returns authentication credentials including an access token for the newly registered user.",
             "content": {
               "*/*": {
                 "schema": {
@@ -937,7 +929,7 @@
         "properties": {
           "productionValue": {
             "type": "number",
-            "description": "The new energy production value. Must be zero or positive.",
+            "description": "The new energy production value for the asset. Must be zero or positive.",
             "example": 150.75
           },
           "productionUnit": {
@@ -947,7 +939,7 @@
               "MW",
               "GW"
             ],
-            "description": "The unit of measurement for the energy production value",
+            "description": "The unit of measurement for the energy production value (kilowatts, megawatts, or gigawatts).",
             "example": "MW"
           }
         },
@@ -970,12 +962,12 @@
               "PUMP",
               "BATTERY"
             ],
-            "description": "The category of energy device (e.g., solar panel array, pump, or battery storage unit).",
+            "description": "The category of the energy device (e.g., solar panel, pump, or battery storage).",
             "example": "SOLAR"
           },
           "ratedCapacityValue": {
             "type": "number",
-            "description": "The maximum power capacity the device is rated to handle, expressed in the corresponding ratedCapacityUnit.",
+            "description": "The maximum power capacity the device is rated to handle.",
             "example": 500.0
           },
           "ratedCapacityUnit": {
@@ -990,7 +982,7 @@
           },
           "productionRateValue": {
             "type": "number",
-            "description": "The current or nominal rate at which the device produces or transfers energy, expressed in the corresponding productionRateUnit.",
+            "description": "The current or nominal rate at which the device produces or consumes energy.",
             "example": 350.75
           },
           "productionRateUnit": {
@@ -1008,7 +1000,7 @@
       },
       "PublicBuildingResponse": {
         "type": "object",
-        "description": "Detailed information about a public building asset, including its energy consumption and associated energy devices.",
+        "description": "Represents a public building asset in the smart city, including its energy consumption details and associated energy devices.",
         "properties": {
           "id": {
             "type": "string",
@@ -1029,7 +1021,7 @@
           "consumptionValue": {
             "type": "number",
             "description": "Current energy consumption value of the building, expressed in the unit specified by consumptionUnit.",
-            "example": 250.75
+            "example": 4.75
           },
           "consumptionUnit": {
             "type": "string",
@@ -1039,7 +1031,7 @@
               "GW"
             ],
             "description": "Unit of measurement for the building's energy consumption (kilowatts, megawatts, or gigawatts).",
-            "example": "kW"
+            "example": "MW"
           },
           "devices": {
             "type": "array",
@@ -1092,7 +1084,7 @@
           "refreshToken": {
             "type": "string",
             "minLength": 1,
-            "description": "The refresh token issued during authentication, used to generate a new access token without re-authenticating",
+            "description": "The refresh token previously issued during authentication",
             "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNjk4NzY1NDMyLCJleHAiOjE3MDE0NDM4MzJ9.dGhpcyBpcyBhIHNhbXBsZSByZWZyZXNoIHRva2Vu"
           }
         },
@@ -1118,12 +1110,12 @@
           "expiresInMs": {
             "type": "integer",
             "format": "int64",
-            "description": "The duration in milliseconds until the access token expires, after which a new token must be obtained using the refresh token.",
+            "description": "Duration in milliseconds until the access token expires, after which a new token must be obtained using the refresh token.",
             "example": 3600000
           },
           "refreshToken": {
             "type": "string",
-            "description": "A long-lived refresh token used to obtain a new access token once the current one has expired, without requiring the user to log in again.",
+            "description": "Long-lived refresh token used to obtain a new access token once the current one has expired, without requiring re-authentication.",
             "example": "dGhpcyBpcyBhIHNhbXBsZSByZWZyZXNoIHRva2VuIHN0cmluZw=="
           }
         },
@@ -1131,13 +1123,13 @@
       },
       "LogoutRequest": {
         "type": "object",
-        "description": "Request payload for logging out a user by invalidating their refresh token",
+        "description": "Request payload for logging out a user by invalidating the provided refresh token",
         "properties": {
           "refreshToken": {
             "type": "string",
             "minLength": 1,
             "description": "The refresh token to be invalidated upon logout",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNjk4NzY4MDAwLCJleHAiOjE2OTkzNzI4MDB9.abc123def456"
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNjk4NzY1NDMyLCJleHAiOjE2OTkzNzAyMzJ9.abc123xyz"
           }
         },
         "required": [
@@ -1188,7 +1180,7 @@
           "totalPages": {
             "type": "integer",
             "format": "int32",
-            "description": "The total number of pages available based on the page size.",
+            "description": "The total number of pages available based on the current page size.",
             "example": 15
           },
           "pageNumber": {
