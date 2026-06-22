@@ -1,4 +1,4 @@
-package com.example.smartcityback.auth.infrastructure;
+package com.example.smartcityback.auth.infrastructure.token;
 
 /*
  * REFRESH TOKEN FLOW — Design decisions

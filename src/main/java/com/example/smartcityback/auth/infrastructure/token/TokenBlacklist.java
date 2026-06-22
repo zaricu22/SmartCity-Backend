@@ -1,4 +1,4 @@
-package com.example.smartcityback.auth.infrastructure;
+package com.example.smartcityback.auth.infrastructure.token;
 
 /*
  * ACCESS TOKEN REVOCATION — Design decisions
