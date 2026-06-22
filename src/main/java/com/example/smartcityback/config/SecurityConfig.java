@@ -89,9 +89,13 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/v1/auth/login", "/v1/auth/refresh", "/v1/auth/register").permitAll()
                         .requestMatchers("/oauth2/authorization/**", "/login/oauth2/code/**").permitAll()
-                        // DEV ONLY — restrict to ADMIN or move to a separate management port in production
-                        .requestMatchers("/actuator/health", "/actuator/info").permitAll()
-                        // DEV ONLY — restrict to hasAnyRole("VIEWER","ADMIN") in production
+                        // Actuator is restricted to ADMIN — a separate management port would be ideal
+                        // but is inaccessible on Render's free tier (no shell, port not exposed).
+                        // /health and /info are safe to expose publicly but kept behind ADMIN for
+                        // consistency; loosen this if an infrastructure health probe is ever added.
+                        .requestMatchers("/actuator/**").hasRole("ADMIN")
+                        // Public by design — Swagger exposes API shape, not data. All actual endpoints
+                        // remain auth-protected, so visibility of the spec carries no security risk.
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
                         .anyRequest().authenticated()
                 )
