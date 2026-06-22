@@ -5,10 +5,11 @@
 SmartCity Backend manages energy consumption and production across public buildings.
 Domain: tracking buildings, their energy devices, real-time consumption, and production data.
 
-## Bounded Context
+## Bounded Contexts
 
-Single bounded context: **asset**
+Two bounded contexts:
 
+**asset** — energy domain (DDD/Onion)
 ```
 com.example.smartcityback.asset
 ├── domain/          — pure Java, zero framework dependencies
@@ -17,7 +18,14 @@ com.example.smartcityback.asset
 └── webapi/          — REST controllers, WebSocket, exception handling
 ```
 
-All production code lives inside `asset`. A second context (e.g. `balancing`) would be a sibling package with its own layer structure and its own `DddArchitectureTest`.
+**auth** — identity and access (flat, no domain layer)
+```
+com.example.smartcityback.auth
+├── infrastructure/  — JWT, user registry, token store, blacklist
+└── webapi/          — AuthController, OAuth2SuccessHandler, filters, DTOs
+```
+
+Additional contexts (e.g. `balancing`) would be sibling packages with their own layer structure and `DddArchitectureTest`.
 
 ## Layer Map
 
@@ -77,3 +85,9 @@ All non-obvious design choices are captured as ADRs in [`adr/`](adr/).
 | [0011](adr/0011-mutation-testing-on-schedule.md) | Mutation testing on schedule, not every push |
 | [0012](adr/0012-409-for-business-rule-violations.md) | HTTP status tier design — 422 for validation, 409 for business rule violations |
 | [0013](adr/0013-reconstitution-via-domain-methods.md) | Reconstitution via static factory, not domain methods |
+| [0014](adr/0014-url-based-api-versioning.md) | URL-based API versioning (`/v1/`) |
+| [0015](adr/0015-cqrs-split-app-service-query-service.md) | CQRS split — separate AppService and QueryService |
+| [0016](adr/0016-self-issued-jwt-hs256.md) | Self-issued JWT with HS256 over OAuth2/OIDC provider |
+| [0017](adr/0017-stateless-session-policy.md) | Stateless session policy |
+| [0018](adr/0018-pagination-and-sorting.md) | Pagination and sorting strategy |
+| [0019](adr/0019-user-registration-and-oauth2-social-login.md) | User registration, OAuth2 social login, and in-memory identity store |

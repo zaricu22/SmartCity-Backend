@@ -7,6 +7,173 @@
   },
   "item": [
     {
+      "name": "Auth",
+      "item": [
+        {
+          "name": "POST Register",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"min8chars\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/auth/register",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "auth", "register"]
+            },
+            "description": "Creates a new local account. All self-registered users receive the VIEWER role. Response: 201 Created — body contains token + refreshToken. Errors: 409 Conflict (email already registered)."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Register — 409 Duplicate Email",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\",\n  \"password\": \"min8chars\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/auth/register",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "auth", "register"]
+            },
+            "description": "Triggers 409 Conflict — send after a successful register to demonstrate duplicate email rejection."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Login (admin)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"{{ADMIN_PASSWORD}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/auth/login",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "auth", "login"]
+            },
+            "description": "Authenticate as the pre-seeded admin user. Response: 200 OK — { token, role: ADMIN, expiresInMs, refreshToken }. Errors: 401 Unauthorized (wrong credentials)."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Login (viewer)",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"viewer\",\n  \"password\": \"{{VIEWER_PASSWORD}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/auth/login",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "auth", "login"]
+            },
+            "description": "Authenticate as the pre-seeded viewer user. Response: 200 OK — { token, role: VIEWER, expiresInMs, refreshToken }."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Login — 401 Bad Credentials",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"username\": \"admin\",\n  \"password\": \"wrongpassword\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/auth/login",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "auth", "login"]
+            },
+            "description": "Triggers 401 Unauthorized — wrong password."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Refresh",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{REFRESH_TOKEN}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/auth/refresh",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "auth", "refresh"]
+            },
+            "description": "Exchange an unexpired refresh token for a new access token + new refresh token. The old refresh token is consumed (single-use). Response: 200 OK — same shape as login. Errors: 401 (token not found, already used, or expired)."
+          },
+          "response": []
+        },
+        {
+          "name": "POST Logout",
+          "request": {
+            "method": "POST",
+            "header": [
+              { "key": "Content-Type", "value": "application/json" },
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"refreshToken\": \"{{REFRESH_TOKEN}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": {
+              "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/auth/logout",
+              "protocol": "https",
+              "host": ["smartcity-backend-9g09", "onrender", "com"],
+              "path": ["SmartCityREST", "v1", "auth", "logout"]
+            },
+            "description": "Revokes the current access token (jti added to blacklist) and consumes the refresh token. Requires Authorization: Bearer header. Response: 204 No Content."
+          },
+          "response": []
+        }
+      ]
+    },
+    {
       "name": "Buildings",
       "item": [
         {
@@ -14,7 +181,8 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
             ],
             "url": {
               "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/buildings",
@@ -22,7 +190,7 @@
               "host": ["smartcity-backend-9g09", "onrender", "com"],
               "path": ["SmartCityREST", "v1", "buildings"]
             },
-            "description": "Returns all public buildings. Response: 200 OK — array of building objects."
+            "description": "Returns all public buildings (paginated). Response: 200 OK — array of building objects. Requires VIEWER or ADMIN role."
           },
           "response": []
         },
@@ -31,7 +199,8 @@
           "request": {
             "method": "GET",
             "header": [
-              { "key": "Accept", "value": "application/json" }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
             ],
             "url": {
               "raw": "https://smartcity-backend-9g09.onrender.com/SmartCityREST/v1/buildings/00000000-0000-0000-0000-000000000001",
@@ -39,7 +208,7 @@
               "host": ["smartcity-backend-9g09", "onrender", "com"],
               "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001"]
             },
-            "description": "Returns a single building by UUID. Replace the last path segment with a real building ID. Response: 200 OK | 404 Not Found."
+            "description": "Returns a single building by UUID. Replace the last path segment with a real building ID. Response: 200 OK | 404 Not Found. Requires VIEWER or ADMIN role."
           },
           "response": []
         },
@@ -49,7 +218,8 @@
             "method": "POST",
             "header": [
               { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
             ],
             "body": {
               "mode": "raw",
@@ -62,7 +232,7 @@
               "host": ["smartcity-backend-9g09", "onrender", "com"],
               "path": ["SmartCityREST", "v1", "buildings"]
             },
-            "description": "Creates a new public building. Response: 201 Created — body contains UUID; Location header points to new resource. Errors: 400 | 422."
+            "description": "Creates a new public building. Response: 201 Created — body contains UUID; Location header points to new resource. Errors: 400 | 422. Requires ADMIN role."
           },
           "response": []
         },
@@ -72,7 +242,8 @@
             "method": "POST",
             "header": [
               { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
             ],
             "body": {
               "mode": "raw",
@@ -85,7 +256,7 @@
               "host": ["smartcity-backend-9g09", "onrender", "com"],
               "path": ["SmartCityREST", "v1", "buildings"]
             },
-            "description": "Triggers 400 Bad Request — blank fields fail @NotBlank validation."
+            "description": "Triggers 400 Bad Request — blank fields fail @NotBlank validation. Requires ADMIN role."
           },
           "response": []
         }
@@ -100,7 +271,8 @@
             "method": "POST",
             "header": [
               { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
             ],
             "body": {
               "mode": "raw",
@@ -113,7 +285,7 @@
               "host": ["smartcity-backend-9g09", "onrender", "com"],
               "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001", "devices"]
             },
-            "description": "Adds a SOLAR device to a building. Replace building UUID in path. Response: 204 No Content. Errors: 400 | 404 | 409 | 422."
+            "description": "Adds a SOLAR device to a building. Replace building UUID in path. Response: 204 No Content. Errors: 400 | 404 | 409 | 422. Requires ADMIN role."
           },
           "response": []
         },
@@ -123,7 +295,8 @@
             "method": "POST",
             "header": [
               { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
             ],
             "body": {
               "mode": "raw",
@@ -136,7 +309,7 @@
               "host": ["smartcity-backend-9g09", "onrender", "com"],
               "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001", "devices"]
             },
-            "description": "Adds a PUMP device to a building. Replace building UUID in path. Response: 204 No Content."
+            "description": "Adds a PUMP device to a building. Replace building UUID in path. Response: 204 No Content. Requires ADMIN role."
           },
           "response": []
         },
@@ -146,7 +319,8 @@
             "method": "POST",
             "header": [
               { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
             ],
             "body": {
               "mode": "raw",
@@ -159,7 +333,7 @@
               "host": ["smartcity-backend-9g09", "onrender", "com"],
               "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001", "devices"]
             },
-            "description": "Adds a BATTERY storage device to a building. Replace building UUID in path. Response: 204 No Content."
+            "description": "Adds a BATTERY storage device to a building. Replace building UUID in path. Response: 204 No Content. Requires ADMIN role."
           },
           "response": []
         },
@@ -169,7 +343,8 @@
             "method": "POST",
             "header": [
               { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
             ],
             "body": {
               "mode": "raw",
@@ -182,7 +357,7 @@
               "host": ["smartcity-backend-9g09", "onrender", "com"],
               "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-999999999999", "devices"]
             },
-            "description": "Triggers 404 — non-existent building UUID."
+            "description": "Triggers 404 — non-existent building UUID. Requires ADMIN role."
           },
           "response": []
         }
@@ -197,7 +372,8 @@
             "method": "PATCH",
             "header": [
               { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
             ],
             "body": {
               "mode": "raw",
@@ -210,7 +386,7 @@
               "host": ["smartcity-backend-9g09", "onrender", "com"],
               "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001", "consumption"]
             },
-            "description": "Updates building energy consumption in kW. Replace building UUID in path. Response: 204 No Content. Errors: 400 | 404 | 409 | 422."
+            "description": "Updates building energy consumption in kW. Replace building UUID in path. Response: 204 No Content. Errors: 400 | 404 | 409 | 422. Requires ADMIN role."
           },
           "response": []
         },
@@ -220,7 +396,8 @@
             "method": "PATCH",
             "header": [
               { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
             ],
             "body": {
               "mode": "raw",
@@ -233,7 +410,7 @@
               "host": ["smartcity-backend-9g09", "onrender", "com"],
               "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001", "consumption"]
             },
-            "description": "Updates building energy consumption in MW — backend converts to kW internally. Response: 204 No Content."
+            "description": "Updates building energy consumption in MW — backend converts to kW internally. Response: 204 No Content. Requires ADMIN role."
           },
           "response": []
         },
@@ -243,7 +420,8 @@
             "method": "PATCH",
             "header": [
               { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
             ],
             "body": {
               "mode": "raw",
@@ -256,7 +434,7 @@
               "host": ["smartcity-backend-9g09", "onrender", "com"],
               "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-999999999999", "consumption"]
             },
-            "description": "Triggers 404 — non-existent building UUID."
+            "description": "Triggers 404 — non-existent building UUID. Requires ADMIN role."
           },
           "response": []
         }
@@ -271,7 +449,8 @@
             "method": "PATCH",
             "header": [
               { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
             ],
             "body": {
               "mode": "raw",
@@ -284,7 +463,7 @@
               "host": ["smartcity-backend-9g09", "onrender", "com"],
               "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001", "devices", "00000000-0000-0000-0000-000000000002", "production"]
             },
-            "description": "Updates production rate of an energy device in kW. Replace both UUIDs in path. Response: 204 No Content. Errors: 400 | 404 | 409 | 422."
+            "description": "Updates production rate of an energy device in kW. Replace both UUIDs in path. Response: 204 No Content. Errors: 400 | 404 | 409 | 422. Requires ADMIN role."
           },
           "response": []
         },
@@ -294,7 +473,8 @@
             "method": "PATCH",
             "header": [
               { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
             ],
             "body": {
               "mode": "raw",
@@ -307,7 +487,7 @@
               "host": ["smartcity-backend-9g09", "onrender", "com"],
               "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001", "devices", "00000000-0000-0000-0000-000000000002", "production"]
             },
-            "description": "Updates device production in MW — backend converts to kW internally. Response: 204 No Content."
+            "description": "Updates device production in MW — backend converts to kW internally. Response: 204 No Content. Requires ADMIN role."
           },
           "response": []
         },
@@ -317,7 +497,8 @@
             "method": "PATCH",
             "header": [
               { "key": "Content-Type", "value": "application/json" },
-              { "key": "Accept", "value": "application/json" }
+              { "key": "Accept", "value": "application/json" },
+              { "key": "Authorization", "value": "Bearer {{ACCESS_TOKEN}}" }
             ],
             "body": {
               "mode": "raw",
@@ -330,7 +511,7 @@
               "host": ["smartcity-backend-9g09", "onrender", "com"],
               "path": ["SmartCityREST", "v1", "buildings", "00000000-0000-0000-0000-000000000001", "devices", "00000000-0000-0000-0000-999999999999", "production"]
             },
-            "description": "Triggers 404 — non-existent device UUID."
+            "description": "Triggers 404 — non-existent device UUID. Requires ADMIN role."
           },
           "response": []
         }
