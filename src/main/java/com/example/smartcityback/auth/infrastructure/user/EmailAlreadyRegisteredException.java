@@ -1,4 +1,4 @@
-package com.example.smartcityback.auth.infrastructure;
+package com.example.smartcityback.auth.infrastructure.user;
 
 public class EmailAlreadyRegisteredException extends RuntimeException {
 

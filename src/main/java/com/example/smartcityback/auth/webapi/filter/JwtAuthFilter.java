@@ -1,8 +1,8 @@
 package com.example.smartcityback.auth.webapi.filter;
 
-import com.example.smartcityback.auth.infrastructure.JwtAuthDetails;
-import com.example.smartcityback.auth.infrastructure.JwtTokenService;
-import com.example.smartcityback.auth.infrastructure.TokenBlacklist;
+import com.example.smartcityback.auth.infrastructure.jwt.JwtAuthDetails;
+import com.example.smartcityback.auth.infrastructure.jwt.JwtTokenService;
+import com.example.smartcityback.auth.infrastructure.token.TokenBlacklist;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;

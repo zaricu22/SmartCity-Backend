@@ -1,4 +1,4 @@
-package com.example.smartcityback.auth.infrastructure;
+package com.example.smartcityback.auth.infrastructure.jwt;
 
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;

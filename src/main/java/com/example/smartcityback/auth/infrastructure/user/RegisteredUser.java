@@ -1,4 +1,4 @@
-package com.example.smartcityback.auth.infrastructure;
+package com.example.smartcityback.auth.infrastructure.user;
 
 /*
  * Identity record shared by all authentication paths.

@@ -1,9 +1,9 @@
-package com.example.smartcityback.auth.webapi;
+package com.example.smartcityback.auth.webapi.handler;
 
-import com.example.smartcityback.auth.infrastructure.InMemoryUserRegistry;
-import com.example.smartcityback.auth.infrastructure.JwtTokenService;
-import com.example.smartcityback.auth.infrastructure.RefreshTokenStore;
-import com.example.smartcityback.auth.infrastructure.RegisteredUser;
+import com.example.smartcityback.auth.infrastructure.jwt.JwtTokenService;
+import com.example.smartcityback.auth.infrastructure.token.RefreshTokenStore;
+import com.example.smartcityback.auth.infrastructure.user.InMemoryUserRegistry;
+import com.example.smartcityback.auth.infrastructure.user.RegisteredUser;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.beans.factory.annotation.Value;

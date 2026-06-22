@@ -1,4 +1,4 @@
-package com.example.smartcityback.auth.infrastructure;
+package com.example.smartcityback.auth.infrastructure.token;
 
 import org.junit.jupiter.api.Test;
 

@@ -1,11 +1,11 @@
-package com.example.smartcityback.auth.webapi;
+package com.example.smartcityback.auth.webapi.controller;
 
-import com.example.smartcityback.auth.infrastructure.EmailAlreadyRegisteredException;
-import com.example.smartcityback.auth.infrastructure.InMemoryUserRegistry;
-import com.example.smartcityback.auth.infrastructure.JwtAuthDetails;
-import com.example.smartcityback.auth.infrastructure.JwtTokenService;
-import com.example.smartcityback.auth.infrastructure.RefreshTokenStore;
-import com.example.smartcityback.auth.infrastructure.TokenBlacklist;
+import com.example.smartcityback.auth.infrastructure.jwt.JwtAuthDetails;
+import com.example.smartcityback.auth.infrastructure.jwt.JwtTokenService;
+import com.example.smartcityback.auth.infrastructure.token.RefreshTokenStore;
+import com.example.smartcityback.auth.infrastructure.token.TokenBlacklist;
+import com.example.smartcityback.auth.infrastructure.user.EmailAlreadyRegisteredException;
+import com.example.smartcityback.auth.infrastructure.user.InMemoryUserRegistry;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;

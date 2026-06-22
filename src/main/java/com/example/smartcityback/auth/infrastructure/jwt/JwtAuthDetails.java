@@ -1,4 +1,4 @@
-package com.example.smartcityback.auth.infrastructure;
+package com.example.smartcityback.auth.infrastructure.jwt;
 
 /*
  * Carried on UsernamePasswordAuthenticationToken.details after JWT validation.

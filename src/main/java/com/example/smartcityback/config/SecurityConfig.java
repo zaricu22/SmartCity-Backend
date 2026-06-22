@@ -1,6 +1,6 @@
 package com.example.smartcityback.config;
 
-import com.example.smartcityback.auth.webapi.OAuth2SuccessHandler;
+import com.example.smartcityback.auth.webapi.handler.OAuth2SuccessHandler;
 import com.example.smartcityback.auth.webapi.filter.JwtAuthFilter;
 import com.example.smartcityback.auth.webapi.filter.RateLimitFilter;
 import org.springframework.context.annotation.Bean;
