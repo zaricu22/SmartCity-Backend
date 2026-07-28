@@ -132,16 +132,32 @@ http://localhost:8080/SmartCityREST/swagger-ui.html
 
 > **AI-enriched spec:** Swagger UI loads an enhanced OpenAPI spec from `/openapi/enhanced-openapi.json` instead of the raw auto-generated one. This file is produced by a Claude-powered script that enriches the base spec with descriptions, examples, and additional metadata. See `application.properties` → `springdoc.swagger-ui.url`.
 
-### Endpoints
+### Asset Endpoints — `/v1/buildings`
 
-| Method | Path | Description |
-|---|---|---|
-| `POST` | `/v1/buildings` | Create a new public building |
-| `GET` | `/v1/buildings` | List all buildings |
-| `GET` | `/v1/buildings/{id}` | Get a building by ID |
-| `POST` | `/v1/buildings/{id}/devices` | Add an energy device to a building |
-| `PATCH` | `/v1/buildings/{id}/consumption` | Update building energy consumption |
-| `PATCH` | `/v1/buildings/{buildingId}/devices/{deviceId}/production` | Update device production rate |
+| Method | Path | Role | Status | Notes |
+|--------|------|------|--------|-------|
+| `POST` | `/v1/buildings` | ADMIN | 201 | `Location` header + UUID body |
+| `GET` | `/v1/buildings` | VIEWER, ADMIN | 200 | Paginated · `?page=0&size=20&sort=name` |
+| `GET` | `/v1/buildings/{id}` | VIEWER, ADMIN | 200 | `PublicBuildingResponse` |
+| `POST` | `/v1/buildings/{id}/devices` | ADMIN | 204 | |
+| `PATCH` | `/v1/buildings/{id}/consumption` | ADMIN | 204 | |
+| `PATCH` | `/v1/buildings/{buildingId}/devices/{deviceId}/production` | ADMIN | 204 | |
+
+### Auth Endpoints — `/v1/auth`
+
+| Method | Path | Auth required | Status | Body |
+|--------|------|---------------|--------|------|
+| `POST` | `/v1/auth/register` | None | 201 | `{ token, role, expiresInMs, refreshToken }` |
+| `POST` | `/v1/auth/login` | None | 200 | `{ token, role, expiresInMs, refreshToken }` |
+| `POST` | `/v1/auth/refresh` | None | 200 | `{ token, role, expiresInMs, refreshToken }` |
+| `POST` | `/v1/auth/logout` | Bearer JWT | 204 | |
+
+### OAuth2
+
+| Path | Notes |
+|------|-------|
+| `GET /oauth2/authorization/google` | Redirect to Google consent page |
+| `GET /login/oauth2/code/google` | Google callback → JWT issued → redirect to frontend with tokens in URL fragment |
 
 ### WebSocket
 
@@ -149,7 +165,13 @@ http://localhost:8080/SmartCityREST/swagger-ui.html
 ws://localhost:8080/SmartCityREST/ws
 ```
 
-Subscribe to `/topic/buildings` to receive real-time `DeviceAddedEvent` and `ConsumptionChangedEvent` messages.
+Connect via STOMP/SockJS, then subscribe to receive real-time push notifications:
+
+| Topic | Triggered by |
+|-------|-------------|
+| `/topic/buildings/{id}/consumption` | `ConsumptionChangedEvent` |
+| `/topic/buildings/{id}/devices` | `DeviceAddedEvent` |
+| `/topic/buildings/{id}/production` | `ProductionChangedEvent` |
 
 ---
 
@@ -157,37 +179,30 @@ Subscribe to `/topic/buildings` to receive real-time `DeviceAddedEvent` and `Con
 
 Every push and pull request to `dev` or `main` runs the full pipeline on GitHub Actions.
 
-```
-Push / PR
-    │
-    ├─── Security (parallel) ───────────────────────────────────────────────┐
-    │       ├── Gitleaks + CodeQL    secret scan + SAST                     │
-    │       ├── Snyk                 dependency vulnerability check         │
-    │       └── OWASP DC             dependency CVE report (HTML artifact)  │
-    │                                                                       │
-    ├─── Test ◄────────────────────────────────── (needs Security jobs)     │
-    │       ├── mvn verify (JUnit 5, Testcontainers, REST Assured)          │
-    │       ├── JaCoCo coverage → artifact + Codecov                        │
-    │       └── Surefire reports → artifact                                 │
-    │                                                                       │
-    ├─── Architecture ◄─────────────────────────── (needs Security jobs)    │
-    │       └── ArchUnit  DDD layer boundary enforcement                    │
-    │                                                                       │
-    ├─── Code Quality ◄──────── (needs Security + Test + Architecture)      │
-    │       ├── Checkstyle           style violations                       │
-    │       ├── PMD                  code flaw detection                    │
-    │       └── SonarCloud           technical debt + quality gate          │
-    │                                                                       │
-    ├─── OpenAPI AI Enrichment ◄──────── (needs Test + Code Quality)        │
-    │       only on push to main, only when API contract files changed      │
-    │       ├── Start app with H2, generate raw OpenAPI schema              │
-    │       ├── Enrich schema with Claude                                   │
-    │       └── Validate + commit enriched JSON                             │
-    │                                                                       │
-    └─── Release & Deploy ◄── (needs Test + Code Quality + Enrichment)      │
-            only on push to main                                            │
-            ├── Semantic Release  (version bump, CHANGELOG, GitHub tag)     │
-            └── Render deploy hook + smoke test                             │
+```mermaid
+graph TD
+    A[Security Scan - Static\nGitleaks · CodeQL]
+    B[SNYK Dependency Check\ncontinue-on-error]
+    C[OWASP Dependency Check\nHTML report artifact]
+    D[Build and Test\nmvn verify · JaCoCo · Codecov]
+    E[DDD Architecture Check\nArchUnit]
+    F[Code Quality and Linting\nCheckstyle · PMD · SonarCloud]
+    G[OpenAPI AI Enrichment\nGenerate schema → Claude → commit\nonly on push to main]
+    H[Semantic Release and Deploy\nRender deploy hook · poll status\nonly on push to main]
+
+    A --> D
+    B --> D
+    C --> D
+    A --> E
+    B --> E
+    C --> E
+    D --> F
+    E --> F
+    D --> G
+    F --> G
+    D --> H
+    F --> H
+    G --> H
 ```
 
 | Job | Trigger | Tool |
