@@ -27,21 +27,74 @@ com.example.smartcityback.auth
 
 Additional contexts (e.g. `balancing`) would be sibling packages with their own layer structure and `DddArchitectureTest`.
 
+```
+┌──────────────────────────────────────────┐   ┌──────────────────────────────────────────┐
+│           «Bounded Context»               │   │           «Bounded Context»               │
+│                asset                      │   │                auth                       │
+│                                           │   │                                           │
+│  Full DDD / Onion Architecture            │   │  Flat — no domain model                  │
+│                                           │   │                                           │
+│  Domain:                                  │   │  InMemoryUserRegistry                     │
+│    PublicBuilding  (Aggregate Root)       │   │  JwtTokenService                          │
+│    EnergyDevice    (Entity)               │   │  RefreshTokenStore (rotating tokens)      │
+│    Energy          (Value Object)         │   │  TokenBlacklist  (@Scheduled eviction)    │
+│    SubsidyEligibilitySpecification        │   │  OAuth2SuccessHandler                     │
+│    Domain Events (3)                      │   │                                           │
+│                                           │   │  Endpoints:                               │
+│  Application:                             │   │    POST /v1/auth/register                 │
+│    PublicBuildingAppService               │   │    POST /v1/auth/login                    │
+│    PublicBuildingQueryService             │   │    POST /v1/auth/refresh                  │
+│                                           │   │    POST /v1/auth/logout                   │
+│  Endpoints:                               │   │    GET  /oauth2/authorization/google      │
+│    /v1/buildings/**                       │   │    GET  /login/oauth2/code/google         │
+│                                           │   │                                           │
+└──────────────────┬───────────────────────┘   └──────────────────┬───────────────────────┘
+                   │                                               │
+                   └─────────────── shared ─────────────────────┘
+                                SecurityConfig  ·  GlobalExceptionHandler
+                                RequestIdFilter  ·  WebSocket config
+                                  (single Spring Boot deployable)
+```
+
 ## Layer Map
 
 ```
-┌────────────────────────────────────────────────────────────┐
-│                    WebAPI / Infrastructure                  │
-│   Controllers, WebSocket, JPA Entities, External Clients   │
-│  ┌──────────────────────────────────────────────────────┐  │
-│  │                  Application Layer                   │  │
-│  │       Services, Commands, DTOs, Event Handlers       │  │
-│  │  ┌────────────────────────────────────────────────┐  │  │
-│  │  │                 Domain Layer                   │  │  │
-│  │  │  Aggregates, Entities, Value Objects, Events   │  │  │
-│  │  └────────────────────────────────────────────────┘  │  │
-│  └──────────────────────────────────────────────────────┘  │
-└────────────────────────────────────────────────────────────┘
+╔══════════════════════════════════════════════════════════════════════════╗
+║                    Infrastructure  ·  Web API                            ║
+║                                                                          ║
+║   PublicBuildingRepositoryImpl     PublicBuildingController              ║
+║   PublicBuildingJpaEntity          AuthController                        ║
+║   EnergyDeviceJpaEntity            GlobalExceptionHandler                ║
+║   EnergyEmbeddable                 RequestIdFilter                       ║
+║   PublicBuildingMapper             JwtAuthFilter  ·  RateLimitFilter     ║
+║   SubsidyEligibilityJpaSpec        BuildingWebSocketEventHandler         ║
+║   JwtTokenService                  OAuth2SuccessHandler                  ║
+║   RefreshTokenStore · TokenBlacklist · InMemoryUserRegistry              ║
+║                                                                          ║
+║  ┌────────────────────────────────────────────────────────────────────┐  ║
+║  │                          Application                                │  ║
+║  │                                                                     │  ║
+║  │   PublicBuildingAppService (@Transactional write)                   │  ║
+║  │   PublicBuildingQueryService (@Transactional readOnly)              │  ║
+║  │   AddDeviceCommand  ·  CreateBuildingCommand (records)              │  ║
+║  │   ChangeConsumptionCommand  ·  ChangeProductionCommand              │  ║
+║  │   AuditLogEventHandler  ·  BuildingDtoMapper                        │  ║
+║  │                                                                     │  ║
+║  │  ┌───────────────────────────────────────────────────────────────┐  │  ║
+║  │  │                           Domain                               │  │  ║
+║  │  │                                                                │  │  ║
+║  │  │   PublicBuilding (Aggregate Root)                              │  │  ║
+║  │  │   EnergyDevice (Entity)                                        │  │  ║
+║  │  │   Energy (Value Object)                                        │  │  ║
+║  │  │   DeviceAddedEvent  ·  ConsumptionChangedEvent                 │  │  ║
+║  │  │   ProductionChangedEvent  ·  DomainEvent (marker)              │  │  ║
+║  │  │   PublicBuildingRepository (interface — implemented in infra)  │  │  ║
+║  │  │   SubsidyEligibilitySpecification                              │  │  ║
+║  │  │   DomainException hierarchy                                    │  │  ║
+║  │  └───────────────────────────────────────────────────────────────┘  │  ║
+║  └────────────────────────────────────────────────────────────────────┘  ║
+╚══════════════════════════════════════════════════════════════════════════╝
+                  Dependencies always point inward  →
 ```
 
 Dependency rule: outer layers depend on inner layers, never the reverse.
@@ -56,6 +109,52 @@ Enforced structurally by ArchUnit — see [ADR-0002](adr/0002-archunit-ddd-enfor
 | Value object | `Energy` | Immutable value + unit pair, cross-unit equality via kW normalization |
 | Domain event | `ConsumptionChangedEvent`, `DeviceAddedEvent` | Published after state changes, consumed by WebSocket + audit |
 | Specification | `SubsidyEligibilitySpecification` | Encapsulates eligibility business rule |
+
+## Aggregate Boundary
+
+```
+╔═══════════════════════════════════════════════════════════════════════════════╗
+║                           «Aggregate Root»                                    ║
+║                            PublicBuilding                                     ║
+║                                                                               ║
+║   id: UUID                name: String              location: String          ║
+║                                                                               ║
+║   consumption: ────────── «Value Object» ─────────────────────────────────┐  ║
+║                            Energy                                          │  ║
+║                            value: BigDecimal                               │  ║
+║                            unit: EnergyUnit (kW / MW / GW)                │  ║
+║                            to(unit) · greaterThan() · compareTo()         │  ║
+║                            equals/hashCode on normalised kW value ─────────┘  ║
+║                                                                               ║
+║   devices: List<EnergyDevice>                                                 ║
+║   │                                                                           ║
+║   └─── «Entity» ──────────────────────────────────────────────────────────┐  ║
+║          EnergyDevice                                                      │  ║
+║          id: UUID                                                          │  ║
+║          type: DeviceType  (SOLAR · WIND · ...)                            │  ║
+║          deviceRatedCapacity: Energy  (final — set once)                   │  ║
+║          productionRate: Energy                                             │  ║
+║          changeProduction() — enforces productionRate ≤ ratedCapacity      │  ║
+║          equals/hashCode on id only ───────────────────────────────────────┘  ║
+║                                                                               ║
+║  ─────────────────────────────────────────────────────────────────────────   ║
+║  Invariants enforced at aggregate boundary:                                   ║
+║  · addDevice()              — total capacity across all devices ≤ limit       ║
+║  · changeConsumption()      — value must be positive                          ║
+║  · changeDeviceProduction() — must not exceed that device's ratedCapacity    ║
+║                                                                               ║
+║  Domain Events (collected, published after save — never before):              ║
+║    DeviceAddedEvent · ConsumptionChangedEvent · ProductionChangedEvent        ║
+║    pullEvents() → List.copyOf(snapshot) then clear — prevents re-publish     ║
+╚═══════════════════════════════════════════════════════════════════════════════╝
+                  │
+                  │  PublicBuildingRepository  (domain interface)
+                  │  implemented by PublicBuildingRepositoryImpl (infra)
+                  ▼
+         PublicBuildingJpaEntity   (never crosses the aggregate boundary)
+```
+
+See [erd.md](erd.md) for the database table structure that backs this aggregate.
 
 ## Profiles
 
