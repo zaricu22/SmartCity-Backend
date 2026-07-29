@@ -90,6 +90,7 @@ Additional contexts (e.g. `balancing`) would be sibling packages with their own 
 ║  │  │   ProductionChangedEvent  ·  DomainEvent (marker)              │  │  ║
 ║  │  │   PublicBuildingRepository (interface — implemented in infra)  │  │  ║
 ║  │  │   SubsidyEligibilitySpecification                              │  │  ║
+║  │  │   PublicBuildingSummary (readmodel — query projection shape)   │  │  ║
 ║  │  │   DomainException hierarchy                                    │  │  ║
 ║  │  └───────────────────────────────────────────────────────────────┘  │  ║
 ║  └────────────────────────────────────────────────────────────────────┘  ║
@@ -108,7 +109,7 @@ Enforced structurally by ArchUnit — see [ADR-0002](adr/0002-archunit-ddd-enfor
 | Entity | `EnergyDevice` | Unique identity within building, mutable production rate |
 | Value object | `Energy` | Immutable value + unit pair, cross-unit equality via kW normalization |
 | Domain event | `ConsumptionChangedEvent`, `DeviceAddedEvent` | Published after state changes, consumed by WebSocket + audit |
-| Specification | `SubsidyEligibilitySpecification` | Encapsulates eligibility business rule |
+| Specification | `SubsidyEligibilitySpecification` | Encapsulates eligibility business rule — backs `GET /v1/buildings?eligible=true` via a query projection, not a full-entity load |
 
 ## Aggregate Boundary
 

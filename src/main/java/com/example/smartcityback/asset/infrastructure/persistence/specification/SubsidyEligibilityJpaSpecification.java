@@ -27,7 +27,6 @@ public class SubsidyEligibilityJpaSpecification implements Specification<PublicB
 
     private static final BigDecimal MIN_CONSUMPTION_VALUE = new BigDecimal("50");
     private static final long       MIN_DEVICES           = 2L;
-    private static final String     ELIGIBLE_ZONE_PREFIX  = "Zone A%";
 
     @Override
     public Predicate toPredicate(Root<PublicBuildingJpaEntity> root,
@@ -40,9 +39,6 @@ public class SubsidyEligibilityJpaSpecification implements Specification<PublicB
                 MIN_CONSUMPTION_VALUE
         );
 
-        // location LIKE 'Zone A%'
-        Predicate zoneOk = cb.like(root.get("location"), ELIGIBLE_ZONE_PREFIX);
-
         // (SELECT COUNT(*) FROM energy_devices WHERE building_id = building.id) >= 2
         // Subquery is required because device count lives in a separate table.
         Subquery<Long> deviceCountSubquery = query.subquery(Long.class);
@@ -53,6 +49,6 @@ public class SubsidyEligibilityJpaSpecification implements Specification<PublicB
 
         Predicate devicesOk = cb.greaterThanOrEqualTo(deviceCountSubquery, MIN_DEVICES);
 
-        return cb.and(consumptionOk, zoneOk, devicesOk);
+        return cb.and(consumptionOk, devicesOk);
     }
 }
