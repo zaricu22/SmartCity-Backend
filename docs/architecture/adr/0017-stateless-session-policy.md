@@ -59,8 +59,8 @@ The JWT must be sent with every request via `Authorization: Bearer <token>`.
   a stateful session can be invalidated instantly server-side; a JWT cannot
 - WebSocket connections do not send HTTP headers after the initial handshake.
   The JWT cannot be injected by the `JwtAuthFilter` during the STOMP frame exchange.
-  WebSocket authentication is a separate concern not yet implemented — the current
-  WebSocket handler (`BuildingWebSocketEventHandler`) operates without auth.
+  WebSocket authentication is a separate concern from `JwtAuthFilter` — see the
+  2026-07-30 amendment below for how it's actually handled.
 - Access tokens have a fixed expiry window (1 hour by default). Shortening this
   reduces the revocation window but increases refresh frequency.
 
@@ -82,3 +82,34 @@ populates `SecurityContextHolder` from the token and Spring never reads back fro
 a session for API calls. A session is created only during the `/oauth2/authorization/google`
 → Google → `/login/oauth2/code/google` redirect dance, and is abandoned immediately
 after `OAuth2SuccessHandler` issues the JWT and redirects to the Angular frontend.
+
+## Amendment — 2026-07-30: WebSocket authentication implemented
+
+**Status:** Superseded in part
+
+The "Negative" consequence above ("WebSocket authentication is a separate concern
+not yet implemented") no longer holds. `/ws/**` is now `permitAll` at the HTTP layer
+— the handshake itself carries no credentials, consistent with browsers being unable
+to attach a custom `Authorization` header to a WebSocket/SockJS handshake request.
+
+**Reason it isn't a `JwtAuthFilter` extension:** `JwtAuthFilter` operates on the HTTP
+request layer, which ends once the socket upgrades. Authentication instead happens
+one layer up, on the STOMP protocol itself: a new `StompAuthChannelInterceptor`
+(`auth.webapi.filter`) intercepts `preSend` on `StompCommand.CONNECT` and reads
+`Authorization` off the **STOMP CONNECT frame** — an application-level message sent
+after the socket is already open, so (unlike the raw handshake) it can carry arbitrary
+headers. It validates via the existing `JwtTokenService` + `TokenBlacklist` and sets
+the STOMP session's Principal via `accessor.setUser(...)`; missing, invalid, or
+revoked tokens reject the CONNECT with `BadCredentialsException`. Registered via
+`WebSocketConfig.configureClientInboundChannel`.
+
+**Also fixed in the same change:** the SockJS handshake endpoint had no
+`.setAllowedOrigins(...)`, which is a separate check from `corsConfigurationSource()`
+— Spring's SockJS service does its own origin validation, uncovered by the app's
+general CORS bean. `WebSocketConfig.registerStompEndpoints` now sets the same two
+origins (`http://localhost:4200`, `https://zaricu22.github.io`).
+
+**Frontend impact:** the STOMP client must send the JWT as a `connectHeaders` option
+on the client (e.g. `@stomp/stompjs`'s `Client({ connectHeaders: { Authorization: 'Bearer ' + token } })`),
+not as an HTTP header on the SockJS handshake request — the frontend WS client does
+not exist yet (still an unimplemented stub as of this amendment).
