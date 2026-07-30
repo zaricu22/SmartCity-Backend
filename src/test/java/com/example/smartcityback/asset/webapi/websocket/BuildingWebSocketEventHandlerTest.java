@@ -1,5 +1,6 @@
 package com.example.smartcityback.asset.webapi.websocket;
 
+import com.example.smartcityback.asset.domain.event.BuildingCreatedEvent;
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
@@ -33,6 +34,39 @@ class BuildingWebSocketEventHandlerTest {
 
     private static final UUID BUILDING_ID = UUID.randomUUID();
     private static final UUID DEVICE_ID   = UUID.randomUUID();
+
+    // =====================================================================
+    // BuildingCreatedEvent
+    // =====================================================================
+
+    @Test
+    void onBuildingCreated_publishesToCollectionTopic() {
+        BuildingCreatedEvent event = new BuildingCreatedEvent(BUILDING_ID, "City Hall", "Main St 1");
+
+        handler.onBuildingCreated(event);
+
+        verify(messagingTemplate).convertAndSend(
+                eq("/topic/buildings"),
+                any(BuildingCreatedMessage.class)
+        );
+    }
+
+    @Test
+    void onBuildingCreated_messageContainsCorrectValues() {
+        BuildingCreatedEvent event = new BuildingCreatedEvent(BUILDING_ID, "City Hall", "Main St 1");
+
+        ArgumentCaptor<BuildingCreatedMessage> captor =
+                ArgumentCaptor.forClass(BuildingCreatedMessage.class);
+
+        handler.onBuildingCreated(event);
+
+        verify(messagingTemplate).convertAndSend(any(String.class), captor.capture());
+
+        BuildingCreatedMessage message = captor.getValue();
+        assertThat(message.buildingId()).isEqualTo(BUILDING_ID);
+        assertThat(message.name()).isEqualTo("City Hall");
+        assertThat(message.location()).isEqualTo("Main St 1");
+    }
 
     // =====================================================================
     // ConsumptionChangedEvent
