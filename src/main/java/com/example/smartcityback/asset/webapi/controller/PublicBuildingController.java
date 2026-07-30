@@ -176,13 +176,18 @@ public class PublicBuildingController {
     @ApiResponse(responseCode = "200")
     @GetMapping
     public PagedResponse<PublicBuildingResponse> getAll(
-            @ParameterObject @PageableDefault(size = 20, sort = "name") Pageable pageable) {
+            @ParameterObject @PageableDefault(size = 20, sort = "name") Pageable pageable,
+            @RequestParam(required = false) Boolean eligible) {
         Sort.Order order = pageable.getSort().stream().findFirst().orElse(Sort.Order.asc("name"));
-        return BuildingResponseMapper.toResponsePage(queryService.getAll(
-                pageable.getPageNumber(),
-                pageable.getPageSize(),
-                order.getProperty(),
-                order.isAscending() ? "asc" : "desc"
-        ));
+        int pageNumber = pageable.getPageNumber();
+        int pageSize = pageable.getPageSize();
+        String sortBy = order.getProperty();
+        String sortDir = order.isAscending() ? "asc" : "desc";
+
+        return BuildingResponseMapper.toResponsePage(
+                Boolean.TRUE.equals(eligible)
+                        ? queryService.getEligibleForSubsidy(pageNumber, pageSize, sortBy, sortDir)
+                        : queryService.getAll(pageNumber, pageSize, sortBy, sortDir)
+        );
     }
 }

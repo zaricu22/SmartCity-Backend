@@ -12,7 +12,6 @@ import java.math.BigDecimal;
  * A building is eligible if:
  *   - it has at least 2 energy devices
  *   - its consumption exceeds 50 kW
- *   - it is located in Zone A
  *
  * Purpose: centralizes this rule so it can be reused across multiple services without duplication and complex if-logic.
  * The rule is defined once, tested once, and injected wherever needed.
@@ -23,11 +22,9 @@ public class SubsidyEligibilitySpecification {
 
     private static final Energy MIN_CONSUMPTION = new Energy(new BigDecimal("50"), EnergyUnit.kW);
     private static final int    MIN_DEVICES      = 2;
-    private static final String ELIGIBLE_ZONE    = "Zone A";
 
     public boolean isSatisfiedBy(PublicBuilding building) {
         return building.getDevices().size() >= MIN_DEVICES
-                && building.getConsumption().greaterThan(MIN_CONSUMPTION)
-                && building.getLocation().startsWith(ELIGIBLE_ZONE);
+                && building.getConsumption().greaterThan(MIN_CONSUMPTION);
     }
 }

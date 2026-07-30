@@ -28,7 +28,7 @@ Frontend: [https://zaricu22.github.io/SmartCity-Frontend](https://zaricu22.githu
 | Consumption | Update a building's current energy consumption (validated against total device capacity) |
 | Production | Update a device's current production rate (validated against rated capacity) |
 | Real-time | WebSocket push notifications on consumption and device changes |
-| Subsidy eligibility | Domain specification evaluating buildings for government energy subsidy |
+| Subsidy eligibility | Domain specification evaluating buildings for government energy subsidy — queryable via `GET /v1/buildings?eligible=true` (query projection, no full entity load) |
 | AI-enriched docs | OpenAPI spec enriched with Claude — descriptions, examples, metadata |
 
 ---
@@ -138,6 +138,7 @@ http://localhost:8080/SmartCityREST/swagger-ui.html
 |--------|------|------|--------|-------|
 | `POST` | `/v1/buildings` | ADMIN | 201 | `Location` header + UUID body |
 | `GET` | `/v1/buildings` | VIEWER, ADMIN | 200 | Paginated · `?page=0&size=20&sort=name` |
+| `GET` | `/v1/buildings?eligible=true` | VIEWER, ADMIN | 200 | Subsidy-eligible buildings only — query projection (`devices` always empty) |
 | `GET` | `/v1/buildings/{id}` | VIEWER, ADMIN | 200 | `PublicBuildingResponse` |
 | `POST` | `/v1/buildings/{id}/devices` | ADMIN | 204 | |
 | `PATCH` | `/v1/buildings/{id}/consumption` | ADMIN | 204 | |
@@ -263,6 +264,7 @@ src/
 │       │   ├── valueobject/            #   Energy (immutable, kW/MW/GW conversion)
 │       │   ├── event/                  #   DeviceAddedEvent, ConsumptionChangedEvent
 │       │   ├── specification/          #   SubsidyEligibilitySpecification
+│       │   ├── readmodel/              #   PublicBuildingSummary (query projection shape)
 │       │   ├── exception/              #   DomainException, ValidationException, ...
 │       │   ├── repository/             #   PublicBuildingRepository (port/interface)
 │       │   └── shared/enums/           #   DeviceType, EnergyUnit, ErrorCode
@@ -278,6 +280,7 @@ src/
 │       │   └── persistence/
 │       │       ├── entity/             #   PublicBuildingJpaEntity, EnergyDeviceJpaEntity
 │       │       ├── repository/         #   PublicBuildingRepositoryImpl (implements port)
+│       │       ├── specification/      #   SubsidyEligibilityJpaSpecification (Criteria API)
 │       │       └── mapper/             #   BuildingPersistenceMapper (domain ↔ JPA entity)
 │       └── webapi/                     # HTTP + WebSocket entry points
 │           ├── controller/             #   PublicBuildingController

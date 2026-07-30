@@ -4,6 +4,7 @@ import com.example.smartcityback.asset.application.dto.PublicBuildingDto;
 import com.example.smartcityback.asset.application.exception.BuildingNotFoundException;
 import com.example.smartcityback.asset.domain.aggregate.PublicBuilding;
 import com.example.smartcityback.asset.domain.entity.EnergyDevice;
+import com.example.smartcityback.asset.domain.readmodel.PublicBuildingSummary;
 import com.example.smartcityback.asset.domain.repository.PublicBuildingRepository;
 import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
@@ -164,6 +165,63 @@ class PublicBuildingQueryServiceTest {
         assertThat(result.content()).hasSize(1);
         assertThat(result.content().get(0).id()).isEqualTo(BUILDING_ID);
         assertThat(result.content().get(0).name()).isEqualTo("City Hall");
+    }
+
+    // =====================================================================
+    // getEligibleForSubsidy — projection mapping
+    // =====================================================================
+
+    @Test
+    void getEligibleForSubsidy_mapsSummaryToDtoWithEmptyDevices() {
+        PublicBuildingSummary summary = new PublicBuildingSummary(
+                BUILDING_ID, "City Hall", "Main St 1", new BigDecimal("75"), EnergyUnit.kW);
+        given(repository.findEligibleForSubsidy(0, 10, "name", "asc"))
+                .willReturn(new PagedResult<>(List.of(summary), 1L, 1, 0, 10));
+
+        PagedResult<PublicBuildingDto> result = queryService.getEligibleForSubsidy(0, 10, "name", "asc");
+
+        assertThat(result.content()).hasSize(1);
+        PublicBuildingDto dto = result.content().get(0);
+        assertThat(dto.id()).isEqualTo(BUILDING_ID);
+        assertThat(dto.name()).isEqualTo("City Hall");
+        assertThat(dto.location()).isEqualTo("Main St 1");
+        assertThat(dto.consumptionValue()).isEqualByComparingTo("75");
+        assertThat(dto.consumptionUnit()).isEqualTo(EnergyUnit.kW);
+        // Projection never fetches devices — the field is always empty, not merely unmapped.
+        assertThat(dto.devices()).isEmpty();
+    }
+
+    @Test
+    void getEligibleForSubsidy_forwardsAllParamsToRepository() {
+        given(repository.findEligibleForSubsidy(1, 5, "location", "desc"))
+                .willReturn(new PagedResult<>(List.of(), 0L, 0, 1, 5));
+
+        queryService.getEligibleForSubsidy(1, 5, "location", "desc");
+
+        then(repository).should().findEligibleForSubsidy(1, 5, "location", "desc");
+    }
+
+    @Test
+    void getEligibleForSubsidy_mapsAllPaginationFields() {
+        given(repository.findEligibleForSubsidy(0, 10, "name", "asc"))
+                .willReturn(new PagedResult<>(List.of(), 7L, 2, 0, 10));
+
+        PagedResult<PublicBuildingDto> result = queryService.getEligibleForSubsidy(0, 10, "name", "asc");
+
+        assertThat(result.totalElements()).isEqualTo(7L);
+        assertThat(result.totalPages()).isEqualTo(2);
+        assertThat(result.pageNumber()).isEqualTo(0);
+        assertThat(result.pageSize()).isEqualTo(10);
+    }
+
+    @Test
+    void getEligibleForSubsidy_emptyPage_returnsEmptyContent() {
+        given(repository.findEligibleForSubsidy(0, 10, "name", "asc"))
+                .willReturn(new PagedResult<>(List.of(), 0L, 0, 0, 10));
+
+        PagedResult<PublicBuildingDto> result = queryService.getEligibleForSubsidy(0, 10, "name", "asc");
+
+        assertThat(result.content()).isEmpty();
     }
 
     // =====================================================================
