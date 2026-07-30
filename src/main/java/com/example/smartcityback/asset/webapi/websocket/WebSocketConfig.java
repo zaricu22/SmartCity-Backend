@@ -44,8 +44,17 @@ public class WebSocketConfig implements WebSocketMessageBrokerConfigurer {
 
     @Override
     public void registerStompEndpoints(StompEndpointRegistry registry) {
-        // SockJS fallback for browsers that don't support native WebSocket
-        registry.addEndpoint("/ws").setAllowedOrigins(ALLOWED_ORIGINS).withSockJS();
+        // SockJS fallback for browsers that don't support native WebSocket.
+        // sessionCookieNeeded defaults to true (a hint for sticky-session load balancers),
+        // which makes the SockJS client send credentialed XHR requests. This app is a
+        // single instance with stateless JWT auth — no sticky-session cookie is ever set —
+        // and CorsConfigurationSource never allows credentials, so credentialed requests
+        // were being blocked by the browser's CORS check (Access-Control-Allow-Credentials
+        // absent), even though Access-Control-Allow-Origin was correct.
+        registry.addEndpoint("/ws")
+                .setAllowedOrigins(ALLOWED_ORIGINS)
+                .withSockJS()
+                .setSessionCookieNeeded(false);
     }
 
     @Override

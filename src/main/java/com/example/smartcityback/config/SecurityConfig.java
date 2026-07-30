@@ -6,6 +6,7 @@ import com.example.smartcityback.auth.webapi.filter.RateLimitFilter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
@@ -15,6 +16,7 @@ import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
@@ -120,6 +122,14 @@ public class SecurityConfig {
                         .redirectionEndpoint(redir -> redir.baseUri("/login/oauth2/code/*"))
                         .successHandler(oAuth2SuccessHandler)
                 )
+                // Without this, oauth2Login's default entry point redirects any unauthenticated
+                // request to a protected resource toward /oauth2/authorization/google instead of
+                // returning 401. That redirect chain ends at accounts.google.com, a truly
+                // cross-origin hop with no CORS headers — the browser blocks it as a CORS failure,
+                // not a clean 401. This is a pure JSON API; unauthenticated access should always be
+                // a plain 401, never a login-flow redirect. /oauth2/authorization/** itself is
+                // unaffected — it's permitAll, so this entry point never fires for it.
+                .exceptionHandling(ex -> ex.authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED)))
                 // Order matters: jwtAuthFilter must be registered first so Spring Security's
                 // FilterOrderRegistration knows JwtAuthFilter.class when rateLimitFilter references it.
                 // Runtime chain: RateLimitFilter → JwtAuthFilter → UsernamePasswordAuthenticationFilter
@@ -135,7 +145,24 @@ public class SecurityConfig {
         config.setAllowedMethods(List.of("GET", "POST", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setExposedHeaders(List.of("Location"));
+
+        // sockjs-client unconditionally sets XMLHttpRequest.withCredentials = true on its
+        // XHR-based transports (see sockjs-client/lib/transport/browser/abstract-xhr.js) —
+        // not configurable from the client, and unrelated to WebSocketConfig's
+        // sessionCookieNeeded flag. A credentialed cross-origin request requires
+        // Access-Control-Allow-Credentials: true or the browser blocks it outright, even
+        // with a correct Access-Control-Allow-Origin. Scoped to /ws/** only — everything
+        // else in this API authenticates via the Authorization header, never cookies.
+        CorsConfiguration webSocketConfig = new CorsConfiguration();
+        webSocketConfig.setAllowedOrigins(List.of("http://localhost:4200", "https://zaricu22.github.io"));
+        webSocketConfig.setAllowedMethods(List.of("GET", "POST", "OPTIONS"));
+        webSocketConfig.setAllowedHeaders(List.of("*"));
+        webSocketConfig.setAllowCredentials(true);
+
+        // More specific pattern must be registered first — UrlBasedCorsConfigurationSource
+        // returns the first matching entry in registration order, not the most specific one.
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/ws/**", webSocketConfig);
         source.registerCorsConfiguration("/**", config);
         return source;
     }
