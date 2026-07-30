@@ -39,6 +39,8 @@ public class PublicBuildingAppService {
         PublicBuilding building = new PublicBuilding(UUID.randomUUID(), cmd.name(), cmd.location());
 
         repository.save(building);
+        building.pullEvents().forEach(eventPublisher::publishEvent);
+
         return building.getId();
     }
 

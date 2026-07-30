@@ -1,5 +1,6 @@
 package com.example.smartcityback.asset.webapi.websocket;
 
+import com.example.smartcityback.asset.domain.event.BuildingCreatedEvent;
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
@@ -15,6 +16,8 @@ import org.springframework.stereotype.Component;
  * real-time updates to frontend clients subscribed to the relevant topics.
  *
  * Topics:
+ *   /topic/buildings                           — building creation (collection-level; no
+ *                                                 per-id subscriber can exist before creation)
  *   /topic/buildings/{buildingId}/consumption  — consumption change updates
  *   /topic/buildings/{buildingId}/devices      — device addition updates
  *   /topic/buildings/{buildingId}/production   — device production rate updates
@@ -37,6 +40,19 @@ public class BuildingWebSocketEventHandler {
 
     public BuildingWebSocketEventHandler(SimpMessagingTemplate messagingTemplate) {
         this.messagingTemplate = messagingTemplate;
+    }
+
+    @EventListener
+    public void onBuildingCreated(BuildingCreatedEvent event) {
+        BuildingCreatedMessage message = new BuildingCreatedMessage(
+                event.buildingId(),
+                event.name(),
+                event.location()
+        );
+
+        messagingTemplate.convertAndSend("/topic/buildings", message);
+
+        log.debug("WebSocket pushed BuildingCreated buildingId={} topic=/topic/buildings", event.buildingId());
     }
 
     @EventListener
