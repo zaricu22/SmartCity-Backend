@@ -86,8 +86,9 @@ Additional contexts (e.g. `balancing`) would be sibling packages with their own 
 ║  │  │   PublicBuilding (Aggregate Root)                              │  │  ║
 ║  │  │   EnergyDevice (Entity)                                        │  │  ║
 ║  │  │   Energy (Value Object)                                        │  │  ║
-║  │  │   DeviceAddedEvent  ·  ConsumptionChangedEvent                 │  │  ║
-║  │  │   ProductionChangedEvent  ·  DomainEvent (marker)              │  │  ║
+║  │  │   BuildingCreatedEvent  ·  DeviceAddedEvent                    │  │  ║
+║  │  │   ConsumptionChangedEvent  ·  ProductionChangedEvent           │  │  ║
+║  │  │   DomainEvent (marker)                                        │  │  ║
 ║  │  │   PublicBuildingRepository (interface — implemented in infra)  │  │  ║
 ║  │  │   SubsidyEligibilitySpecification                              │  │  ║
 ║  │  │   PublicBuildingSummary (readmodel — query projection shape)   │  │  ║
@@ -108,7 +109,8 @@ Enforced structurally by ArchUnit — see [ADR-0002](adr/0002-archunit-ddd-enfor
 | Aggregate root | `PublicBuilding` | Building identity, device collection, consumption invariant |
 | Entity | `EnergyDevice` | Unique identity within building, mutable production rate |
 | Value object | `Energy` | Immutable value + unit pair, cross-unit equality via kW normalization |
-| Domain event | `ConsumptionChangedEvent`, `DeviceAddedEvent` | Published after state changes, consumed by WebSocket + audit |
+| Domain event | `ConsumptionChangedEvent`, `DeviceAddedEvent`, `ProductionChangedEvent` | Published after state changes, consumed by WebSocket (per-building topic) + audit |
+| Domain event | `BuildingCreatedEvent` | Published on aggregate construction, consumed by WebSocket (collection-level `/topic/buildings` — no id exists yet for a per-building topic) + audit |
 | Specification | `SubsidyEligibilitySpecification` | Encapsulates eligibility business rule — backs `GET /v1/buildings?eligible=true` via a query projection, not a full-entity load |
 
 ## Aggregate Boundary
@@ -145,7 +147,8 @@ Enforced structurally by ArchUnit — see [ADR-0002](adr/0002-archunit-ddd-enfor
 ║  · changeDeviceProduction() — must not exceed that device's ratedCapacity    ║
 ║                                                                               ║
 ║  Domain Events (collected, published after save — never before):              ║
-║    DeviceAddedEvent · ConsumptionChangedEvent · ProductionChangedEvent        ║
+║    BuildingCreatedEvent · DeviceAddedEvent · ConsumptionChangedEvent          ║
+║    ProductionChangedEvent                                                     ║
 ║    pullEvents() → List.copyOf(snapshot) then clear — prevents re-publish     ║
 ╚═══════════════════════════════════════════════════════════════════════════════╝
                   │

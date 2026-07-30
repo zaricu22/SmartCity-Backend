@@ -1,5 +1,6 @@
 package com.example.smartcityback.asset.application.eventhandler;
 
+import com.example.smartcityback.asset.domain.event.BuildingCreatedEvent;
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
@@ -29,6 +30,18 @@ class AuditLogEventHandlerTest {
 
     private static final UUID BUILDING_ID = UUID.randomUUID();
     private static final UUID DEVICE_ID   = UUID.randomUUID();
+
+    // =====================================================================
+    // BuildingCreatedEvent
+    // =====================================================================
+
+    @Test
+    void onBuildingCreated_validEvent_doesNotThrow() {
+        BuildingCreatedEvent event = new BuildingCreatedEvent(BUILDING_ID, "City Hall", "Main St 1");
+
+        assertThatCode(() -> handler.onBuildingCreated(event))
+                .doesNotThrowAnyException();
+    }
 
     // =====================================================================
     // DeviceAddedEvent

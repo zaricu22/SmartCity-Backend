@@ -1,6 +1,7 @@
 package com.example.smartcityback.asset.domain.aggregate;
 
 import com.example.smartcityback.asset.domain.entity.EnergyDevice;
+import com.example.smartcityback.asset.domain.event.BuildingCreatedEvent;
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
@@ -56,6 +57,8 @@ public class PublicBuilding {
 
         this.devices = new ArrayList<>();
         this.consumption = new Energy(new BigDecimal(0), EnergyUnit.kW);
+
+        domainEvents.add(new BuildingCreatedEvent(id, name, location));
     }
 
     public List<DomainEvent> pullEvents() {

@@ -170,6 +170,7 @@ Connect via STOMP/SockJS, then subscribe to receive real-time push notifications
 
 | Topic | Triggered by |
 |-------|-------------|
+| `/topic/buildings` | `BuildingCreatedEvent` (collection-level — no per-id subscriber can exist before creation) |
 | `/topic/buildings/{id}/consumption` | `ConsumptionChangedEvent` |
 | `/topic/buildings/{id}/devices` | `DeviceAddedEvent` |
 | `/topic/buildings/{id}/production` | `ProductionChangedEvent` |

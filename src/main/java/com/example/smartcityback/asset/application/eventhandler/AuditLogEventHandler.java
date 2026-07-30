@@ -1,5 +1,6 @@
 package com.example.smartcityback.asset.application.eventhandler;
 
+import com.example.smartcityback.asset.domain.event.BuildingCreatedEvent;
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
@@ -16,6 +17,14 @@ import org.springframework.stereotype.Component;
 @Component
 @Slf4j
 public class AuditLogEventHandler {
+
+    @EventListener
+    public void onBuildingCreated(BuildingCreatedEvent event) {
+        log.info("AUDIT BuildingCreated buildingId={} name={} location={}",
+                event.buildingId(),
+                event.name(),
+                event.location());
+    }
 
     @EventListener
     public void onDeviceAdded(DeviceAddedEvent event) {

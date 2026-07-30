@@ -2,6 +2,7 @@ package com.example.smartcityback.asset.application.service;
 
 import com.example.smartcityback.asset.application.command.*;
 import com.example.smartcityback.asset.application.exception.BuildingNotFoundException;
+import com.example.smartcityback.asset.domain.event.BuildingCreatedEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import com.example.smartcityback.asset.domain.aggregate.PublicBuilding;
 import com.example.smartcityback.asset.domain.entity.EnergyDevice;
@@ -66,6 +67,13 @@ class PublicBuildingAppServiceTest {
         UUID result = service.create(new CreateBuildingCommand("City Hall", "Main St 1"));
 
         assertThat(result).isNotNull();
+    }
+
+    @Test
+    void create_validCommand_publishesBuildingCreatedEvent() {
+        service.create(new CreateBuildingCommand("City Hall", "Main St 1"));
+
+        then(eventPublisher).should().publishEvent(any(BuildingCreatedEvent.class));
     }
 
     // =====================================================================

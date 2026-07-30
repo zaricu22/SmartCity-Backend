@@ -1,6 +1,7 @@
 package com.example.smartcityback.asset.domain.aggregate;
 
 import com.example.smartcityback.asset.domain.entity.EnergyDevice;
+import com.example.smartcityback.asset.domain.event.BuildingCreatedEvent;
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
 import com.example.smartcityback.asset.domain.event.DomainEvent;
@@ -232,8 +233,23 @@ class PublicBuildingTest {
     // =====================================================================
 
     @Test
+    void construction_firesBuildingCreatedEvent() {
+        PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+
+        List<DomainEvent> events = building.pullEvents();
+
+        assertThat(events).hasSize(1);
+        assertThat(events.get(0)).isInstanceOf(BuildingCreatedEvent.class);
+        BuildingCreatedEvent event = (BuildingCreatedEvent) events.get(0);
+        assertThat(event.buildingId()).isEqualTo(BUILDING_ID);
+        assertThat(event.name()).isEqualTo("City Hall");
+        assertThat(event.location()).isEqualTo("Main St 1");
+    }
+
+    @Test
     void addDevice_firesDeviceAddedEvent() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+        building.pullEvents(); // clear BuildingCreatedEvent
         building.addDevice(new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW));
 
         List<DomainEvent> events = building.pullEvents();
