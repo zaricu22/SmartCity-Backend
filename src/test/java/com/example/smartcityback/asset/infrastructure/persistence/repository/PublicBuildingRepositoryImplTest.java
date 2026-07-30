@@ -2,6 +2,7 @@ package com.example.smartcityback.asset.infrastructure.persistence.repository;
 
 import com.example.smartcityback.asset.domain.aggregate.PublicBuilding;
 import com.example.smartcityback.asset.domain.entity.EnergyDevice;
+import com.example.smartcityback.asset.domain.readmodel.PublicBuildingSummary;
 import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
 import com.example.smartcityback.asset.domain.valueobject.Energy;
@@ -262,5 +263,126 @@ class PublicBuildingRepositoryImplTest {
 
         assertThat(found.getConsumption().value()).isEqualByComparingTo("50");
         assertThat(found.getConsumption().unit()).isEqualTo(EnergyUnit.kW);
+    }
+
+    // =====================================================================
+    // findEligibleForSubsidy — projection + filtering
+    // =====================================================================
+
+    @Test
+    void findEligibleForSubsidy_twoDevicesAndConsumptionAbove50_isIncludedWithCorrectFields() {
+        PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+        building.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.SOLAR, CAPACITY_100_KW));
+        building.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.BATTERY, CAPACITY_100_KW));
+        building.changeConsumption(new Energy(new BigDecimal("75"), EnergyUnit.kW));
+        repository.save(building);
+        em.flush();
+        em.clear();
+
+        PagedResult<PublicBuildingSummary> result = repository.findEligibleForSubsidy(0, 10, "name", "asc");
+
+        assertThat(result.content()).hasSize(1);
+        PublicBuildingSummary summary = result.content().get(0);
+        assertThat(summary.id()).isEqualTo(BUILDING_ID);
+        assertThat(summary.name()).isEqualTo("City Hall");
+        assertThat(summary.location()).isEqualTo("Main St 1");
+        assertThat(summary.consumptionValue()).isEqualByComparingTo("75");
+        assertThat(summary.consumptionUnit()).isEqualTo(EnergyUnit.kW);
+    }
+
+    @Test
+    void findEligibleForSubsidy_fewerThanTwoDevices_isExcluded() {
+        PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+        building.addDevice(new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW));
+        building.changeConsumption(new Energy(new BigDecimal("100"), EnergyUnit.kW));
+        repository.save(building);
+        em.flush();
+        em.clear();
+
+        PagedResult<PublicBuildingSummary> result = repository.findEligibleForSubsidy(0, 10, "name", "asc");
+
+        assertThat(result.content()).isEmpty();
+        assertThat(result.totalElements()).isZero();
+    }
+
+    @Test
+    void findEligibleForSubsidy_consumptionAtExactly50_isExcluded() {
+        PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+        building.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.SOLAR, CAPACITY_100_KW));
+        building.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.BATTERY, CAPACITY_100_KW));
+        building.changeConsumption(new Energy(new BigDecimal("50"), EnergyUnit.kW));
+        repository.save(building);
+        em.flush();
+        em.clear();
+
+        PagedResult<PublicBuildingSummary> result = repository.findEligibleForSubsidy(0, 10, "name", "asc");
+
+        assertThat(result.content()).isEmpty();
+    }
+
+    @Test
+    void findEligibleForSubsidy_mixedBuildings_returnsOnlyEligibleOnes() {
+        PublicBuilding eligible = new PublicBuilding(UUID.randomUUID(), "Eligible Hall", "Addr 1");
+        eligible.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.SOLAR, CAPACITY_100_KW));
+        eligible.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.BATTERY, CAPACITY_100_KW));
+        eligible.changeConsumption(new Energy(new BigDecimal("60"), EnergyUnit.kW));
+
+        PublicBuilding ineligible = new PublicBuilding(UUID.randomUUID(), "Ineligible Hall", "Addr 2");
+        ineligible.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.SOLAR, CAPACITY_100_KW));
+        ineligible.changeConsumption(new Energy(new BigDecimal("100"), EnergyUnit.kW));
+
+        repository.save(eligible);
+        repository.save(ineligible);
+        em.flush();
+        em.clear();
+
+        PagedResult<PublicBuildingSummary> result = repository.findEligibleForSubsidy(0, 10, "name", "asc");
+
+        assertThat(result.content()).hasSize(1);
+        assertThat(result.content().get(0).name()).isEqualTo("Eligible Hall");
+    }
+
+    @Test
+    void findEligibleForSubsidy_pagination_returnsCorrectPageMetadata() {
+        for (int i = 0; i < 3; i++) {
+            PublicBuilding building = new PublicBuilding(UUID.randomUUID(), "Building " + i, "Addr " + i);
+            building.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.SOLAR, CAPACITY_100_KW));
+            building.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.BATTERY, CAPACITY_100_KW));
+            building.changeConsumption(new Energy(new BigDecimal("75"), EnergyUnit.kW));
+            repository.save(building);
+        }
+        em.flush();
+        em.clear();
+
+        PagedResult<PublicBuildingSummary> result = repository.findEligibleForSubsidy(0, 2, "name", "asc");
+
+        assertThat(result.content()).hasSize(2);
+        assertThat(result.totalElements()).isEqualTo(3L);
+        assertThat(result.totalPages()).isEqualTo(2);
+        assertThat(result.pageNumber()).isEqualTo(0);
+        assertThat(result.pageSize()).isEqualTo(2);
+    }
+
+    @Test
+    void findEligibleForSubsidy_descSort_returnsDescendingOrder() {
+        PublicBuilding a = new PublicBuilding(UUID.randomUUID(), "A Hall", "Addr A");
+        a.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.SOLAR, CAPACITY_100_KW));
+        a.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.BATTERY, CAPACITY_100_KW));
+        a.changeConsumption(new Energy(new BigDecimal("75"), EnergyUnit.kW));
+
+        PublicBuilding b = new PublicBuilding(UUID.randomUUID(), "B Hall", "Addr B");
+        b.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.SOLAR, CAPACITY_100_KW));
+        b.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.BATTERY, CAPACITY_100_KW));
+        b.changeConsumption(new Energy(new BigDecimal("75"), EnergyUnit.kW));
+
+        repository.save(a);
+        repository.save(b);
+        em.flush();
+        em.clear();
+
+        PagedResult<PublicBuildingSummary> result = repository.findEligibleForSubsidy(0, 10, "name", "desc");
+
+        assertThat(result.content()).extracting(PublicBuildingSummary::name)
+                .containsExactly("B Hall", "A Hall");
     }
 }

@@ -154,6 +154,42 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    void getAll_eligibleTrue_callsGetEligibleForSubsidyNotGetAll() throws Exception {
+        given(queryService.getEligibleForSubsidy(anyInt(), anyInt(), anyString(), anyString()))
+                .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
+
+        mockMvc.perform(get("/v1/buildings").param("eligible", "true"))
+                .andExpect(status().isOk());
+
+        then(queryService).should().getEligibleForSubsidy(anyInt(), anyInt(), anyString(), anyString());
+        then(queryService).should(never()).getAll(anyInt(), anyInt(), anyString(), anyString());
+    }
+
+    @Test
+    void getAll_eligibleFalse_callsGetAllNotGetEligibleForSubsidy() throws Exception {
+        given(queryService.getAll(anyInt(), anyInt(), anyString(), anyString()))
+                .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
+
+        mockMvc.perform(get("/v1/buildings").param("eligible", "false"))
+                .andExpect(status().isOk());
+
+        then(queryService).should().getAll(anyInt(), anyInt(), anyString(), anyString());
+        then(queryService).should(never()).getEligibleForSubsidy(anyInt(), anyInt(), anyString(), anyString());
+    }
+
+    @Test
+    void getAll_eligibleParamAbsent_callsGetAll() throws Exception {
+        given(queryService.getAll(anyInt(), anyInt(), anyString(), anyString()))
+                .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
+
+        mockMvc.perform(get("/v1/buildings"))
+                .andExpect(status().isOk());
+
+        then(queryService).should().getAll(anyInt(), anyInt(), anyString(), anyString());
+        then(queryService).should(never()).getEligibleForSubsidy(anyInt(), anyInt(), anyString(), anyString());
+    }
+
+    @Test
     void getBuilding_found_returns200WithBody() throws Exception {
         PublicBuildingDto response = new PublicBuildingDto(
                 BUILDING_ID, "City Hall", "Main St 1",

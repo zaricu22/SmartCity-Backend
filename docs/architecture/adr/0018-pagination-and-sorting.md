@@ -50,10 +50,19 @@ The mapper `BuildingResponseMapper.toResponsePage()` converts `PagedResult<Publi
 
 ### 3. Infrastructure implementation
 
-`PublicBuildingJpaRepository` extends both `JpaRepository` and `JpaSpecificationExecutor`
-(wired but unused until filtering is added). `PublicBuildingRepositoryImpl.findAll()` uses
-Spring Data's `PageRequest.of(page, size, Sort.by(direction, sortBy))` and maps the
-returned `Page<T>` to `PagedResult<T>`.
+`PublicBuildingJpaRepository` extends both `JpaRepository` and `JpaSpecificationExecutor`.
+`PublicBuildingRepositoryImpl.findAll()` uses Spring Data's
+`PageRequest.of(page, size, Sort.by(direction, sortBy))` and maps the returned `Page<T>`
+to `PagedResult<T>`.
+
+`findEligibleForSubsidy()` (backing `GET /v1/buildings?eligible=true`) paginates differently:
+`JpaSpecificationExecutor.findAll(Specification, Pageable)` is hard-typed to return
+`Page<PublicBuildingJpaEntity>`, so it cannot produce a projected result shape. Instead, this
+method builds a manual `CriteriaQuery<PublicBuildingSummary>` via `EntityManager`, reusing
+`SubsidyEligibilityJpaSpecification#toPredicate()` for the `WHERE` clause, with
+`setFirstResult`/`setMaxResults` for paging and a second `COUNT` query (same predicate) for
+`totalElements`. See [ADR-0020](0020-query-projection-for-eligible-buildings.md) for the
+full rationale.
 
 ### 4. Frontend alignment
 
@@ -73,10 +82,15 @@ The backend mirrors this structure: `PagedResult<T>` in `asset.shared`,
   repository contract and application layer free of framework types
 - Two-type separation ensures the HTTP wire format can evolve independently of the
   domain concept
-- `JpaSpecificationExecutor` is already wired, making filter-by-field queries addable
-  without interface changes
+- `JpaSpecificationExecutor` is already wired, making full-entity filter-by-field queries
+  addable without interface changes — confirmed when `GET /v1/buildings?eligible=true` was
+  added using `SubsidyEligibilityJpaSpecification`
 
 **Negative:**
+- `JpaSpecificationExecutor.findAll(Specification, Pageable)` only returns `Page<T>` of the
+  full entity type — it cannot combine a `Specification` with a projected/DTO result shape.
+  The eligible-buildings endpoint needed a hand-built `CriteriaQuery` instead (see ADR-0020),
+  so this pagination model does not extend cleanly to projected reads without extra code
 - Each new sortable field must be a valid JPA column name; invalid `sort` values
   cause a `PropertyReferenceException` at runtime (not validated at the controller boundary)
 - The controller extracts the first sort order only; multi-column sorting is not
