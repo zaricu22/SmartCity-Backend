@@ -89,6 +89,10 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(HttpMethod.POST, "/v1/auth/login", "/v1/auth/refresh", "/v1/auth/register").permitAll()
                         .requestMatchers("/oauth2/authorization/**", "/login/oauth2/code/**").permitAll()
+                        // WebSocket/SockJS handshake — browsers cannot attach a custom Authorization
+                        // header to this request, so it can't be gated by anyRequest().authenticated().
+                        // Auth instead happens on the STOMP CONNECT frame — see StompAuthChannelInterceptor.
+                        .requestMatchers("/ws/**").permitAll()
                         // Actuator is restricted to ADMIN — a separate management port would be ideal
                         // but is inaccessible on Render's free tier (no shell, port not exposed).
                         // /health and /info are safe to expose publicly but kept behind ADMIN for

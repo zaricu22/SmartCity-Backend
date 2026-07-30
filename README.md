@@ -166,7 +166,13 @@ http://localhost:8080/SmartCityREST/swagger-ui.html
 ws://localhost:8080/SmartCityREST/ws
 ```
 
-Connect via STOMP/SockJS, then subscribe to receive real-time push notifications:
+Connect via STOMP/SockJS, then subscribe to receive real-time push notifications.
+
+**Auth:** the handshake itself is unauthenticated (`permitAll` — browsers can't attach
+a custom `Authorization` header to a WebSocket/SockJS handshake). Instead, send the JWT
+as a STOMP `CONNECT` header: `Authorization: Bearer <token>` on the `CONNECT` frame
+(e.g. `@stomp/stompjs`'s `connectHeaders` option). Missing, invalid, or revoked tokens
+are rejected at CONNECT.
 
 | Topic | Triggered by |
 |-------|-------------|
