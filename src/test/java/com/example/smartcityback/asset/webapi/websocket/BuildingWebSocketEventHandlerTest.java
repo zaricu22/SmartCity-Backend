@@ -150,7 +150,7 @@ class BuildingWebSocketEventHandlerTest {
 
     @Test
     void onDeviceAdded_publishesToCorrectTopic() {
-        DeviceAddedEvent event = new DeviceAddedEvent(BUILDING_ID, DEVICE_ID, DeviceType.SOLAR);
+        DeviceAddedEvent event = new DeviceAddedEvent(BUILDING_ID, DEVICE_ID, "Test Device", DeviceType.SOLAR);
 
         handler.onDeviceAdded(event);
 
@@ -162,7 +162,7 @@ class BuildingWebSocketEventHandlerTest {
 
     @Test
     void onDeviceAdded_messageContainsCorrectValues() {
-        DeviceAddedEvent event = new DeviceAddedEvent(BUILDING_ID, DEVICE_ID, DeviceType.BATTERY);
+        DeviceAddedEvent event = new DeviceAddedEvent(BUILDING_ID, DEVICE_ID, "Test Device", DeviceType.BATTERY);
 
         ArgumentCaptor<DeviceAddedMessage> captor =
                 ArgumentCaptor.forClass(DeviceAddedMessage.class);
@@ -174,6 +174,7 @@ class BuildingWebSocketEventHandlerTest {
         DeviceAddedMessage message = captor.getValue();
         assertThat(message.buildingId()).isEqualTo(BUILDING_ID);
         assertThat(message.deviceId()).isEqualTo(DEVICE_ID);
+        assertThat(message.deviceName()).isEqualTo("Test Device");
         assertThat(message.deviceType()).isEqualTo(DeviceType.BATTERY);
     }
 
@@ -183,7 +184,7 @@ class BuildingWebSocketEventHandlerTest {
 
     @Test
     void onDeviceRemoved_publishesToCorrectTopic() {
-        DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, DeviceType.SOLAR);
+        DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, "Test Device", DeviceType.SOLAR);
 
         handler.onDeviceRemoved(event);
 
@@ -195,7 +196,7 @@ class BuildingWebSocketEventHandlerTest {
 
     @Test
     void onDeviceRemoved_messageContainsCorrectValues() {
-        DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, DeviceType.BATTERY);
+        DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, "Test Device", DeviceType.BATTERY);
 
         ArgumentCaptor<DeviceRemovedMessage> captor =
                 ArgumentCaptor.forClass(DeviceRemovedMessage.class);
@@ -207,6 +208,7 @@ class BuildingWebSocketEventHandlerTest {
         DeviceRemovedMessage message = captor.getValue();
         assertThat(message.buildingId()).isEqualTo(BUILDING_ID);
         assertThat(message.deviceId()).isEqualTo(DEVICE_ID);
+        assertThat(message.deviceName()).isEqualTo("Test Device");
         assertThat(message.deviceType()).isEqualTo(DeviceType.BATTERY);
     }
 

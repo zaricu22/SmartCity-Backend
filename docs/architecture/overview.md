@@ -135,6 +135,7 @@ Enforced structurally by ArchUnit — see [ADR-0002](adr/0002-archunit-ddd-enfor
 ║   └─── «Entity» ──────────────────────────────────────────────────────────┐  ║
 ║          EnergyDevice                                                      │  ║
 ║          id: UUID                                                          │  ║
+║          name: String  (required, non-empty)                              │  ║
 ║          type: DeviceType  (SOLAR · WIND · ...)                            │  ║
 ║          deviceRatedCapacity: Energy  (final — set once)                   │  ║
 ║          productionRate: Energy                                             │  ║

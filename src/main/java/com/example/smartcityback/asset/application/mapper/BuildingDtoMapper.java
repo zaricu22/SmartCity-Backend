@@ -19,6 +19,7 @@ public class BuildingDtoMapper {
                         .stream()
                         .map(d -> new EnergyDeviceDto(
                                 d.getId(),
+                                d.getName(),
                                 d.getType(),
                                 d.getDeviceRatedCapacity().value(),
                                 d.getDeviceRatedCapacity().unit(),

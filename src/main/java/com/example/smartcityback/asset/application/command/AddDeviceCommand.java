@@ -14,6 +14,7 @@ import java.util.UUID;
 // they are not the correct place for any validation logic.
 public record AddDeviceCommand(
         UUID buildingId,
+        String name,
         DeviceType type,
         BigDecimal ratedCapacityValue,
         EnergyUnit ratedCapacityUnit

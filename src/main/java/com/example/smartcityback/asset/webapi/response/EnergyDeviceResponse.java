@@ -10,6 +10,7 @@ import java.util.UUID;
 @Schema
 public record EnergyDeviceResponse(
         UUID id,
+        String name,
         DeviceType type,
         BigDecimal ratedCapacityValue,
         EnergyUnit ratedCapacityUnit,

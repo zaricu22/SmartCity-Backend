@@ -51,13 +51,14 @@ class BuildingDtoMapperTest {
     @Test
     void toDto_withDevice_mapsDeviceFields() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        building.addDevice(new EnergyDevice(DEVICE_ID, DeviceType.SOLAR,
+        building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR,
                 new Energy(new BigDecimal("100"), EnergyUnit.kW)));
 
         PublicBuildingDto dto = BuildingDtoMapper.toDto(building);
 
         assertThat(dto.devices()).hasSize(1);
         assertThat(dto.devices().get(0).id()).isEqualTo(DEVICE_ID);
+        assertThat(dto.devices().get(0).name()).isEqualTo("Test Device");
         assertThat(dto.devices().get(0).type()).isEqualTo(DeviceType.SOLAR);
         assertThat(dto.devices().get(0).ratedCapacityValue()).isEqualByComparingTo("100");
         assertThat(dto.devices().get(0).ratedCapacityUnit()).isEqualTo(EnergyUnit.kW);
@@ -68,9 +69,9 @@ class BuildingDtoMapperTest {
     @Test
     void toDto_withMultipleDevices_mapsAll() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        building.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.SOLAR,
+        building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR,
                 new Energy(new BigDecimal("100"), EnergyUnit.kW)));
-        building.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.BATTERY,
+        building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.BATTERY,
                 new Energy(new BigDecimal("50"), EnergyUnit.kW)));
 
         PublicBuildingDto dto = BuildingDtoMapper.toDto(building);

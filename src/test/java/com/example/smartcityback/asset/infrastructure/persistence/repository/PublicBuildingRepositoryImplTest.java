@@ -85,7 +85,7 @@ class PublicBuildingRepositoryImplTest {
     @Test
     void save_withDevice_persistsDevice() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        building.addDevice(new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW));
+        building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
 
         repository.save(building);
         em.flush();
@@ -101,8 +101,8 @@ class PublicBuildingRepositoryImplTest {
     @Test
     void save_withMultipleDevices_persistsAll() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        building.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.SOLAR,   CAPACITY_100_KW));
-        building.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.BATTERY, CAPACITY_100_KW));
+        building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
+        building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.BATTERY, CAPACITY_100_KW));
 
         repository.save(building);
         em.flush();
@@ -142,7 +142,7 @@ class PublicBuildingRepositoryImplTest {
     @Test
     void delete_buildingWithDevices_cascadesDeviceRemoval() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        building.addDevice(new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW));
+        building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
         repository.save(building);
         em.flush();
         em.clear();
@@ -165,7 +165,7 @@ class PublicBuildingRepositoryImplTest {
     @Test
     void save_withChangedProduction_persistsProduction() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        EnergyDevice device = new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW);
+        EnergyDevice device = new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW);
         building.addDevice(device);
         building.changeDeviceProduction(DEVICE_ID, new Energy(new BigDecimal("60"), EnergyUnit.kW));
 
@@ -252,7 +252,7 @@ class PublicBuildingRepositoryImplTest {
     @Test
     void save_withChangedConsumption_persistsConsumption() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        building.addDevice(new EnergyDevice(DEVICE_ID, DeviceType.BATTERY, CAPACITY_100_KW));
+        building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.BATTERY, CAPACITY_100_KW));
         building.changeConsumption(new Energy(new BigDecimal("50"), EnergyUnit.kW));
 
         repository.save(building);
@@ -272,8 +272,8 @@ class PublicBuildingRepositoryImplTest {
     @Test
     void findEligibleForSubsidy_twoDevicesAndConsumptionAbove50_isIncludedWithCorrectFields() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        building.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.SOLAR, CAPACITY_100_KW));
-        building.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.BATTERY, CAPACITY_100_KW));
+        building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
+        building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.BATTERY, CAPACITY_100_KW));
         building.changeConsumption(new Energy(new BigDecimal("75"), EnergyUnit.kW));
         repository.save(building);
         em.flush();
@@ -293,7 +293,7 @@ class PublicBuildingRepositoryImplTest {
     @Test
     void findEligibleForSubsidy_fewerThanTwoDevices_isExcluded() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        building.addDevice(new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW));
+        building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
         building.changeConsumption(new Energy(new BigDecimal("100"), EnergyUnit.kW));
         repository.save(building);
         em.flush();
@@ -308,8 +308,8 @@ class PublicBuildingRepositoryImplTest {
     @Test
     void findEligibleForSubsidy_consumptionAtExactly50_isExcluded() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        building.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.SOLAR, CAPACITY_100_KW));
-        building.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.BATTERY, CAPACITY_100_KW));
+        building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
+        building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.BATTERY, CAPACITY_100_KW));
         building.changeConsumption(new Energy(new BigDecimal("50"), EnergyUnit.kW));
         repository.save(building);
         em.flush();
@@ -323,12 +323,12 @@ class PublicBuildingRepositoryImplTest {
     @Test
     void findEligibleForSubsidy_mixedBuildings_returnsOnlyEligibleOnes() {
         PublicBuilding eligible = new PublicBuilding(UUID.randomUUID(), "Eligible Hall", "Addr 1");
-        eligible.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.SOLAR, CAPACITY_100_KW));
-        eligible.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.BATTERY, CAPACITY_100_KW));
+        eligible.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
+        eligible.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.BATTERY, CAPACITY_100_KW));
         eligible.changeConsumption(new Energy(new BigDecimal("60"), EnergyUnit.kW));
 
         PublicBuilding ineligible = new PublicBuilding(UUID.randomUUID(), "Ineligible Hall", "Addr 2");
-        ineligible.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.SOLAR, CAPACITY_100_KW));
+        ineligible.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
         ineligible.changeConsumption(new Energy(new BigDecimal("100"), EnergyUnit.kW));
 
         repository.save(eligible);
@@ -346,8 +346,8 @@ class PublicBuildingRepositoryImplTest {
     void findEligibleForSubsidy_pagination_returnsCorrectPageMetadata() {
         for (int i = 0; i < 3; i++) {
             PublicBuilding building = new PublicBuilding(UUID.randomUUID(), "Building " + i, "Addr " + i);
-            building.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.SOLAR, CAPACITY_100_KW));
-            building.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.BATTERY, CAPACITY_100_KW));
+            building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
+            building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.BATTERY, CAPACITY_100_KW));
             building.changeConsumption(new Energy(new BigDecimal("75"), EnergyUnit.kW));
             repository.save(building);
         }
@@ -366,13 +366,13 @@ class PublicBuildingRepositoryImplTest {
     @Test
     void findEligibleForSubsidy_descSort_returnsDescendingOrder() {
         PublicBuilding a = new PublicBuilding(UUID.randomUUID(), "A Hall", "Addr A");
-        a.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.SOLAR, CAPACITY_100_KW));
-        a.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.BATTERY, CAPACITY_100_KW));
+        a.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
+        a.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.BATTERY, CAPACITY_100_KW));
         a.changeConsumption(new Energy(new BigDecimal("75"), EnergyUnit.kW));
 
         PublicBuilding b = new PublicBuilding(UUID.randomUUID(), "B Hall", "Addr B");
-        b.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.SOLAR, CAPACITY_100_KW));
-        b.addDevice(new EnergyDevice(UUID.randomUUID(), DeviceType.BATTERY, CAPACITY_100_KW));
+        b.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
+        b.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.BATTERY, CAPACITY_100_KW));
         b.changeConsumption(new Energy(new BigDecimal("75"), EnergyUnit.kW));
 
         repository.save(a);

@@ -95,6 +95,7 @@ public class BuildingWebSocketEventHandler {
         DeviceAddedMessage message = new DeviceAddedMessage(
                 event.buildingId(),
                 event.deviceId(),
+                event.deviceName(),
                 event.deviceType()
         );
 
@@ -111,6 +112,7 @@ public class BuildingWebSocketEventHandler {
         DeviceRemovedMessage message = new DeviceRemovedMessage(
                 event.buildingId(),
                 event.deviceId(),
+                event.deviceName(),
                 event.deviceType()
         );
 

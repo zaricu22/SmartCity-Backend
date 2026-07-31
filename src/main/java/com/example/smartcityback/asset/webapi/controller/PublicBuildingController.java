@@ -88,11 +88,12 @@ public class PublicBuildingController {
             @PathVariable UUID id,
             @Valid @RequestBody AddDeviceRequest request) {
 
-        log.info("RequestReceived endpoint=POST /buildings/{id}/devices id={} type={} capacity={} {} requestId={}",
-                id, request.type(), request.ratedCapacityValue(), request.ratedCapacityUnit(), requestId());
+        log.info("RequestReceived endpoint=POST /buildings/{id}/devices id={} name={} type={} capacity={} {} requestId={}",
+                id, request.name(), request.type(), request.ratedCapacityValue(), request.ratedCapacityUnit(), requestId());
 
         service.addDevice(new AddDeviceCommand(
                 id,
+                request.name(),
                 request.type(),
                 request.ratedCapacityValue(),
                 request.ratedCapacityUnit()

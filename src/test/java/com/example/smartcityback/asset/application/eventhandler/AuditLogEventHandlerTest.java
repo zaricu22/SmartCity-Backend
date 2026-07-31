@@ -63,7 +63,7 @@ class AuditLogEventHandlerTest {
 
     @Test
     void onDeviceAdded_validEvent_doesNotThrow() {
-        DeviceAddedEvent event = new DeviceAddedEvent(BUILDING_ID, DEVICE_ID, DeviceType.SOLAR);
+        DeviceAddedEvent event = new DeviceAddedEvent(BUILDING_ID, DEVICE_ID, "Test Device", DeviceType.SOLAR);
 
         assertThatCode(() -> handler.onDeviceAdded(event))
                 .doesNotThrowAnyException();
@@ -72,7 +72,7 @@ class AuditLogEventHandlerTest {
     @Test
     void onDeviceAdded_allDeviceTypes_doesNotThrow() {
         for (DeviceType type : DeviceType.values()) {
-            DeviceAddedEvent event = new DeviceAddedEvent(BUILDING_ID, DEVICE_ID, type);
+            DeviceAddedEvent event = new DeviceAddedEvent(BUILDING_ID, DEVICE_ID, "Test Device", type);
 
             assertThatCode(() -> handler.onDeviceAdded(event))
                     .doesNotThrowAnyException();
@@ -85,7 +85,7 @@ class AuditLogEventHandlerTest {
 
     @Test
     void onDeviceRemoved_validEvent_doesNotThrow() {
-        DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, DeviceType.SOLAR);
+        DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, "Test Device", DeviceType.SOLAR);
 
         assertThatCode(() -> handler.onDeviceRemoved(event))
                 .doesNotThrowAnyException();

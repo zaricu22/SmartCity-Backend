@@ -8,4 +8,4 @@ import java.util.UUID;
  * WebSocket push message — sent to /topic/buildings/{buildingId}/devices/removed
  * when a device is removed from a building.
  */
-public record DeviceRemovedMessage(UUID buildingId, UUID deviceId, DeviceType deviceType) {}
+public record DeviceRemovedMessage(UUID buildingId, UUID deviceId, String deviceName, DeviceType deviceType) {}
