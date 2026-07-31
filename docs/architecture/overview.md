@@ -86,7 +86,8 @@ Additional contexts (e.g. `balancing`) would be sibling packages with their own 
 ║  │  │   PublicBuilding (Aggregate Root)                              │  │  ║
 ║  │  │   EnergyDevice (Entity)                                        │  │  ║
 ║  │  │   Energy (Value Object)                                        │  │  ║
-║  │  │   BuildingCreatedEvent  ·  DeviceAddedEvent                    │  │  ║
+║  │  │   BuildingCreatedEvent  ·  BuildingDeletedEvent                │  │  ║
+║  │  │   DeviceAddedEvent  ·  DeviceRemovedEvent                      │  │  ║
 ║  │  │   ConsumptionChangedEvent  ·  ProductionChangedEvent           │  │  ║
 ║  │  │   DomainEvent (marker)                                        │  │  ║
 ║  │  │   PublicBuildingRepository (interface — implemented in infra)  │  │  ║
@@ -109,8 +110,8 @@ Enforced structurally by ArchUnit — see [ADR-0002](adr/0002-archunit-ddd-enfor
 | Aggregate root | `PublicBuilding` | Building identity, device collection, consumption invariant |
 | Entity | `EnergyDevice` | Unique identity within building, mutable production rate |
 | Value object | `Energy` | Immutable value + unit pair, cross-unit equality via kW normalization |
-| Domain event | `ConsumptionChangedEvent`, `DeviceAddedEvent`, `ProductionChangedEvent` | Published after state changes, consumed by WebSocket (per-building topic) + audit |
-| Domain event | `BuildingCreatedEvent` | Published on aggregate construction, consumed by WebSocket (collection-level `/topic/buildings` — no id exists yet for a per-building topic) + audit |
+| Domain event | `ConsumptionChangedEvent`, `DeviceAddedEvent`, `DeviceRemovedEvent`, `ProductionChangedEvent` | Published after state changes, consumed by WebSocket (per-building topic) + audit |
+| Domain event | `BuildingCreatedEvent`, `BuildingDeletedEvent` | Published on aggregate construction/deletion, consumed by WebSocket (collection-level `/topic/buildings`, `/topic/buildings/deleted` — no id exists to subscribe per-building before creation, and none remains after deletion) + audit |
 | Specification | `SubsidyEligibilitySpecification` | Encapsulates eligibility business rule — backs `GET /v1/buildings?eligible=true` via a query projection, not a full-entity load |
 
 ## Aggregate Boundary
@@ -143,13 +144,17 @@ Enforced structurally by ArchUnit — see [ADR-0002](adr/0002-archunit-ddd-enfor
 ║  ─────────────────────────────────────────────────────────────────────────   ║
 ║  Invariants enforced at aggregate boundary:                                   ║
 ║  · addDevice()              — total capacity across all devices ≤ limit       ║
+║  · removeDevice()           — device must exist (DeviceNotFoundException)    ║
 ║  · changeConsumption()      — value must be positive                          ║
 ║  · changeDeviceProduction() — must not exceed that device's ratedCapacity    ║
 ║                                                                               ║
 ║  Domain Events (collected, published after save — never before):              ║
-║    BuildingCreatedEvent · DeviceAddedEvent · ConsumptionChangedEvent          ║
-║    ProductionChangedEvent                                                     ║
+║    BuildingCreatedEvent · DeviceAddedEvent · DeviceRemovedEvent               ║
+║    ConsumptionChangedEvent · ProductionChangedEvent                           ║
 ║    pullEvents() → List.copyOf(snapshot) then clear — prevents re-publish     ║
+║    NOTE: BuildingDeletedEvent is NOT in this list — it's published directly  ║
+║    by AppService.delete(), not raised by the aggregate (no invariant to      ║
+║    protect; the aggregate ceases to exist rather than being saved)           ║
 ╚═══════════════════════════════════════════════════════════════════════════════╝
                   │
                   │  PublicBuildingRepository  (domain interface)

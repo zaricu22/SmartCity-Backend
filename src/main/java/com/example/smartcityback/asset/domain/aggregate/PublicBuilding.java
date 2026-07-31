@@ -4,6 +4,7 @@ import com.example.smartcityback.asset.domain.entity.EnergyDevice;
 import com.example.smartcityback.asset.domain.event.BuildingCreatedEvent;
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
+import com.example.smartcityback.asset.domain.event.DeviceRemovedEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DomainEvent;
 import com.example.smartcityback.asset.domain.exception.BuildingTotalCapacityExceededException;
@@ -87,6 +88,17 @@ public class PublicBuilding {
         this.devices.add(newDevice);
 
         domainEvents.add(new DeviceAddedEvent(id, newDevice.getId(), newDevice.getType()));
+    }
+
+    public void removeDevice(UUID deviceId) {
+        EnergyDevice device = devices.stream()
+                .filter(d -> d.getId().equals(deviceId))
+                .findFirst()
+                .orElseThrow(DeviceNotFoundException::new);
+
+        devices.remove(device);
+
+        domainEvents.add(new DeviceRemovedEvent(id, deviceId));
     }
 
     private Energy calculateTotalCapacity() {

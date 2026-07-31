@@ -1,8 +1,10 @@
 package com.example.smartcityback.asset.webapi.websocket;
 
 import com.example.smartcityback.asset.domain.event.BuildingCreatedEvent;
+import com.example.smartcityback.asset.domain.event.BuildingDeletedEvent;
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
+import com.example.smartcityback.asset.domain.event.DeviceRemovedEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -16,11 +18,15 @@ import org.springframework.stereotype.Component;
  * real-time updates to frontend clients subscribed to the relevant topics.
  *
  * Topics:
- *   /topic/buildings                           — building creation (collection-level; no
- *                                                 per-id subscriber can exist before creation)
- *   /topic/buildings/{buildingId}/consumption  — consumption change updates
- *   /topic/buildings/{buildingId}/devices      — device addition updates
- *   /topic/buildings/{buildingId}/production   — device production rate updates
+ *   /topic/buildings                            — building creation (collection-level; no
+ *                                                  per-id subscriber can exist before creation)
+ *   /topic/buildings/deleted                    — building deletion (collection-level; kept
+ *                                                  separate from /topic/buildings so each topic
+ *                                                  carries exactly one message shape)
+ *   /topic/buildings/{buildingId}/consumption   — consumption change updates
+ *   /topic/buildings/{buildingId}/devices       — device addition updates
+ *   /topic/buildings/{buildingId}/devices/removed — device removal updates
+ *   /topic/buildings/{buildingId}/production    — device production rate updates
  *
  * This handler lives in webapi because it depends on SimpMessagingTemplate,
  * which is a web/infrastructure concern. Domain events remain pure — they have
@@ -56,6 +62,15 @@ public class BuildingWebSocketEventHandler {
     }
 
     @EventListener
+    public void onBuildingDeleted(BuildingDeletedEvent event) {
+        BuildingDeletedMessage message = new BuildingDeletedMessage(event.buildingId());
+
+        messagingTemplate.convertAndSend("/topic/buildings/deleted", message);
+
+        log.debug("WebSocket pushed BuildingDeleted buildingId={} topic=/topic/buildings/deleted", event.buildingId());
+    }
+
+    @EventListener
     public void onConsumptionChanged(ConsumptionChangedEvent event) {
         String topic = "/topic/buildings/" + event.buildingId() + "/consumption";
 
@@ -86,6 +101,21 @@ public class BuildingWebSocketEventHandler {
         messagingTemplate.convertAndSend(topic, message);
 
         log.debug("WebSocket pushed DeviceAdded buildingId={} topic={}",
+                event.buildingId(), topic);
+    }
+
+    @EventListener
+    public void onDeviceRemoved(DeviceRemovedEvent event) {
+        String topic = "/topic/buildings/" + event.buildingId() + "/devices/removed";
+
+        DeviceRemovedMessage message = new DeviceRemovedMessage(
+                event.buildingId(),
+                event.deviceId()
+        );
+
+        messagingTemplate.convertAndSend(topic, message);
+
+        log.debug("WebSocket pushed DeviceRemoved buildingId={} topic={}",
                 event.buildingId(), topic);
     }
 

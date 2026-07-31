@@ -42,9 +42,10 @@ never raises events directly — in DDD, entities delegate state-change notifica
 the aggregate root, which decides what domain events to record. This keeps event responsibility
 centralised and prevents handlers from reacting to partial or intermediate aggregate state.
 
-`changeProduction` does not call `pullEvents()` because `EnergyDevice.changeProduction()`
-raises no domain events — a production rate change is an internal device state update that
-currently has no downstream subscribers.
+`EnergyDevice.changeProduction()` itself raises no domain event — consistent with the
+principle above, only the aggregate root does. `PublicBuilding.changeDeviceProduction()`
+(the aggregate-level method that delegates to it) raises `ProductionChangedEvent`, and
+`AppService.changeProduction()` does call `pullEvents()`, same as every other mutation.
 
 Domain events implement the `DomainEvent` marker interface (`domain.event.DomainEvent`) so the
 aggregate's internal list is typed as `List<DomainEvent>`. This gives compile-time safety:
@@ -63,3 +64,26 @@ only genuine domain events can be added to the list and dispatched via `Applicat
 - All handlers run synchronously before the HTTP response returns — a slow handler
   blocks the request thread
 - Not suitable if events need to cross service boundaries (different microservices)
+
+## Amendment — 2026-07-31: `BuildingDeletedEvent` is a deliberate exception
+
+**Status:** Superseded in part
+
+"Only the aggregate root raises domain events" no longer holds without
+exception. `BuildingDeletedEvent` is constructed and published directly in
+`AppService.delete()`, bypassing `domainEvents`/`pullEvents()` entirely:
+
+```java
+// AppService.delete(UUID buildingId)
+repository.delete(buildingId);
+eventPublisher.publishEvent(new BuildingDeletedEvent(buildingId));
+```
+
+**Reason:** the `pullEvents()` flow assumes an aggregate instance that gets
+mutated and saved, then has its events collected. Deletion doesn't fit that
+shape — there's no invariant for a domain method to protect, and the
+aggregate ceases to exist rather than being saved. `DeviceRemovedEvent`
+(removing a device from a still-existing building) *is* raised through the
+normal aggregate path via `PublicBuilding.removeDevice()`, same as every
+other mutation — only whole-aggregate deletion is the exception, not "delete"
+operations in general.

@@ -1,8 +1,10 @@
 package com.example.smartcityback.asset.application.eventhandler;
 
 import com.example.smartcityback.asset.domain.event.BuildingCreatedEvent;
+import com.example.smartcityback.asset.domain.event.BuildingDeletedEvent;
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
+import com.example.smartcityback.asset.domain.event.DeviceRemovedEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.event.EventListener;
@@ -27,11 +29,23 @@ public class AuditLogEventHandler {
     }
 
     @EventListener
+    public void onBuildingDeleted(BuildingDeletedEvent event) {
+        log.info("AUDIT BuildingDeleted buildingId={}", event.buildingId());
+    }
+
+    @EventListener
     public void onDeviceAdded(DeviceAddedEvent event) {
         log.info("AUDIT DeviceAdded buildingId={} deviceId={} deviceType={}",
                 event.buildingId(),
                 event.deviceId(),
                 event.deviceType());
+    }
+
+    @EventListener
+    public void onDeviceRemoved(DeviceRemovedEvent event) {
+        log.info("AUDIT DeviceRemoved buildingId={} deviceId={}",
+                event.buildingId(),
+                event.deviceId());
     }
 
     @EventListener

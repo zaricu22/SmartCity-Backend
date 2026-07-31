@@ -159,6 +159,42 @@ public class PublicBuildingController {
         return ResponseEntity.noContent().build();
     }
 
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Delete a public building")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204"),
+            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(
+            @PathVariable UUID id) {
+
+        log.info("RequestReceived endpoint=DELETE /buildings/{id} id={} requestId={}", id, requestId());
+
+        service.delete(id);
+
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasRole('ADMIN')")
+    @Operation(summary = "Remove an energy device from a building")
+    @ApiResponses({
+            @ApiResponse(responseCode = "204"),
+            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    })
+    @DeleteMapping("/{buildingId}/devices/{deviceId}")
+    public ResponseEntity<Void> removeDevice(
+            @PathVariable UUID buildingId,
+            @PathVariable UUID deviceId) {
+
+        log.info("RequestReceived endpoint=DELETE /buildings/{buildingId}/devices/{deviceId} buildingId={} deviceId={} requestId={}",
+                buildingId, deviceId, requestId());
+
+        service.removeDevice(buildingId, deviceId);
+
+        return ResponseEntity.noContent().build();
+    }
+
     @PreAuthorize("hasAnyRole('VIEWER', 'ADMIN')")
     @Operation(summary = "Get a public building by ID")
     @ApiResponses({

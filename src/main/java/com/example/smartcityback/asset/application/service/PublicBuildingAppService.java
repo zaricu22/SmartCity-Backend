@@ -6,6 +6,7 @@ import com.example.smartcityback.asset.application.command.ChangeProductionComma
 import com.example.smartcityback.asset.application.command.CreateBuildingCommand;
 import com.example.smartcityback.asset.domain.aggregate.PublicBuilding;
 import com.example.smartcityback.asset.domain.entity.EnergyDevice;
+import com.example.smartcityback.asset.domain.event.BuildingDeletedEvent;
 import com.example.smartcityback.asset.application.exception.BuildingNotFoundException;
 import com.example.smartcityback.asset.domain.repository.PublicBuildingRepository;
 import com.example.smartcityback.asset.domain.valueobject.Energy;
@@ -101,6 +102,38 @@ public class PublicBuildingAppService {
         building.pullEvents().forEach(eventPublisher::publishEvent);
 
         log.info("ConsumptionChanged buildingId={}", buildingId);
+    }
+
+    public void delete(UUID buildingId) {
+        log.info("CommandReceived command=DeleteBuilding aggregate=PublicBuilding buildingId={}", buildingId);
+
+        if (repository.findById(buildingId).isEmpty()) {
+            log.warn("BuildingNotFound buildingId={}", buildingId);
+            throw new BuildingNotFoundException();
+        }
+
+        repository.delete(buildingId);
+        eventPublisher.publishEvent(new BuildingDeletedEvent(buildingId));
+
+        log.info("BuildingDeleted buildingId={}", buildingId);
+    }
+
+    public void removeDevice(UUID buildingId, UUID deviceId) {
+        log.info("CommandReceived command=RemoveDevice aggregate=PublicBuilding buildingId={} deviceId={}",
+                buildingId, deviceId);
+
+        PublicBuilding building = repository.findById(buildingId)
+                .orElseThrow(() -> {
+                    log.warn("BuildingNotFound buildingId={}", buildingId);
+                    return new BuildingNotFoundException();
+                });
+
+        building.removeDevice(deviceId);
+
+        repository.save(building);
+        building.pullEvents().forEach(eventPublisher::publishEvent);
+
+        log.info("DeviceRemoved buildingId={} deviceId={}", buildingId, deviceId);
     }
 
     public void changeProduction(UUID buildingId, UUID deviceId, ChangeProductionCommand cmd) {

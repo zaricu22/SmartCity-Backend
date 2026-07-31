@@ -177,8 +177,10 @@ are rejected at CONNECT.
 | Topic | Triggered by |
 |-------|-------------|
 | `/topic/buildings` | `BuildingCreatedEvent` (collection-level — no per-id subscriber can exist before creation) |
+| `/topic/buildings/deleted` | `BuildingDeletedEvent` (collection-level; separate topic so each carries one message shape) |
 | `/topic/buildings/{id}/consumption` | `ConsumptionChangedEvent` |
 | `/topic/buildings/{id}/devices` | `DeviceAddedEvent` |
+| `/topic/buildings/{id}/devices/removed` | `DeviceRemovedEvent` |
 | `/topic/buildings/{id}/production` | `ProductionChangedEvent` |
 
 ---
