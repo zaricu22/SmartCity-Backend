@@ -1,8 +1,10 @@
 package com.example.smartcityback.asset.webapi.websocket;
 
 import com.example.smartcityback.asset.domain.event.BuildingCreatedEvent;
+import com.example.smartcityback.asset.domain.event.BuildingDeletedEvent;
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
+import com.example.smartcityback.asset.domain.event.DeviceRemovedEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
@@ -66,6 +68,37 @@ class BuildingWebSocketEventHandlerTest {
         assertThat(message.buildingId()).isEqualTo(BUILDING_ID);
         assertThat(message.name()).isEqualTo("City Hall");
         assertThat(message.location()).isEqualTo("Main St 1");
+    }
+
+    // =====================================================================
+    // BuildingDeletedEvent
+    // =====================================================================
+
+    @Test
+    void onBuildingDeleted_publishesToCollectionTopic() {
+        BuildingDeletedEvent event = new BuildingDeletedEvent(BUILDING_ID, "City Hall");
+
+        handler.onBuildingDeleted(event);
+
+        verify(messagingTemplate).convertAndSend(
+                eq("/topic/buildings/deleted"),
+                any(BuildingDeletedMessage.class)
+        );
+    }
+
+    @Test
+    void onBuildingDeleted_messageContainsCorrectValues() {
+        BuildingDeletedEvent event = new BuildingDeletedEvent(BUILDING_ID, "City Hall");
+
+        ArgumentCaptor<BuildingDeletedMessage> captor =
+                ArgumentCaptor.forClass(BuildingDeletedMessage.class);
+
+        handler.onBuildingDeleted(event);
+
+        verify(messagingTemplate).convertAndSend(any(String.class), captor.capture());
+
+        assertThat(captor.getValue().buildingId()).isEqualTo(BUILDING_ID);
+        assertThat(captor.getValue().name()).isEqualTo("City Hall");
     }
 
     // =====================================================================
@@ -139,6 +172,39 @@ class BuildingWebSocketEventHandlerTest {
         verify(messagingTemplate).convertAndSend(any(String.class), captor.capture());
 
         DeviceAddedMessage message = captor.getValue();
+        assertThat(message.buildingId()).isEqualTo(BUILDING_ID);
+        assertThat(message.deviceId()).isEqualTo(DEVICE_ID);
+        assertThat(message.deviceType()).isEqualTo(DeviceType.BATTERY);
+    }
+
+    // =====================================================================
+    // DeviceRemovedEvent
+    // =====================================================================
+
+    @Test
+    void onDeviceRemoved_publishesToCorrectTopic() {
+        DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, DeviceType.SOLAR);
+
+        handler.onDeviceRemoved(event);
+
+        verify(messagingTemplate).convertAndSend(
+                eq("/topic/buildings/" + BUILDING_ID + "/devices/removed"),
+                any(DeviceRemovedMessage.class)
+        );
+    }
+
+    @Test
+    void onDeviceRemoved_messageContainsCorrectValues() {
+        DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, DeviceType.BATTERY);
+
+        ArgumentCaptor<DeviceRemovedMessage> captor =
+                ArgumentCaptor.forClass(DeviceRemovedMessage.class);
+
+        handler.onDeviceRemoved(event);
+
+        verify(messagingTemplate).convertAndSend(any(String.class), captor.capture());
+
+        DeviceRemovedMessage message = captor.getValue();
         assertThat(message.buildingId()).isEqualTo(BUILDING_ID);
         assertThat(message.deviceId()).isEqualTo(DEVICE_ID);
         assertThat(message.deviceType()).isEqualTo(DeviceType.BATTERY);

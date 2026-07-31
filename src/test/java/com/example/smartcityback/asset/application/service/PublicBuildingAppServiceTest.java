@@ -3,6 +3,8 @@ package com.example.smartcityback.asset.application.service;
 import com.example.smartcityback.asset.application.command.*;
 import com.example.smartcityback.asset.application.exception.BuildingNotFoundException;
 import com.example.smartcityback.asset.domain.event.BuildingCreatedEvent;
+import com.example.smartcityback.asset.domain.event.BuildingDeletedEvent;
+import com.example.smartcityback.asset.domain.event.DeviceRemovedEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import com.example.smartcityback.asset.domain.aggregate.PublicBuilding;
 import com.example.smartcityback.asset.domain.entity.EnergyDevice;
@@ -77,6 +79,30 @@ class PublicBuildingAppServiceTest {
     }
 
     // =====================================================================
+    // delete
+    // =====================================================================
+
+    @Test
+    void delete_buildingNotFound_throwsBuildingNotFoundException() {
+        given(repository.findById(BUILDING_ID)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.delete(BUILDING_ID))
+                .isInstanceOf(BuildingNotFoundException.class);
+
+        then(repository).should(never()).delete(any());
+    }
+
+    @Test
+    void delete_buildingFound_deletesAndPublishesEvent() {
+        given(repository.findById(BUILDING_ID)).willReturn(Optional.of(new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1")));
+
+        service.delete(BUILDING_ID);
+
+        then(repository).should().delete(BUILDING_ID);
+        then(eventPublisher).should().publishEvent(new BuildingDeletedEvent(BUILDING_ID, "City Hall"));
+    }
+
+    // =====================================================================
     // addDevice
     // =====================================================================
 
@@ -104,6 +130,41 @@ class PublicBuildingAppServiceTest {
     // addDevice_domainException_doesNotSave() is not needed because PublicBuilding.addDevice()
     // always generate new ID for the new device, so it can never throw DeviceAlreadyExistsException
     // but domain-level validation is necessary and tested in publicBuildingTest.addDevice_duplicateDevice_throwsDeviceAlreadyExistsException()
+
+    // =====================================================================
+    // removeDevice
+    // =====================================================================
+
+    @Test
+    void removeDevice_buildingNotFound_throwsBuildingNotFoundException() {
+        given(repository.findById(BUILDING_ID)).willReturn(Optional.empty());
+
+        assertThatThrownBy(() -> service.removeDevice(BUILDING_ID, DEVICE_ID))
+                .isInstanceOf(BuildingNotFoundException.class);
+    }
+
+    @Test
+    void removeDevice_deviceNotFound_throwsDeviceNotFoundException() {
+        PublicBuilding emptyBuilding = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+        given(repository.findById(BUILDING_ID)).willReturn(Optional.of(emptyBuilding));
+
+        assertThatThrownBy(() -> service.removeDevice(BUILDING_ID, DEVICE_ID))
+                .isInstanceOf(com.example.smartcityback.asset.domain.exception.DeviceNotFoundException.class);
+
+        then(repository).should(never()).save(any());
+    }
+
+    @Test
+    void removeDevice_deviceFound_savesAndPublishesEvent() {
+        PublicBuilding building = buildingWithOneDevice();
+        given(repository.findById(BUILDING_ID)).willReturn(Optional.of(building));
+
+        service.removeDevice(BUILDING_ID, DEVICE_ID);
+
+        then(repository).should().save(building);
+        assertThat(building.getDevices()).isEmpty();
+        then(eventPublisher).should().publishEvent(new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, DeviceType.SOLAR));
+    }
 
     // =====================================================================
     // changeConsumption

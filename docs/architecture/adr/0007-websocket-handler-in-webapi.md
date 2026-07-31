@@ -52,3 +52,23 @@ explicitly allowed via `ignoreDependency` in `DddArchitectureTest`. See [ADR-000
 - `DddArchitectureTest` requires an explicit exception in the layer dependency rule
 - `webapi.websocket` now has a dependency on `domain.event` and `domain.valueobject`,
   which a strict reading of Onion Architecture does not permit
+
+## Amendment — 2026-07-31: Handler extended to 6 events
+
+`BuildingWebSocketEventHandler` now has six `@EventListener` methods, not two —
+`ProductionChangedEvent`, `BuildingCreatedEvent`, `BuildingDeletedEvent`, and
+`DeviceRemovedEvent` were added after this ADR's original table was written.
+The original decision (placement in `webapi.websocket`, driven solely by the
+`SimpMessagingTemplate` dependency) is unchanged and still governs all of them.
+
+Two of the newer events use a different topic shape than the original table
+shows — not a change in placement, just an extension of the pattern:
+
+| Domain event | WebSocket message | Topic |
+|---|---|---|
+| `BuildingCreatedEvent` | `BuildingCreatedMessage` | `/topic/buildings` (collection-level — no id exists yet to subscribe per-building) |
+| `BuildingDeletedEvent` | `BuildingDeletedMessage` | `/topic/buildings/deleted` (collection-level; kept separate from `/topic/buildings` so each topic carries one message shape) |
+| `DeviceAddedEvent` | `DeviceAddedMessage` | `/topic/buildings/{buildingId}/devices` |
+| `DeviceRemovedEvent` | `DeviceRemovedMessage` | `/topic/buildings/{buildingId}/devices/removed` |
+| `ConsumptionChangedEvent` | `ConsumptionUpdateMessage` | `/topic/buildings/{buildingId}/consumption` |
+| `ProductionChangedEvent` | `ProductionUpdateMessage` | `/topic/buildings/{buildingId}/production` |

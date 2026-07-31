@@ -4,6 +4,7 @@ import com.example.smartcityback.asset.domain.entity.EnergyDevice;
 import com.example.smartcityback.asset.domain.event.BuildingCreatedEvent;
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
+import com.example.smartcityback.asset.domain.event.DeviceRemovedEvent;
 import com.example.smartcityback.asset.domain.event.DomainEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import com.example.smartcityback.asset.domain.exception.BuildingTotalCapacityExceededException;
@@ -115,6 +116,45 @@ class PublicBuildingTest {
 
         assertThatThrownBy(() -> building.getDevices().clear())
                 .isInstanceOf(UnsupportedOperationException.class);
+    }
+
+    // =====================================================================
+    // removeDevice
+    // =====================================================================
+
+    @Test
+    void removeDevice_existingDevice_isRemoved() {
+        PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+        building.addDevice(new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW));
+
+        building.removeDevice(DEVICE_ID);
+
+        assertThat(building.getDevices()).isEmpty();
+    }
+
+    @Test
+    void removeDevice_nonExistentDevice_throwsDeviceNotFoundException() {
+        PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+
+        assertThatThrownBy(() -> building.removeDevice(DEVICE_ID))
+                .isInstanceOf(DeviceNotFoundException.class);
+    }
+
+    @Test
+    void removeDevice_firesDeviceRemovedEvent() {
+        PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+        building.addDevice(new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW));
+        building.pullEvents(); // clear BuildingCreatedEvent, DeviceAddedEvent
+
+        building.removeDevice(DEVICE_ID);
+
+        List<DomainEvent> events = building.pullEvents();
+        assertThat(events).hasSize(1);
+        assertThat(events.get(0)).isInstanceOf(DeviceRemovedEvent.class);
+        DeviceRemovedEvent event = (DeviceRemovedEvent) events.get(0);
+        assertThat(event.buildingId()).isEqualTo(BUILDING_ID);
+        assertThat(event.deviceId()).isEqualTo(DEVICE_ID);
+        assertThat(event.deviceType()).isEqualTo(DeviceType.SOLAR);
     }
 
     //* =====================================================================
