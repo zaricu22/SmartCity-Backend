@@ -16,6 +16,9 @@ public class EnergyDeviceJpaEntity {
     @Column(name = "id", length = 36, nullable = false, updatable = false)
     private UUID id;
 
+    @Column(nullable = false)
+    private String name;
+
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private DeviceType type;
@@ -42,17 +45,15 @@ public class EnergyDeviceJpaEntity {
         // JPA requires
     }
 
-    public EnergyDeviceJpaEntity(UUID id, DeviceType type) {
-        this.id = id;
-        this.type = type;
-    }
-
     public UUID getId() {
         return id;
     }
     public void setId(UUID id) {
         this.id = id;
     }
+
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
 
     public DeviceType getType() { return type; }
     public void setType(DeviceType type) { this.type = type; }

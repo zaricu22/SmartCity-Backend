@@ -11,5 +11,6 @@ import java.util.UUID;
 public record DeviceAddedMessage(
         UUID buildingId,
         UUID deviceId,
+        String deviceName,
         DeviceType deviceType
 ) {}

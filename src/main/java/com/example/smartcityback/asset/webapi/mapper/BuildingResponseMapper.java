@@ -23,6 +23,7 @@ public class BuildingResponseMapper {
                         .stream()
                         .map(d -> new EnergyDeviceResponse(
                                 d.id(),
+                                d.name(),
                                 d.type(),
                                 d.ratedCapacityValue(),
                                 d.ratedCapacityUnit(),

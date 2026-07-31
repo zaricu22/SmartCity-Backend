@@ -23,9 +23,10 @@ class EnergyDeviceTest {
 
     @Test
     void create_validTypeAndCapacity_succeeds() {
-        EnergyDevice device = new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW);
+        EnergyDevice device = new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW);
 
         assertThat(device.getId()).isEqualTo(DEVICE_ID);
+        assertThat(device.getName()).isEqualTo("Test Device");
         assertThat(device.getType()).isEqualTo(DeviceType.SOLAR);
         assertThat(device.getDeviceRatedCapacity()).isEqualTo(CAPACITY_100_KW);
         assertThat(device.getProductionRate().value()).isEqualByComparingTo(BigDecimal.ZERO);
@@ -34,20 +35,32 @@ class EnergyDeviceTest {
 
     @Test
     void create_allDeviceTypes_succeed() {
-        assertThatCode(() -> new EnergyDevice(DEVICE_ID, DeviceType.SOLAR,   CAPACITY_100_KW)).doesNotThrowAnyException();
-        assertThatCode(() -> new EnergyDevice(DEVICE_ID, DeviceType.PUMP,    CAPACITY_100_KW)).doesNotThrowAnyException();
-        assertThatCode(() -> new EnergyDevice(DEVICE_ID, DeviceType.BATTERY, CAPACITY_100_KW)).doesNotThrowAnyException();
+        assertThatCode(() -> new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW)).doesNotThrowAnyException();
+        assertThatCode(() -> new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.PUMP, CAPACITY_100_KW)).doesNotThrowAnyException();
+        assertThatCode(() -> new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.BATTERY, CAPACITY_100_KW)).doesNotThrowAnyException();
+    }
+
+    @Test
+    void create_nullName_throwsValidationException() {
+        assertThatThrownBy(() -> new EnergyDevice(DEVICE_ID, null, DeviceType.SOLAR, CAPACITY_100_KW))
+                .isInstanceOf(ValidationException.class);
+    }
+
+    @Test
+    void create_emptyName_throwsValidationException() {
+        assertThatThrownBy(() -> new EnergyDevice(DEVICE_ID, "", DeviceType.SOLAR, CAPACITY_100_KW))
+                .isInstanceOf(ValidationException.class);
     }
 
     @Test
     void create_nullType_throwsValidationException() {
-        assertThatThrownBy(() -> new EnergyDevice(DEVICE_ID, null, CAPACITY_100_KW))
+        assertThatThrownBy(() -> new EnergyDevice(DEVICE_ID, "Test Device", null, CAPACITY_100_KW))
                 .isInstanceOf(ValidationException.class);
     }
 
     @Test
     void create_nullCapacity_throwsValidationException() {
-        assertThatThrownBy(() -> new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, null))
+        assertThatThrownBy(() -> new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, null))
                 .isInstanceOf(ValidationException.class);
     }
 
@@ -59,7 +72,7 @@ class EnergyDeviceTest {
 
     @Test
     void changeProductionRate_withinCapacity_succeeds() {
-        EnergyDevice device   = new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW);
+        EnergyDevice device   = new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW);
         Energy production80kW = new Energy(new BigDecimal("80"), EnergyUnit.kW);
 
         device.changeProduction(production80kW);
@@ -69,7 +82,7 @@ class EnergyDeviceTest {
 
     @Test
     void changeProductionRate_equalToCapacity_succeeds() {
-        EnergyDevice device = new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW);
+        EnergyDevice device = new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW);
 
         device.changeProduction(CAPACITY_100_KW);
 
@@ -78,7 +91,7 @@ class EnergyDeviceTest {
 
     @Test
     void changeProductionRate_exceedsCapacity_throwsDeviceCapacityLimitException() {
-        EnergyDevice device      = new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW);
+        EnergyDevice device      = new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW);
         Energy overCapacity101kW = new Energy(new BigDecimal("101"), EnergyUnit.kW);
 
         assertThatThrownBy(() -> device.changeProduction(overCapacity101kW))
@@ -89,7 +102,7 @@ class EnergyDeviceTest {
     void changeProductionRate_crossUnit_999kWWithin1MWCapacity_succeeds() {
         // 1 MW = 1000 kW; 999 kW < 1 MW — must NOT throw.
         Energy capacity1MW  = new Energy(new BigDecimal("1"), EnergyUnit.MW);
-        EnergyDevice device = new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, capacity1MW);
+        EnergyDevice device = new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, capacity1MW);
         Energy production   = new Energy(new BigDecimal("999"), EnergyUnit.kW);
 
         assertThatCode(() -> device.changeProduction(production)).doesNotThrowAnyException();
@@ -98,7 +111,7 @@ class EnergyDeviceTest {
     @Test
     void changeProductionRate_crossUnit_2MWExceeds1MWCapacity_throws() {
         Energy capacity1MW  = new Energy(new BigDecimal("1"), EnergyUnit.MW);
-        EnergyDevice device = new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, capacity1MW);
+        EnergyDevice device = new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, capacity1MW);
         Energy production   = new Energy(new BigDecimal("2"), EnergyUnit.MW);
 
         assertThatThrownBy(() -> device.changeProduction(production))

@@ -13,6 +13,7 @@ import java.util.UUID;
 
 public class EnergyDevice {
     private UUID id;
+    private String name;
     private DeviceType type;
 
     private final Energy deviceRatedCapacity;
@@ -21,20 +22,24 @@ public class EnergyDevice {
     // Private constructor for reconstitution from persistence — bypasses validation because
     // data from the DB is already valid (was validated on write). deviceRatedCapacity is final
     // so a constructor overload is required; a private no-arg constructor cannot assign final fields.
-    private EnergyDevice(UUID id, DeviceType type, Energy deviceRatedCapacity, Energy productionRate) {
+    private EnergyDevice(UUID id, String name, DeviceType type, Energy deviceRatedCapacity, Energy productionRate) {
         this.id = id;
+        this.name = name;
         this.type = type;
         this.deviceRatedCapacity = deviceRatedCapacity;
         this.productionRate = productionRate;
     }
 
-    public static EnergyDevice reconstitute(UUID id, DeviceType type,
+    public static EnergyDevice reconstitute(UUID id, String name, DeviceType type,
                                              Energy ratedCapacity, Energy productionRate) {
-        return new EnergyDevice(id, type, ratedCapacity, productionRate);
+        return new EnergyDevice(id, name, type, ratedCapacity, productionRate);
     }
 
-    public EnergyDevice(UUID id, DeviceType type, Energy deviceRatedCapacity) {
+    public EnergyDevice(UUID id, String name, DeviceType type, Energy deviceRatedCapacity) {
         this.id = id;
+        if (name == null || name.isEmpty()) {
+            throw new ValidationException("Device name is required!", ErrorCode.DEVICE_NAME_EMPTY);
+        }
         if (type == null) {
             throw new ValidationException("Device type is required!", ErrorCode.DEVICE_TYPE_REQUIRED);
         }
@@ -43,6 +48,7 @@ public class EnergyDevice {
         }
 
         // required minimum
+        this.name = name;
         this.type = type;
         this.deviceRatedCapacity = deviceRatedCapacity;
 
@@ -80,6 +86,7 @@ public class EnergyDevice {
 
     // Immutable getters
     public UUID getId() { return id; }
+    public String getName() { return name; }
     public DeviceType getType() { return type; }
     public Energy getDeviceRatedCapacity() { return deviceRatedCapacity; }
     public Energy getProductionRate() { return productionRate; }

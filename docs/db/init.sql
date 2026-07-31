@@ -43,6 +43,7 @@ CREATE TABLE IF NOT EXISTS smartcity.public.public_building (
 CREATE TABLE IF NOT EXISTS smartcity.public.energy_device (
     id                    UUID           PRIMARY KEY,  -- MySQL: CHAR(36)
     building_id           UUID           NOT NULL,     -- MySQL: CHAR(36)
+    name                  TEXT           NOT NULL,
     type                  VARCHAR(50)    NOT NULL,
     rated_capacity_value  NUMERIC(19,4)  NOT NULL,     -- @AttributeOverride(name="value", column=@Column(name="rated_capacity_value"))
     rated_capacity_unit   VARCHAR(10)    NOT NULL,     -- @AttributeOverride(name="unit",  column=@Column(name="rated_capacity_unit"))

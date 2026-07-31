@@ -102,7 +102,7 @@ class PublicBuildingControllerAPITest {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
+                                {"name": "Solar Panel", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
                                 """))
                 .andExpect(status().isNoContent());
     }
@@ -195,6 +195,7 @@ class PublicBuildingControllerAPITest {
                 BUILDING_ID, "City Hall", "Main St 1",
                 BigDecimal.ZERO, EnergyUnit.kW,
                 List.of(new EnergyDeviceDto(DEVICE_ID,
+                        "Solar Panel",
                         com.example.smartcityback.asset.domain.shared.enums.DeviceType.SOLAR,
                         new BigDecimal("100"), EnergyUnit.kW,
                         BigDecimal.ZERO, EnergyUnit.kW))
@@ -207,6 +208,7 @@ class PublicBuildingControllerAPITest {
                 .andExpect(jsonPath("$.name").value("City Hall"))
                 .andExpect(jsonPath("$.location").value("Main St 1"))
                 .andExpect(jsonPath("$.devices").isArray())
+                .andExpect(jsonPath("$.devices[0].name").value("Solar Panel"))
                 .andExpect(jsonPath("$.devices[0].type").value("SOLAR"));
     }
 
@@ -292,7 +294,18 @@ class PublicBuildingControllerAPITest {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"ratedCapacityValue": 50, "ratedCapacityUnit": "kW"}
+                                {"name": "Solar Panel", "ratedCapacityValue": 50, "ratedCapacityUnit": "kW"}
+                                """))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void addDevice_blankName_returns422() throws Exception {
+        mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
                                 """))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
@@ -303,7 +316,7 @@ class PublicBuildingControllerAPITest {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"type": "SOLAR", "ratedCapacityValue": -5, "ratedCapacityUnit": "kW"}
+                                {"name": "Solar Panel", "type": "SOLAR", "ratedCapacityValue": -5, "ratedCapacityUnit": "kW"}
                                 """))
                 .andExpect(status().isUnprocessableEntity())
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
@@ -343,7 +356,7 @@ class PublicBuildingControllerAPITest {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
+                                {"name": "Solar Panel", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
                                 """))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("BUILDING_NOT_FOUND"));
@@ -428,7 +441,7 @@ class PublicBuildingControllerAPITest {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
+                                {"name": "Solar Panel", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.errorCode").value("DEVICE_ALREADY_EXISTS"));
@@ -469,7 +482,7 @@ class PublicBuildingControllerAPITest {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
+                                {"name": "Solar Panel", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.errorCode").value("CONCURRENT_MODIFICATION"));

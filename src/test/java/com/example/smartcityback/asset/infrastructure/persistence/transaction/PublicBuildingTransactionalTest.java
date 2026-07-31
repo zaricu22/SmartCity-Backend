@@ -124,7 +124,7 @@ class PublicBuildingTransactionalTest {
                         .orElse(0));
 
         AddDeviceCommand cmd = new AddDeviceCommand(
-                unknownBuildingId, DeviceType.SOLAR, new BigDecimal("50"), EnergyUnit.kW);
+                unknownBuildingId, "Test Device", DeviceType.SOLAR, new BigDecimal("50"), EnergyUnit.kW);
 
         assertThatThrownBy(() -> service.addDevice(cmd))
                 .isInstanceOf(BuildingNotFoundException.class);

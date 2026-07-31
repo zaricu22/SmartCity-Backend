@@ -12,6 +12,7 @@ import java.util.UUID;
  */
 public record EnergyDeviceDto(
         UUID id,
+        String name,
         DeviceType type,
         BigDecimal ratedCapacityValue,
         EnergyUnit ratedCapacityUnit,
