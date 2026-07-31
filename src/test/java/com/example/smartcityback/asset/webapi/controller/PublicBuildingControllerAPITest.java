@@ -220,6 +220,18 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    void delete_validRequest_returns204() throws Exception {
+        mockMvc.perform(delete("/v1/buildings/{id}", BUILDING_ID))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
+    void removeDevice_validRequest_returns204() throws Exception {
+        mockMvc.perform(delete("/v1/buildings/{buildingId}/devices/{deviceId}", BUILDING_ID, DEVICE_ID))
+                .andExpect(status().isNoContent());
+    }
+
+    @Test
     void changeProduction_validRequest_returns204() throws Exception {
         mockMvc.perform(patch("/v1/buildings/{buildingId}/devices/{deviceId}/production",
                         BUILDING_ID, DEVICE_ID)
@@ -374,6 +386,33 @@ class PublicBuildingControllerAPITest {
                         .content("""
                                 {"productionValue": 60, "productionUnit": "kW"}
                                 """))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("DEVICE_NOT_FOUND"));
+    }
+
+    @Test
+    void delete_buildingNotFound_returns404() throws Exception {
+        willThrow(new BuildingNotFoundException()).given(appService).delete(any());
+
+        mockMvc.perform(delete("/v1/buildings/{id}", BUILDING_ID))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("BUILDING_NOT_FOUND"));
+    }
+
+    @Test
+    void removeDevice_buildingNotFound_returns404() throws Exception {
+        willThrow(new BuildingNotFoundException()).given(appService).removeDevice(any(), any());
+
+        mockMvc.perform(delete("/v1/buildings/{buildingId}/devices/{deviceId}", BUILDING_ID, DEVICE_ID))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.errorCode").value("BUILDING_NOT_FOUND"));
+    }
+
+    @Test
+    void removeDevice_deviceNotFound_returns404() throws Exception {
+        willThrow(new DeviceNotFoundException()).given(appService).removeDevice(any(), any());
+
+        mockMvc.perform(delete("/v1/buildings/{buildingId}/devices/{deviceId}", BUILDING_ID, DEVICE_ID))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("DEVICE_NOT_FOUND"));
     }

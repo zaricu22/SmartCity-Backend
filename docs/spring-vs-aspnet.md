@@ -16,7 +16,7 @@ In ASP.NET: no equivalent annotation. You would wrap service methods in `using v
 
 ### `@EventListener` internal event bus — demonstrated
 
-`AuditLogEventHandler` and `BuildingWebSocketEventHandler` each have four `@EventListener` methods, one per domain event (`BuildingCreatedEvent`, `DeviceAddedEvent`, `ConsumptionChangedEvent`, `ProductionChangedEvent`). `AppService` just calls `eventPublisher.publishEvent(event)`. Both handlers are discovered automatically — no registration code anywhere.
+`AuditLogEventHandler` and `BuildingWebSocketEventHandler` each have six `@EventListener` methods, one per domain event (`BuildingCreatedEvent`, `BuildingDeletedEvent`, `DeviceAddedEvent`, `DeviceRemovedEvent`, `ConsumptionChangedEvent`, `ProductionChangedEvent`). `AppService` just calls `eventPublisher.publishEvent(event)`. Both handlers are discovered automatically — no registration code anywhere.
 
 In ASP.NET: requires MediatR or a similar third-party library. Each handler must implement `INotificationHandler<T>` and be registered with `services.AddMediatR(...)`. Equivalent functionality, but two extra dependencies and explicit wiring.
 

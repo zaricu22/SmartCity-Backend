@@ -1,8 +1,10 @@
 package com.example.smartcityback.asset.application.eventhandler;
 
 import com.example.smartcityback.asset.domain.event.BuildingCreatedEvent;
+import com.example.smartcityback.asset.domain.event.BuildingDeletedEvent;
 import com.example.smartcityback.asset.domain.event.ConsumptionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
+import com.example.smartcityback.asset.domain.event.DeviceRemovedEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
@@ -44,6 +46,18 @@ class AuditLogEventHandlerTest {
     }
 
     // =====================================================================
+    // BuildingDeletedEvent
+    // =====================================================================
+
+    @Test
+    void onBuildingDeleted_validEvent_doesNotThrow() {
+        BuildingDeletedEvent event = new BuildingDeletedEvent(BUILDING_ID, "City Hall");
+
+        assertThatCode(() -> handler.onBuildingDeleted(event))
+                .doesNotThrowAnyException();
+    }
+
+    // =====================================================================
     // DeviceAddedEvent
     // =====================================================================
 
@@ -63,6 +77,18 @@ class AuditLogEventHandlerTest {
             assertThatCode(() -> handler.onDeviceAdded(event))
                     .doesNotThrowAnyException();
         }
+    }
+
+    // =====================================================================
+    // DeviceRemovedEvent
+    // =====================================================================
+
+    @Test
+    void onDeviceRemoved_validEvent_doesNotThrow() {
+        DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, DeviceType.SOLAR);
+
+        assertThatCode(() -> handler.onDeviceRemoved(event))
+                .doesNotThrowAnyException();
     }
 
     // =====================================================================
