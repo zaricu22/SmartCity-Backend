@@ -92,3 +92,42 @@ aggregate ceases to exist rather than being saved. `DeviceRemovedEvent`
 normal aggregate path via `PublicBuilding.removeDevice()`, same as every
 other mutation — only whole-aggregate deletion is the exception, not "delete"
 operations in general.
+
+## Amendment — 2026-08-06: listeners must use `@TransactionalEventListener(AFTER_COMMIT)`
+
+**Status:** Correction
+
+The "Positive" consequence above claimed "event publishing is fire-and-forget
+**after commit**" — that was aspirational, not actual. `AppService` methods
+are `@Transactional`, and `eventPublisher.publishEvent(...)` is called from
+inside that same transactional method, right after `repository.save(...)`.
+Plain `@EventListener` (used by both `BuildingWebSocketEventHandler` and
+`AuditLogEventHandler`) fires **synchronously at publish time**, before the
+surrounding transaction commits — not after.
+
+For the WebSocket handler this broke client-visible correctness: a client
+receiving the push and immediately refetching (`GET /v1/buildings/{id}`)
+could race the backend's own commit and read pre-write state, since its own
+read ran in a separate transaction that started before the write transaction
+had committed. For the audit-log handler the symptom was quieter but the
+same bug: an exception thrown from *any* listener during publish — audit log
+included — propagates back through `publishEvent()` and, because it runs
+before commit, could roll back the aggregate save itself, contradicting the
+"handler failures are logged but do not roll back the aggregate change"
+claim in the Negative consequences below. A successful audit log line was
+also no guarantee the write it described actually committed.
+
+**Fix:** every handler in both `BuildingWebSocketEventHandler` and
+`AuditLogEventHandler` now uses
+`@TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)` instead
+of `@EventListener`. This defers execution until
+`TransactionSynchronizationManager` confirms the transaction actually
+committed — still synchronous, still same thread, still before the
+`AppService` method returns to the controller, but now strictly after the
+write is durable. Any client reacting to the WebSocket push is guaranteed to
+see committed data on a subsequent read, and every audit log line now
+describes a change that is genuinely persisted.
+
+This does **not** change the "Negative" consequence about slow handlers
+blocking the request thread — `AFTER_COMMIT` still runs inline as part of
+commit, just later in that same sequence.
