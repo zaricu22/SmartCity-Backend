@@ -75,9 +75,14 @@ exception. `BuildingDeletedEvent` is constructed and published directly in
 
 ```java
 // AppService.delete(UUID buildingId)
+PublicBuilding building = repository.findById(buildingId).orElseThrow(BuildingNotFoundException::new);
 repository.delete(buildingId);
-eventPublisher.publishEvent(new BuildingDeletedEvent(buildingId));
+eventPublisher.publishEvent(new BuildingDeletedEvent(buildingId, building.getName()));
 ```
+
+Note the building is loaded *before* `delete()` — the event carries the
+building's name for downstream consumers (audit log, WebSocket push), which
+wouldn't be available after the row is gone.
 
 **Reason:** the `pullEvents()` flow assumes an aggregate instance that gets
 mutated and saved, then has its events collected. Deletion doesn't fit that

@@ -107,13 +107,14 @@ public class PublicBuildingAppService {
     public void delete(UUID buildingId) {
         log.info("CommandReceived command=DeleteBuilding aggregate=PublicBuilding buildingId={}", buildingId);
 
-        if (repository.findById(buildingId).isEmpty()) {
-            log.warn("BuildingNotFound buildingId={}", buildingId);
-            throw new BuildingNotFoundException();
-        }
+        PublicBuilding building = repository.findById(buildingId)
+                .orElseThrow(() -> {
+                    log.warn("BuildingNotFound buildingId={}", buildingId);
+                    return new BuildingNotFoundException();
+                });
 
         repository.delete(buildingId);
-        eventPublisher.publishEvent(new BuildingDeletedEvent(buildingId));
+        eventPublisher.publishEvent(new BuildingDeletedEvent(buildingId, building.getName()));
 
         log.info("BuildingDeleted buildingId={}", buildingId);
     }

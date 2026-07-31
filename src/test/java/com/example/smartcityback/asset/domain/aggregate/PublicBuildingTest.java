@@ -154,6 +154,7 @@ class PublicBuildingTest {
         DeviceRemovedEvent event = (DeviceRemovedEvent) events.get(0);
         assertThat(event.buildingId()).isEqualTo(BUILDING_ID);
         assertThat(event.deviceId()).isEqualTo(DEVICE_ID);
+        assertThat(event.deviceType()).isEqualTo(DeviceType.SOLAR);
     }
 
     //* =====================================================================

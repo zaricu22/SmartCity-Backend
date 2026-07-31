@@ -76,7 +76,7 @@ class BuildingWebSocketEventHandlerTest {
 
     @Test
     void onBuildingDeleted_publishesToCollectionTopic() {
-        BuildingDeletedEvent event = new BuildingDeletedEvent(BUILDING_ID);
+        BuildingDeletedEvent event = new BuildingDeletedEvent(BUILDING_ID, "City Hall");
 
         handler.onBuildingDeleted(event);
 
@@ -88,7 +88,7 @@ class BuildingWebSocketEventHandlerTest {
 
     @Test
     void onBuildingDeleted_messageContainsCorrectValues() {
-        BuildingDeletedEvent event = new BuildingDeletedEvent(BUILDING_ID);
+        BuildingDeletedEvent event = new BuildingDeletedEvent(BUILDING_ID, "City Hall");
 
         ArgumentCaptor<BuildingDeletedMessage> captor =
                 ArgumentCaptor.forClass(BuildingDeletedMessage.class);
@@ -98,6 +98,7 @@ class BuildingWebSocketEventHandlerTest {
         verify(messagingTemplate).convertAndSend(any(String.class), captor.capture());
 
         assertThat(captor.getValue().buildingId()).isEqualTo(BUILDING_ID);
+        assertThat(captor.getValue().name()).isEqualTo("City Hall");
     }
 
     // =====================================================================
@@ -182,7 +183,7 @@ class BuildingWebSocketEventHandlerTest {
 
     @Test
     void onDeviceRemoved_publishesToCorrectTopic() {
-        DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID);
+        DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, DeviceType.SOLAR);
 
         handler.onDeviceRemoved(event);
 
@@ -194,7 +195,7 @@ class BuildingWebSocketEventHandlerTest {
 
     @Test
     void onDeviceRemoved_messageContainsCorrectValues() {
-        DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID);
+        DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, DeviceType.BATTERY);
 
         ArgumentCaptor<DeviceRemovedMessage> captor =
                 ArgumentCaptor.forClass(DeviceRemovedMessage.class);
@@ -206,6 +207,7 @@ class BuildingWebSocketEventHandlerTest {
         DeviceRemovedMessage message = captor.getValue();
         assertThat(message.buildingId()).isEqualTo(BUILDING_ID);
         assertThat(message.deviceId()).isEqualTo(DEVICE_ID);
+        assertThat(message.deviceType()).isEqualTo(DeviceType.BATTERY);
     }
 
     // =====================================================================

@@ -8,4 +8,4 @@ import java.util.UUID;
  * Collection-level topic, same shape as /topic/buildings (creation) — kept as a separate
  * topic rather than reusing /topic/buildings so each topic carries exactly one message shape.
  */
-public record BuildingDeletedMessage(UUID buildingId) {}
+public record BuildingDeletedMessage(UUID buildingId, String name) {}

@@ -51,7 +51,7 @@ class AuditLogEventHandlerTest {
 
     @Test
     void onBuildingDeleted_validEvent_doesNotThrow() {
-        BuildingDeletedEvent event = new BuildingDeletedEvent(BUILDING_ID);
+        BuildingDeletedEvent event = new BuildingDeletedEvent(BUILDING_ID, "City Hall");
 
         assertThatCode(() -> handler.onBuildingDeleted(event))
                 .doesNotThrowAnyException();
@@ -85,7 +85,7 @@ class AuditLogEventHandlerTest {
 
     @Test
     void onDeviceRemoved_validEvent_doesNotThrow() {
-        DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID);
+        DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, DeviceType.SOLAR);
 
         assertThatCode(() -> handler.onDeviceRemoved(event))
                 .doesNotThrowAnyException();

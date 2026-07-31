@@ -30,7 +30,7 @@ public class AuditLogEventHandler {
 
     @EventListener
     public void onBuildingDeleted(BuildingDeletedEvent event) {
-        log.info("AUDIT BuildingDeleted buildingId={}", event.buildingId());
+        log.info("AUDIT BuildingDeleted buildingId={} name={}", event.buildingId(), event.name());
     }
 
     @EventListener
@@ -43,9 +43,10 @@ public class AuditLogEventHandler {
 
     @EventListener
     public void onDeviceRemoved(DeviceRemovedEvent event) {
-        log.info("AUDIT DeviceRemoved buildingId={} deviceId={}",
+        log.info("AUDIT DeviceRemoved buildingId={} deviceId={} deviceType={}",
                 event.buildingId(),
-                event.deviceId());
+                event.deviceId(),
+                event.deviceType());
     }
 
     @EventListener

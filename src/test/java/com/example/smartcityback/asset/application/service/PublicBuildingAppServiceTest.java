@@ -99,7 +99,7 @@ class PublicBuildingAppServiceTest {
         service.delete(BUILDING_ID);
 
         then(repository).should().delete(BUILDING_ID);
-        then(eventPublisher).should().publishEvent(any(BuildingDeletedEvent.class));
+        then(eventPublisher).should().publishEvent(new BuildingDeletedEvent(BUILDING_ID, "City Hall"));
     }
 
     // =====================================================================
@@ -163,7 +163,7 @@ class PublicBuildingAppServiceTest {
 
         then(repository).should().save(building);
         assertThat(building.getDevices()).isEmpty();
-        then(eventPublisher).should().publishEvent(any(DeviceRemovedEvent.class));
+        then(eventPublisher).should().publishEvent(new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, DeviceType.SOLAR));
     }
 
     // =====================================================================

@@ -63,7 +63,7 @@ public class BuildingWebSocketEventHandler {
 
     @EventListener
     public void onBuildingDeleted(BuildingDeletedEvent event) {
-        BuildingDeletedMessage message = new BuildingDeletedMessage(event.buildingId());
+        BuildingDeletedMessage message = new BuildingDeletedMessage(event.buildingId(), event.name());
 
         messagingTemplate.convertAndSend("/topic/buildings/deleted", message);
 
@@ -110,7 +110,8 @@ public class BuildingWebSocketEventHandler {
 
         DeviceRemovedMessage message = new DeviceRemovedMessage(
                 event.buildingId(),
-                event.deviceId()
+                event.deviceId(),
+                event.deviceType()
         );
 
         messagingTemplate.convertAndSend(topic, message);
