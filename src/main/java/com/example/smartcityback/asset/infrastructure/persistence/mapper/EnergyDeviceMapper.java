@@ -13,6 +13,7 @@ public class EnergyDeviceMapper {
     public static EnergyDevice toDomain(EnergyDeviceJpaEntity entity) {
         return EnergyDevice.reconstitute(
                 entity.getId(),
+                entity.getName(),
                 entity.getType(),
                 Energy.reconstitute(entity.getRatedCapacity().getValue(),
                                     entity.getRatedCapacity().getUnit()),
@@ -26,6 +27,7 @@ public class EnergyDeviceMapper {
         EnergyDeviceJpaEntity entity = new EnergyDeviceJpaEntity();
 
         entity.setId(device.getId());
+        entity.setName(device.getName());
         entity.setType(device.getType());
 
         entity.setRatedCapacity(

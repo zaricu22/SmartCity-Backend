@@ -24,7 +24,7 @@ in the same thread:
 
 ```java
 // PublicBuilding.addDevice(EnergyDevice newDevice) 
-domainEvents.add(new DeviceAddedEvent(id, newDevice.getId(), newDevice.getType()));
+domainEvents.add(new DeviceAddedEvent(id, newDevice.getId(), newDevice.getName(), newDevice.getType()));
 
 // Application.addDevice(AddDeviceCommand cmd)
 repository.save(building);

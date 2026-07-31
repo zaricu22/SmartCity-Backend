@@ -49,7 +49,7 @@ class PublicBuildingAppServiceTest {
 
     private PublicBuilding buildingWithOneDevice() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        building.addDevice(new EnergyDevice(DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW));
+        building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
         return building;
     }
 
@@ -110,7 +110,7 @@ class PublicBuildingAppServiceTest {
     void addDevice_buildingNotFound_throwsBuildingNotFoundException() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.empty());
 
-        AddDeviceCommand cmd = new AddDeviceCommand(BUILDING_ID, DeviceType.SOLAR, new BigDecimal("50"), EnergyUnit.kW);
+        AddDeviceCommand cmd = new AddDeviceCommand(BUILDING_ID, "Test Device", DeviceType.SOLAR, new BigDecimal("50"), EnergyUnit.kW);
 
         assertThatThrownBy(() -> service.addDevice(cmd))
                 .isInstanceOf(BuildingNotFoundException.class);
@@ -121,7 +121,7 @@ class PublicBuildingAppServiceTest {
         PublicBuilding emptyBuilding = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(emptyBuilding));
 
-        service.addDevice(new AddDeviceCommand(BUILDING_ID, DeviceType.SOLAR, new BigDecimal("50"), EnergyUnit.kW));
+        service.addDevice(new AddDeviceCommand(BUILDING_ID, "Test Device", DeviceType.SOLAR, new BigDecimal("50"), EnergyUnit.kW));
 
         then(repository).should().save(emptyBuilding);
         assertThat(emptyBuilding.getDevices()).hasSize(1);
@@ -163,7 +163,7 @@ class PublicBuildingAppServiceTest {
 
         then(repository).should().save(building);
         assertThat(building.getDevices()).isEmpty();
-        then(eventPublisher).should().publishEvent(new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, DeviceType.SOLAR));
+        then(eventPublisher).should().publishEvent(new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, "Test Device", DeviceType.SOLAR));
     }
 
     // =====================================================================

@@ -57,13 +57,14 @@ class BuildingResponseMapperTest {
         PublicBuildingDto dto = new PublicBuildingDto(
                 BUILDING_ID, "City Hall", "Main St 1",
                 BigDecimal.ZERO, EnergyUnit.kW,
-                List.of(new EnergyDeviceDto(DEVICE_ID, DeviceType.SOLAR, new BigDecimal("100"), EnergyUnit.kW, new BigDecimal("60"), EnergyUnit.kW))
+                List.of(new EnergyDeviceDto(DEVICE_ID, "Test Device", DeviceType.SOLAR, new BigDecimal("100"), EnergyUnit.kW, new BigDecimal("60"), EnergyUnit.kW))
         );
 
         PublicBuildingResponse response = BuildingResponseMapper.toResponse(dto);
 
         assertThat(response.devices()).hasSize(1);
         assertThat(response.devices().get(0).id()).isEqualTo(DEVICE_ID);
+        assertThat(response.devices().get(0).name()).isEqualTo("Test Device");
         assertThat(response.devices().get(0).type()).isEqualTo(DeviceType.SOLAR);
         assertThat(response.devices().get(0).ratedCapacityValue()).isEqualByComparingTo("100");
         assertThat(response.devices().get(0).ratedCapacityUnit()).isEqualTo(EnergyUnit.kW);

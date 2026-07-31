@@ -35,17 +35,19 @@ public class AuditLogEventHandler {
 
     @EventListener
     public void onDeviceAdded(DeviceAddedEvent event) {
-        log.info("AUDIT DeviceAdded buildingId={} deviceId={} deviceType={}",
+        log.info("AUDIT DeviceAdded buildingId={} deviceId={} deviceName={} deviceType={}",
                 event.buildingId(),
                 event.deviceId(),
+                event.deviceName(),
                 event.deviceType());
     }
 
     @EventListener
     public void onDeviceRemoved(DeviceRemovedEvent event) {
-        log.info("AUDIT DeviceRemoved buildingId={} deviceId={} deviceType={}",
+        log.info("AUDIT DeviceRemoved buildingId={} deviceId={} deviceName={} deviceType={}",
                 event.buildingId(),
                 event.deviceId(),
+                event.deviceName(),
                 event.deviceType());
     }
 

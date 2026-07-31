@@ -87,7 +87,7 @@ public class PublicBuilding {
 
         this.devices.add(newDevice);
 
-        domainEvents.add(new DeviceAddedEvent(id, newDevice.getId(), newDevice.getType()));
+        domainEvents.add(new DeviceAddedEvent(id, newDevice.getId(), newDevice.getName(), newDevice.getType()));
     }
 
     public void removeDevice(UUID deviceId) {
@@ -98,7 +98,7 @@ public class PublicBuilding {
 
         devices.remove(device);
 
-        domainEvents.add(new DeviceRemovedEvent(id, deviceId, device.getType()));
+        domainEvents.add(new DeviceRemovedEvent(id, deviceId, device.getName(), device.getType()));
     }
 
     private Energy calculateTotalCapacity() {

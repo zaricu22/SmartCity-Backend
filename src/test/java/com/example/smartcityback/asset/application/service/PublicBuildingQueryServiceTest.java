@@ -50,7 +50,7 @@ class PublicBuildingQueryServiceTest {
     }
 
     private EnergyDevice deviceEntity() {
-        EnergyDevice device = new EnergyDevice(DEVICE_ID, DeviceType.SOLAR,
+        EnergyDevice device = new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR,
                 new Energy(new BigDecimal("100"), EnergyUnit.kW));
         device.changeProduction(new Energy(new BigDecimal("60"), EnergyUnit.kW));
         return device;
@@ -92,7 +92,7 @@ class PublicBuildingQueryServiceTest {
     @Test
     void getById_multipleDevices_allMapped() {
         EnergyDevice solar   = deviceEntity();
-        EnergyDevice battery = new EnergyDevice(UUID.randomUUID(), DeviceType.BATTERY,
+        EnergyDevice battery = new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.BATTERY,
                 new Energy(new BigDecimal("200"), EnergyUnit.kW));
 
         given(repository.findById(BUILDING_ID))

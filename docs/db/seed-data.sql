@@ -43,194 +43,194 @@ INSERT INTO smartcity.public.public_building (id, name, location, consumption_va
 -- Devices — City Hall (total capacity: 550 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0001-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 'SOLAR',   200.0000, 'kW', 160.0000, 'kW'),
-    ('d1000000-0001-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000001', 'SOLAR',   200.0000, 'kW', 155.0000, 'kW'),
-    ('d1000000-0001-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000001', 'BATTERY', 100.0000, 'kW',  40.0000, 'kW'),
-    ('d1000000-0001-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000001', 'PUMP',     50.0000, 'kW',  30.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0001-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000001', 'City Hall Solar Panel 1',  'SOLAR',   200.0000, 'kW', 160.0000, 'kW'),
+    ('d1000000-0001-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000001', 'City Hall Solar Panel 2',  'SOLAR',   200.0000, 'kW', 155.0000, 'kW'),
+    ('d1000000-0001-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000001', 'City Hall Battery Bank',   'BATTERY', 100.0000, 'kW',  40.0000, 'kW'),
+    ('d1000000-0001-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000001', 'City Hall Water Pump',     'PUMP',     50.0000, 'kW',  30.0000, 'kW');
 
 -- ============================================================
 -- Devices — Public Library (total capacity: 230 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0002-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000002', 'SOLAR',   150.0000, 'kW', 110.0000, 'kW'),
-    ('d1000000-0002-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000002', 'BATTERY',  80.0000, 'kW',  25.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0002-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000002', 'Public Library Solar Panel',  'SOLAR',   150.0000, 'kW', 110.0000, 'kW'),
+    ('d1000000-0002-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000002', 'Public Library Battery Bank', 'BATTERY',  80.0000, 'kW',  25.0000, 'kW');
 
 -- ============================================================
 -- Devices — Sports Arena (total capacity: 1500 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0003-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000003', 'SOLAR',   300.0000, 'kW', 240.0000, 'kW'),
-    ('d1000000-0003-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000003', 'SOLAR',   300.0000, 'kW', 235.0000, 'kW'),
-    ('d1000000-0003-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000003', 'SOLAR',   300.0000, 'kW', 220.0000, 'kW'),
-    ('d1000000-0003-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000003', 'BATTERY', 200.0000, 'kW',  80.0000, 'kW'),
-    ('d1000000-0003-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000003', 'BATTERY', 200.0000, 'kW',  75.0000, 'kW'),
-    ('d1000000-0003-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000003', 'PUMP',    100.0000, 'kW',  60.0000, 'kW'),
-    ('d1000000-0003-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000003', 'PUMP',    100.0000, 'kW',  55.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0003-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000003', 'Sports Arena Solar Panel 1',  'SOLAR',   300.0000, 'kW', 240.0000, 'kW'),
+    ('d1000000-0003-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000003', 'Sports Arena Solar Panel 2',  'SOLAR',   300.0000, 'kW', 235.0000, 'kW'),
+    ('d1000000-0003-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000003', 'Sports Arena Solar Panel 3',  'SOLAR',   300.0000, 'kW', 220.0000, 'kW'),
+    ('d1000000-0003-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000003', 'Sports Arena Battery Bank 1', 'BATTERY', 200.0000, 'kW',  80.0000, 'kW'),
+    ('d1000000-0003-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000003', 'Sports Arena Battery Bank 2', 'BATTERY', 200.0000, 'kW',  75.0000, 'kW'),
+    ('d1000000-0003-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000003', 'Sports Arena Water Pump 1',   'PUMP',    100.0000, 'kW',  60.0000, 'kW'),
+    ('d1000000-0003-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000003', 'Sports Arena Water Pump 2',   'PUMP',    100.0000, 'kW',  55.0000, 'kW');
 
 -- ============================================================
 -- Devices — Central Hospital (total capacity: 1030 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0004-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000004', 'SOLAR',   250.0000, 'kW', 200.0000, 'kW'),
-    ('d1000000-0004-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000004', 'SOLAR',   250.0000, 'kW', 195.0000, 'kW'),
-    ('d1000000-0004-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000004', 'BATTERY', 150.0000, 'kW',  90.0000, 'kW'),
-    ('d1000000-0004-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000004', 'BATTERY', 150.0000, 'kW',  85.0000, 'kW'),
-    ('d1000000-0004-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000004', 'BATTERY', 150.0000, 'kW',  80.0000, 'kW'),
-    ('d1000000-0004-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000004', 'PUMP',     80.0000, 'kW',  50.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0004-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000004', 'Central Hospital Solar Panel 1',  'SOLAR',   250.0000, 'kW', 200.0000, 'kW'),
+    ('d1000000-0004-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000004', 'Central Hospital Solar Panel 2',  'SOLAR',   250.0000, 'kW', 195.0000, 'kW'),
+    ('d1000000-0004-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000004', 'Central Hospital Battery Bank 1', 'BATTERY', 150.0000, 'kW',  90.0000, 'kW'),
+    ('d1000000-0004-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000004', 'Central Hospital Battery Bank 2', 'BATTERY', 150.0000, 'kW',  85.0000, 'kW'),
+    ('d1000000-0004-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000004', 'Central Hospital Battery Bank 3', 'BATTERY', 150.0000, 'kW',  80.0000, 'kW'),
+    ('d1000000-0004-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000004', 'Central Hospital Water Pump',     'PUMP',     80.0000, 'kW',  50.0000, 'kW');
 
 -- ============================================================
 -- Devices — North District School (total capacity: 180 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0005-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000005', 'SOLAR',   100.0000, 'kW',  70.0000, 'kW'),
-    ('d1000000-0005-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000005', 'BATTERY',  50.0000, 'kW',  20.0000, 'kW'),
-    ('d1000000-0005-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000005', 'PUMP',     30.0000, 'kW',  18.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0005-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000005', 'North District School Solar Panel',  'SOLAR',   100.0000, 'kW',  70.0000, 'kW'),
+    ('d1000000-0005-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000005', 'North District School Battery Bank', 'BATTERY',  50.0000, 'kW',  20.0000, 'kW'),
+    ('d1000000-0005-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000005', 'North District School Water Pump',   'PUMP',     30.0000, 'kW',  18.0000, 'kW');
 
 -- ============================================================
 -- Devices — Police Station (total capacity: 240 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0006-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000006', 'SOLAR',   120.0000, 'kW',  85.0000, 'kW'),
-    ('d1000000-0006-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000006', 'BATTERY',  80.0000, 'kW',  35.0000, 'kW'),
-    ('d1000000-0006-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000006', 'PUMP',     40.0000, 'kW',  25.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0006-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000006', 'Police Station Solar Panel',  'SOLAR',   120.0000, 'kW',  85.0000, 'kW'),
+    ('d1000000-0006-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000006', 'Police Station Battery Bank', 'BATTERY',  80.0000, 'kW',  35.0000, 'kW'),
+    ('d1000000-0006-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000006', 'Police Station Water Pump',   'PUMP',     40.0000, 'kW',  25.0000, 'kW');
 
 -- ============================================================
 -- Devices — Fire Station No. 2 (total capacity: 210 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0007-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000007', 'SOLAR',   100.0000, 'kW',  75.0000, 'kW'),
-    ('d1000000-0007-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000007', 'BATTERY',  60.0000, 'kW',  28.0000, 'kW'),
-    ('d1000000-0007-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000007', 'PUMP',     50.0000, 'kW',  35.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0007-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000007', 'Fire Station No. 2 Solar Panel',  'SOLAR',   100.0000, 'kW',  75.0000, 'kW'),
+    ('d1000000-0007-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000007', 'Fire Station No. 2 Battery Bank', 'BATTERY',  60.0000, 'kW',  28.0000, 'kW'),
+    ('d1000000-0007-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000007', 'Fire Station No. 2 Water Pump',   'PUMP',     50.0000, 'kW',  35.0000, 'kW');
 
 -- ============================================================
 -- Devices — Community Center (total capacity: 400 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0008-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000008', 'SOLAR',   150.0000, 'kW', 115.0000, 'kW'),
-    ('d1000000-0008-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000008', 'SOLAR',   150.0000, 'kW', 110.0000, 'kW'),
-    ('d1000000-0008-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000008', 'BATTERY', 100.0000, 'kW',  42.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0008-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000008', 'Community Center Solar Panel 1',  'SOLAR',   150.0000, 'kW', 115.0000, 'kW'),
+    ('d1000000-0008-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000008', 'Community Center Solar Panel 2',  'SOLAR',   150.0000, 'kW', 110.0000, 'kW'),
+    ('d1000000-0008-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000008', 'Community Center Battery Bank',   'BATTERY', 100.0000, 'kW',  42.0000, 'kW');
 
 -- ============================================================
 -- Devices — Water Treatment Plant (total capacity: 1500 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0009-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000009', 'SOLAR',   400.0000, 'kW', 320.0000, 'kW'),
-    ('d1000000-0009-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000009', 'SOLAR',   400.0000, 'kW', 310.0000, 'kW'),
-    ('d1000000-0009-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000009', 'PUMP',    200.0000, 'kW', 140.0000, 'kW'),
-    ('d1000000-0009-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000009', 'PUMP',    200.0000, 'kW', 135.0000, 'kW'),
-    ('d1000000-0009-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000009', 'BATTERY', 150.0000, 'kW',  70.0000, 'kW'),
-    ('d1000000-0009-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000009', 'BATTERY', 150.0000, 'kW',  65.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0009-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000009', 'Water Treatment Plant Solar Panel 1',  'SOLAR',   400.0000, 'kW', 320.0000, 'kW'),
+    ('d1000000-0009-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000009', 'Water Treatment Plant Solar Panel 2',  'SOLAR',   400.0000, 'kW', 310.0000, 'kW'),
+    ('d1000000-0009-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000009', 'Water Treatment Plant Water Pump 1',   'PUMP',    200.0000, 'kW', 140.0000, 'kW'),
+    ('d1000000-0009-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000009', 'Water Treatment Plant Water Pump 2',   'PUMP',    200.0000, 'kW', 135.0000, 'kW'),
+    ('d1000000-0009-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000009', 'Water Treatment Plant Battery Bank 1', 'BATTERY', 150.0000, 'kW',  70.0000, 'kW'),
+    ('d1000000-0009-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000009', 'Water Treatment Plant Battery Bank 2', 'BATTERY', 150.0000, 'kW',  65.0000, 'kW');
 
 -- ============================================================
 -- Devices — Airport Terminal (total capacity: 1800 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0010-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000010', 'SOLAR',   300.0000, 'kW', 245.0000, 'kW'),
-    ('d1000000-0010-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000010', 'SOLAR',   300.0000, 'kW', 240.0000, 'kW'),
-    ('d1000000-0010-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000010', 'SOLAR',   300.0000, 'kW', 230.0000, 'kW'),
-    ('d1000000-0010-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000010', 'SOLAR',   300.0000, 'kW', 225.0000, 'kW'),
-    ('d1000000-0010-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000010', 'BATTERY', 200.0000, 'kW',  90.0000, 'kW'),
-    ('d1000000-0010-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000010', 'BATTERY', 200.0000, 'kW',  85.0000, 'kW'),
-    ('d1000000-0010-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000010', 'PUMP',    100.0000, 'kW',  65.0000, 'kW'),
-    ('d1000000-0010-0000-0000-000000000008', 'a1000000-0000-0000-0000-000000000010', 'PUMP',    100.0000, 'kW',  60.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0010-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000010', 'Airport Terminal Solar Panel 1',  'SOLAR',   300.0000, 'kW', 245.0000, 'kW'),
+    ('d1000000-0010-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000010', 'Airport Terminal Solar Panel 2',  'SOLAR',   300.0000, 'kW', 240.0000, 'kW'),
+    ('d1000000-0010-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000010', 'Airport Terminal Solar Panel 3',  'SOLAR',   300.0000, 'kW', 230.0000, 'kW'),
+    ('d1000000-0010-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000010', 'Airport Terminal Solar Panel 4',  'SOLAR',   300.0000, 'kW', 225.0000, 'kW'),
+    ('d1000000-0010-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000010', 'Airport Terminal Battery Bank 1', 'BATTERY', 200.0000, 'kW',  90.0000, 'kW'),
+    ('d1000000-0010-0000-0000-000000000006', 'a1000000-0000-0000-0000-000000000010', 'Airport Terminal Battery Bank 2', 'BATTERY', 200.0000, 'kW',  85.0000, 'kW'),
+    ('d1000000-0010-0000-0000-000000000007', 'a1000000-0000-0000-0000-000000000010', 'Airport Terminal Water Pump 1',   'PUMP',    100.0000, 'kW',  65.0000, 'kW'),
+    ('d1000000-0010-0000-0000-000000000008', 'a1000000-0000-0000-0000-000000000010', 'Airport Terminal Water Pump 2',   'PUMP',    100.0000, 'kW',  60.0000, 'kW');
 
 -- ============================================================
 -- Devices — Central Train Station (total capacity: 750 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0011-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000011', 'SOLAR',   250.0000, 'kW', 195.0000, 'kW'),
-    ('d1000000-0011-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000011', 'SOLAR',   250.0000, 'kW', 190.0000, 'kW'),
-    ('d1000000-0011-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000011', 'BATTERY', 150.0000, 'kW',  70.0000, 'kW'),
-    ('d1000000-0011-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000011', 'PUMP',    100.0000, 'kW',  60.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0011-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000011', 'Central Train Station Solar Panel 1',  'SOLAR',   250.0000, 'kW', 195.0000, 'kW'),
+    ('d1000000-0011-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000011', 'Central Train Station Solar Panel 2',  'SOLAR',   250.0000, 'kW', 190.0000, 'kW'),
+    ('d1000000-0011-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000011', 'Central Train Station Battery Bank',   'BATTERY', 150.0000, 'kW',  70.0000, 'kW'),
+    ('d1000000-0011-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000011', 'Central Train Station Water Pump',     'PUMP',    100.0000, 'kW',  60.0000, 'kW');
 
 -- ============================================================
 -- Devices — Municipal Swimming Pool (total capacity: 330 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0012-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000012', 'SOLAR',   150.0000, 'kW', 110.0000, 'kW'),
-    ('d1000000-0012-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000012', 'PUMP',    100.0000, 'kW',  75.0000, 'kW'),
-    ('d1000000-0012-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000012', 'BATTERY',  80.0000, 'kW',  32.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0012-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000012', 'Municipal Swimming Pool Solar Panel',  'SOLAR',   150.0000, 'kW', 110.0000, 'kW'),
+    ('d1000000-0012-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000012', 'Municipal Swimming Pool Water Pump',   'PUMP',    100.0000, 'kW',  75.0000, 'kW'),
+    ('d1000000-0012-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000012', 'Municipal Swimming Pool Battery Bank', 'BATTERY',  80.0000, 'kW',  32.0000, 'kW');
 
 -- ============================================================
 -- Devices — City Museum (total capacity: 230 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0013-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000013', 'SOLAR',   130.0000, 'kW',  95.0000, 'kW'),
-    ('d1000000-0013-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000013', 'BATTERY', 100.0000, 'kW',  45.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0013-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000013', 'City Museum Solar Panel',  'SOLAR',   130.0000, 'kW',  95.0000, 'kW'),
+    ('d1000000-0013-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000013', 'City Museum Battery Bank', 'BATTERY', 100.0000, 'kW',  45.0000, 'kW');
 
 -- ============================================================
 -- Devices — East District Kindergarten (total capacity: 90 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0014-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000014', 'SOLAR',    60.0000, 'kW',  42.0000, 'kW'),
-    ('d1000000-0014-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000014', 'BATTERY',  30.0000, 'kW',  12.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0014-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000014', 'East District Kindergarten Solar Panel',  'SOLAR',    60.0000, 'kW',  42.0000, 'kW'),
+    ('d1000000-0014-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000014', 'East District Kindergarten Battery Bank', 'BATTERY',  30.0000, 'kW',  12.0000, 'kW');
 
 -- ============================================================
 -- Devices — Central Post Office (total capacity: 150 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0015-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000015', 'SOLAR',    90.0000, 'kW',  65.0000, 'kW'),
-    ('d1000000-0015-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000015', 'BATTERY',  60.0000, 'kW',  28.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0015-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000015', 'Central Post Office Solar Panel',  'SOLAR',    90.0000, 'kW',  65.0000, 'kW'),
+    ('d1000000-0015-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000015', 'Central Post Office Battery Bank', 'BATTERY',  60.0000, 'kW',  28.0000, 'kW');
 
 -- ============================================================
 -- Devices — Solar Research Center (total capacity: 600 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0016-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000016', 'SOLAR',   200.0000, 'kW', 175.0000, 'kW'),
-    ('d1000000-0016-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000016', 'SOLAR',   200.0000, 'kW', 170.0000, 'kW'),
-    ('d1000000-0016-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000016', 'SOLAR',   200.0000, 'kW', 165.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0016-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000016', 'Solar Research Center Solar Panel 1', 'SOLAR',   200.0000, 'kW', 175.0000, 'kW'),
+    ('d1000000-0016-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000016', 'Solar Research Center Solar Panel 2', 'SOLAR',   200.0000, 'kW', 170.0000, 'kW'),
+    ('d1000000-0016-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000016', 'Solar Research Center Solar Panel 3', 'SOLAR',   200.0000, 'kW', 165.0000, 'kW');
 
 -- ============================================================
 -- Devices — Waste Management Facility (total capacity: 900 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0017-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000017', 'SOLAR',   300.0000, 'kW', 235.0000, 'kW'),
-    ('d1000000-0017-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000017', 'PUMP',    200.0000, 'kW', 150.0000, 'kW'),
-    ('d1000000-0017-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000017', 'PUMP',    200.0000, 'kW', 145.0000, 'kW'),
-    ('d1000000-0017-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000017', 'BATTERY', 200.0000, 'kW',  88.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0017-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000017', 'Waste Management Facility Solar Panel',  'SOLAR',   300.0000, 'kW', 235.0000, 'kW'),
+    ('d1000000-0017-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000017', 'Waste Management Facility Water Pump 1', 'PUMP',    200.0000, 'kW', 150.0000, 'kW'),
+    ('d1000000-0017-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000017', 'Waste Management Facility Water Pump 2', 'PUMP',    200.0000, 'kW', 145.0000, 'kW'),
+    ('d1000000-0017-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000017', 'Waste Management Facility Battery Bank', 'BATTERY', 200.0000, 'kW',  88.0000, 'kW');
 
 -- ============================================================
 -- Devices — District Courthouse (total capacity: 270 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0018-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000018', 'SOLAR',   150.0000, 'kW', 110.0000, 'kW'),
-    ('d1000000-0018-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000018', 'BATTERY',  80.0000, 'kW',  38.0000, 'kW'),
-    ('d1000000-0018-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000018', 'PUMP',     40.0000, 'kW',  25.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0018-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000018', 'District Courthouse Solar Panel',  'SOLAR',   150.0000, 'kW', 110.0000, 'kW'),
+    ('d1000000-0018-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000018', 'District Courthouse Battery Bank', 'BATTERY',  80.0000, 'kW',  38.0000, 'kW'),
+    ('d1000000-0018-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000018', 'District Courthouse Water Pump',   'PUMP',     40.0000, 'kW',  25.0000, 'kW');
 
 -- ============================================================
 -- Devices — Sports Complex - Outdoor (total capacity: 500 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0019-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000019', 'SOLAR',   200.0000, 'kW', 155.0000, 'kW'),
-    ('d1000000-0019-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000019', 'SOLAR',   200.0000, 'kW', 150.0000, 'kW'),
-    ('d1000000-0019-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000019', 'BATTERY', 100.0000, 'kW',  44.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0019-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000019', 'Sports Complex - Outdoor Solar Panel 1',  'SOLAR',   200.0000, 'kW', 155.0000, 'kW'),
+    ('d1000000-0019-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000019', 'Sports Complex - Outdoor Solar Panel 2',  'SOLAR',   200.0000, 'kW', 150.0000, 'kW'),
+    ('d1000000-0019-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000019', 'Sports Complex - Outdoor Battery Bank',   'BATTERY', 100.0000, 'kW',  44.0000, 'kW');
 
 -- ============================================================
 -- Devices — City Convention Center (total capacity: 1100 kW)
 -- ============================================================
 
-INSERT INTO smartcity.public.energy_device (id, building_id, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
-    ('d1000000-0020-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000020', 'SOLAR',   300.0000, 'kW', 240.0000, 'kW'),
-    ('d1000000-0020-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000020', 'SOLAR',   300.0000, 'kW', 235.0000, 'kW'),
-    ('d1000000-0020-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000020', 'SOLAR',   300.0000, 'kW', 228.0000, 'kW'),
-    ('d1000000-0020-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000020', 'BATTERY', 100.0000, 'kW',  48.0000, 'kW'),
-    ('d1000000-0020-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000020', 'PUMP',     100.0000, 'kW',  65.0000, 'kW');
+INSERT INTO smartcity.public.energy_device (id, building_id, name, type, rated_capacity_value, rated_capacity_unit, production_value, production_unit) VALUES
+    ('d1000000-0020-0000-0000-000000000001', 'a1000000-0000-0000-0000-000000000020', 'City Convention Center Solar Panel 1',  'SOLAR',   300.0000, 'kW', 240.0000, 'kW'),
+    ('d1000000-0020-0000-0000-000000000002', 'a1000000-0000-0000-0000-000000000020', 'City Convention Center Solar Panel 2',  'SOLAR',   300.0000, 'kW', 235.0000, 'kW'),
+    ('d1000000-0020-0000-0000-000000000003', 'a1000000-0000-0000-0000-000000000020', 'City Convention Center Solar Panel 3',  'SOLAR',   300.0000, 'kW', 228.0000, 'kW'),
+    ('d1000000-0020-0000-0000-000000000004', 'a1000000-0000-0000-0000-000000000020', 'City Convention Center Battery Bank',   'BATTERY', 100.0000, 'kW',  48.0000, 'kW'),
+    ('d1000000-0020-0000-0000-000000000005', 'a1000000-0000-0000-0000-000000000020', 'City Convention Center Water Pump',     'PUMP',     100.0000, 'kW',  65.0000, 'kW');

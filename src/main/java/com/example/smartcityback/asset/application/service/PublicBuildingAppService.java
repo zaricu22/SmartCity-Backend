@@ -57,7 +57,7 @@ public class PublicBuildingAppService {
 
         building.addDevice(
                 new EnergyDevice(
-                        UUID.randomUUID(), cmd.type(),
+                        UUID.randomUUID(), cmd.name(), cmd.type(),
                         new Energy(cmd.ratedCapacityValue(),cmd.ratedCapacityUnit())
                 )
         );

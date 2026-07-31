@@ -102,7 +102,7 @@ class PublicBuildingFullIntegrationTest {
         given(asAdmin)
                 .contentType(ContentType.JSON)
                 .body("""
-                    { "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW" }
+                    { "name": "Solar Panel 1", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW" }
                     """)
                 .when()
                 .post("/v1/buildings/{id}/devices", buildingId)
@@ -137,7 +137,7 @@ class PublicBuildingFullIntegrationTest {
         given(asAdmin)
                 .contentType(ContentType.JSON)
                 .body("""
-                    { "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW" }
+                    { "name": "Solar Panel 1", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW" }
                     """)
                 .when()
                 .post("/v1/buildings/{id}/devices", buildingId)
