@@ -14,5 +14,6 @@ public record AddDeviceRequest(
         @NotBlank String name,
         @NotNull DeviceType type,
         @Positive BigDecimal ratedCapacityValue,
-        @NotNull EnergyUnit ratedCapacityUnit
+        @NotNull EnergyUnit ratedCapacityUnit,
+        @NotNull Long version
 ) {}

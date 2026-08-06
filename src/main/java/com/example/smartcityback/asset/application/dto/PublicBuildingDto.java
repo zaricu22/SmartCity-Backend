@@ -16,5 +16,6 @@ public record PublicBuildingDto(
         String location,
         BigDecimal consumptionValue,
         EnergyUnit consumptionUnit,
-        List<EnergyDeviceDto> devices
+        List<EnergyDeviceDto> devices,
+        Long version
 ) {}

@@ -102,7 +102,7 @@ class PublicBuildingFullIntegrationTest {
         given(asAdmin)
                 .contentType(ContentType.JSON)
                 .body("""
-                    { "name": "Solar Panel 1", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW" }
+                    { "name": "Solar Panel 1", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW", "version": 0 }
                     """)
                 .when()
                 .post("/v1/buildings/{id}/devices", buildingId)
@@ -137,7 +137,7 @@ class PublicBuildingFullIntegrationTest {
         given(asAdmin)
                 .contentType(ContentType.JSON)
                 .body("""
-                    { "name": "Solar Panel 1", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW" }
+                    { "name": "Solar Panel 1", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW", "version": 0 }
                     """)
                 .when()
                 .post("/v1/buildings/{id}/devices", buildingId)
@@ -147,12 +147,15 @@ class PublicBuildingFullIntegrationTest {
 
     @Test
     void changeConsumption_validRequest_returns204() {
+        // devices is @OneToMany(mappedBy = "building") — the FK lives on the child table, so
+        // addDevice() only INSERTs into energy_device and never UPDATEs the building's own row.
+        // The building's version is therefore still 0 after createBuildingWithDevice().
         UUID buildingId = createBuildingWithDevice();
 
         given(asAdmin)
                 .contentType(ContentType.JSON)
                 .body("""
-                    { "consumptionValue": 50, "consumptionUnit": "kW" }
+                    { "consumptionValue": 50, "consumptionUnit": "kW", "version": 0 }
                     """)
                 .when()
                 .patch("/v1/buildings/{id}/consumption", buildingId)
@@ -162,6 +165,9 @@ class PublicBuildingFullIntegrationTest {
 
     @Test
     void changeProduction_validRequest_returns204() {
+        // devices is @OneToMany(mappedBy = "building") — the FK lives on the child table, so
+        // addDevice() only INSERTs into energy_device and never UPDATEs the building's own row.
+        // The building's version is therefore still 0 after createBuildingWithDevice().
         UUID buildingId = createBuildingWithDevice();
         UUID deviceId = given(asAdmin)
                 .when()
@@ -173,7 +179,7 @@ class PublicBuildingFullIntegrationTest {
         given(asAdmin)
                 .contentType(ContentType.JSON)
                 .body("""
-                    { "productionValue": 60, "productionUnit": "kW" }
+                    { "productionValue": 60, "productionUnit": "kW", "version": 0 }
                     """)
                 .when()
                 .patch("/v1/buildings/{buildingId}/devices/{deviceId}/production", buildingId, deviceId)

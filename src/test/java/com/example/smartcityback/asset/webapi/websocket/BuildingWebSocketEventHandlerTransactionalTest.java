@@ -111,9 +111,10 @@ class BuildingWebSocketEventHandlerTransactionalTest {
     @Test
     @Transactional
     void deviceAdded_transactionRollsBack_neverPushesOverWebSocket() {
+        // version=0L matches the version Hibernate assigns on the row inserted in @BeforeEach.
         service.addDevice(new AddDeviceCommand(
                 buildingId, "Solar Panel", DeviceType.SOLAR,
-                new BigDecimal("100"), EnergyUnit.kW));
+                new BigDecimal("100"), EnergyUnit.kW, 0L));
 
         // This @Test method is itself @Transactional, so the call above joined that still-open
         // transaction instead of committing its own. A plain @EventListener would already have
@@ -134,7 +135,7 @@ class BuildingWebSocketEventHandlerTransactionalTest {
         // AFTER_COMMIT has already fired synchronously as part of that commit.
         service.addDevice(new AddDeviceCommand(
                 buildingId, "Solar Panel", DeviceType.SOLAR,
-                new BigDecimal("100"), EnergyUnit.kW));
+                new BigDecimal("100"), EnergyUnit.kW, 0L));
 
         verify(messagingTemplate).convertAndSend(
                 eq("/topic/buildings/" + buildingId + "/devices"),

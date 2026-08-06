@@ -13,8 +13,10 @@ import com.example.smartcityback.asset.domain.valueobject.Energy;
 import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 import org.springframework.stereotype.Service;
 
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -36,6 +38,19 @@ public class PublicBuildingAppService {
         this.eventPublisher = eventPublisher;
     }
 
+    // Guards against stale edits: a client submits the version it last read, and this compares
+    // that against the version on the aggregate just loaded from the DB. A mismatch means
+    // someone else changed the building since the client read it, so we reject before mutating
+    // rather than relying solely on Hibernate's flush-time @Version check (which only catches
+    // requests racing within the same instant, not edits based on stale data).
+    private void checkVersion(PublicBuilding building, Long expectedVersion) {
+        if (!Objects.equals(building.getVersion(), expectedVersion)) {
+            log.warn("OptimisticLockConflict buildingId={} expectedVersion={} actualVersion={}",
+                    building.getId(), expectedVersion, building.getVersion());
+            throw new ObjectOptimisticLockingFailureException(PublicBuilding.class, building.getId());
+        }
+    }
+
     public UUID create(CreateBuildingCommand cmd) {
         PublicBuilding building = new PublicBuilding(UUID.randomUUID(), cmd.name(), cmd.location());
 
@@ -54,6 +69,8 @@ public class PublicBuildingAppService {
                     log.warn("BuildingNotFound buildingId={}", cmd.buildingId());
                     return new BuildingNotFoundException();
                 });
+
+        checkVersion(building, cmd.version());
 
         building.addDevice(
                 new EnergyDevice(
@@ -94,6 +111,8 @@ public class PublicBuildingAppService {
                 building.getConsumption(),
                 cmd.consumptionValue());
 
+        checkVersion(building, cmd.version());
+
         building.changeConsumption(
                 new Energy(cmd.consumptionValue(), cmd.consumptionUnit())
         );
@@ -104,7 +123,7 @@ public class PublicBuildingAppService {
         log.info("ConsumptionChanged buildingId={}", buildingId);
     }
 
-    public void delete(UUID buildingId) {
+    public void delete(UUID buildingId, Long version) {
         log.info("CommandReceived command=DeleteBuilding aggregate=PublicBuilding buildingId={}", buildingId);
 
         PublicBuilding building = repository.findById(buildingId)
@@ -113,13 +132,15 @@ public class PublicBuildingAppService {
                     return new BuildingNotFoundException();
                 });
 
+        checkVersion(building, version);
+
         repository.delete(buildingId);
         eventPublisher.publishEvent(new BuildingDeletedEvent(buildingId, building.getName()));
 
         log.info("BuildingDeleted buildingId={}", buildingId);
     }
 
-    public void removeDevice(UUID buildingId, UUID deviceId) {
+    public void removeDevice(UUID buildingId, UUID deviceId, Long version) {
         log.info("CommandReceived command=RemoveDevice aggregate=PublicBuilding buildingId={} deviceId={}",
                 buildingId, deviceId);
 
@@ -128,6 +149,8 @@ public class PublicBuildingAppService {
                     log.warn("BuildingNotFound buildingId={}", buildingId);
                     return new BuildingNotFoundException();
                 });
+
+        checkVersion(building, version);
 
         building.removeDevice(deviceId);
 
@@ -146,6 +169,8 @@ public class PublicBuildingAppService {
                     log.warn("BuildingNotFound buildingId={}", buildingId);
                     return new BuildingNotFoundException();
                 });
+
+        checkVersion(building, cmd.version());
 
         Energy production = new Energy(cmd.productionValue(), cmd.productionUnit());
 

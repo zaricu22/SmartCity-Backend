@@ -26,6 +26,11 @@ public class PublicBuilding {
     private Energy consumption;
     private List<EnergyDevice> devices;
 
+    // Mirrors the JPA entity's @Version column. Null for a not-yet-persisted building;
+    // set on reconstitution so callers can compare "the version I last read" against the
+    // current one before mutating, catching stale edits instead of blindly overwriting them.
+    private Long version;
+
     private final List<DomainEvent> domainEvents = new ArrayList<>();
 
     // Private no-arg constructor for reconstitution from persistence — bypasses validation
@@ -35,13 +40,14 @@ public class PublicBuilding {
     private PublicBuilding() {}
 
     public static PublicBuilding reconstitute(UUID id, String name, String location,
-                                               List<EnergyDevice> devices, Energy consumption) {
+                                               List<EnergyDevice> devices, Energy consumption, Long version) {
         PublicBuilding b = new PublicBuilding();
         b.id = id;
         b.name = name;
         b.location = location;
         b.devices = new ArrayList<>(devices);
         b.consumption = consumption;
+        b.version = version;
         return b;
     }
 
@@ -138,4 +144,5 @@ public class PublicBuilding {
     public String getLocation() { return location; }
     public Energy getConsumption() { return consumption; }
     public List<EnergyDevice> getDevices() { return Collections.unmodifiableList(devices); }
+    public Long getVersion() { return version; }
 }

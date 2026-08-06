@@ -102,7 +102,7 @@ class PublicBuildingControllerAPITest {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Solar Panel", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
+                                {"name": "Solar Panel", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW", "version": 0}
                                 """))
                 .andExpect(status().isNoContent());
     }
@@ -112,7 +112,7 @@ class PublicBuildingControllerAPITest {
         mockMvc.perform(patch("/v1/buildings/{id}/consumption", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"consumptionValue": 50, "consumptionUnit": "kW"}
+                                {"consumptionValue": 50, "consumptionUnit": "kW", "version": 0}
                                 """))
                 .andExpect(status().isNoContent());
     }
@@ -198,7 +198,8 @@ class PublicBuildingControllerAPITest {
                         "Solar Panel",
                         com.example.smartcityback.asset.domain.shared.enums.DeviceType.SOLAR,
                         new BigDecimal("100"), EnergyUnit.kW,
-                        BigDecimal.ZERO, EnergyUnit.kW))
+                        BigDecimal.ZERO, EnergyUnit.kW)),
+                3L
         );
         given(queryService.getById(BUILDING_ID)).willReturn(response);
 
@@ -209,7 +210,8 @@ class PublicBuildingControllerAPITest {
                 .andExpect(jsonPath("$.location").value("Main St 1"))
                 .andExpect(jsonPath("$.devices").isArray())
                 .andExpect(jsonPath("$.devices[0].name").value("Solar Panel"))
-                .andExpect(jsonPath("$.devices[0].type").value("SOLAR"));
+                .andExpect(jsonPath("$.devices[0].type").value("SOLAR"))
+                .andExpect(jsonPath("$.version").value(3));
     }
 
     @Test
@@ -223,13 +225,21 @@ class PublicBuildingControllerAPITest {
 
     @Test
     void delete_validRequest_returns204() throws Exception {
-        mockMvc.perform(delete("/v1/buildings/{id}", BUILDING_ID))
+        mockMvc.perform(delete("/v1/buildings/{id}", BUILDING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"version": 0}
+                                """))
                 .andExpect(status().isNoContent());
     }
 
     @Test
     void removeDevice_validRequest_returns204() throws Exception {
-        mockMvc.perform(delete("/v1/buildings/{buildingId}/devices/{deviceId}", BUILDING_ID, DEVICE_ID))
+        mockMvc.perform(delete("/v1/buildings/{buildingId}/devices/{deviceId}", BUILDING_ID, DEVICE_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"version": 0}
+                                """))
                 .andExpect(status().isNoContent());
     }
 
@@ -239,7 +249,7 @@ class PublicBuildingControllerAPITest {
                         BUILDING_ID, DEVICE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"productionValue": 60, "productionUnit": "kW"}
+                                {"productionValue": 60, "productionUnit": "kW", "version": 0}
                                 """))
                 .andExpect(status().isNoContent());
     }
@@ -345,6 +355,49 @@ class PublicBuildingControllerAPITest {
                 .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
     }
 
+    @Test
+    void addDevice_missingVersion_returns422() throws Exception {
+        mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "Solar Panel", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
+                                """))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void changeConsumption_missingVersion_returns422() throws Exception {
+        mockMvc.perform(patch("/v1/buildings/{id}/consumption", BUILDING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"consumptionValue": 50, "consumptionUnit": "kW"}
+                                """))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void changeProduction_missingVersion_returns422() throws Exception {
+        mockMvc.perform(patch("/v1/buildings/{buildingId}/devices/{deviceId}/production",
+                        BUILDING_ID, DEVICE_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"productionValue": 60, "productionUnit": "kW"}
+                                """))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+    }
+
+    @Test
+    void removeDevice_missingVersion_returns422() throws Exception {
+        mockMvc.perform(delete("/v1/buildings/{buildingId}/devices/{deviceId}", BUILDING_ID, DEVICE_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+    }
+
     // =====================================================================
     // Not Found path: invalid requests fail with 404 (GlobalExceptionHandler.handleNotFound())
     // =====================================================================
@@ -356,7 +409,7 @@ class PublicBuildingControllerAPITest {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Solar Panel", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
+                                {"name": "Solar Panel", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW", "version": 0}
                                 """))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("BUILDING_NOT_FOUND"));
@@ -369,7 +422,7 @@ class PublicBuildingControllerAPITest {
         mockMvc.perform(patch("/v1/buildings/{id}/consumption", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"consumptionValue": 50, "consumptionUnit": "kW"}
+                                {"consumptionValue": 50, "consumptionUnit": "kW", "version": 0}
                                 """))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("BUILDING_NOT_FOUND"));
@@ -383,7 +436,7 @@ class PublicBuildingControllerAPITest {
                         BUILDING_ID, DEVICE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"productionValue": 60, "productionUnit": "kW"}
+                                {"productionValue": 60, "productionUnit": "kW", "version": 0}
                                 """))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("BUILDING_NOT_FOUND"));
@@ -397,7 +450,7 @@ class PublicBuildingControllerAPITest {
                         BUILDING_ID, DEVICE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"productionValue": 60, "productionUnit": "kW"}
+                                {"productionValue": 60, "productionUnit": "kW", "version": 0}
                                 """))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("DEVICE_NOT_FOUND"));
@@ -405,27 +458,48 @@ class PublicBuildingControllerAPITest {
 
     @Test
     void delete_buildingNotFound_returns404() throws Exception {
-        willThrow(new BuildingNotFoundException()).given(appService).delete(any());
+        willThrow(new BuildingNotFoundException()).given(appService).delete(any(), any());
 
-        mockMvc.perform(delete("/v1/buildings/{id}", BUILDING_ID))
+        mockMvc.perform(delete("/v1/buildings/{id}", BUILDING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"version": 0}
+                                """))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("BUILDING_NOT_FOUND"));
     }
 
     @Test
-    void removeDevice_buildingNotFound_returns404() throws Exception {
-        willThrow(new BuildingNotFoundException()).given(appService).removeDevice(any(), any());
+    void delete_missingVersion_returns422() throws Exception {
+        mockMvc.perform(delete("/v1/buildings/{id}", BUILDING_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isUnprocessableEntity())
+                .andExpect(jsonPath("$.errorCode").value("VALIDATION_ERROR"));
+    }
 
-        mockMvc.perform(delete("/v1/buildings/{buildingId}/devices/{deviceId}", BUILDING_ID, DEVICE_ID))
+    @Test
+    void removeDevice_buildingNotFound_returns404() throws Exception {
+        willThrow(new BuildingNotFoundException()).given(appService).removeDevice(any(), any(), any());
+
+        mockMvc.perform(delete("/v1/buildings/{buildingId}/devices/{deviceId}", BUILDING_ID, DEVICE_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"version": 0}
+                                """))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("BUILDING_NOT_FOUND"));
     }
 
     @Test
     void removeDevice_deviceNotFound_returns404() throws Exception {
-        willThrow(new DeviceNotFoundException()).given(appService).removeDevice(any(), any());
+        willThrow(new DeviceNotFoundException()).given(appService).removeDevice(any(), any(), any());
 
-        mockMvc.perform(delete("/v1/buildings/{buildingId}/devices/{deviceId}", BUILDING_ID, DEVICE_ID))
+        mockMvc.perform(delete("/v1/buildings/{buildingId}/devices/{deviceId}", BUILDING_ID, DEVICE_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"version": 0}
+                                """))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.errorCode").value("DEVICE_NOT_FOUND"));
     }
@@ -441,7 +515,7 @@ class PublicBuildingControllerAPITest {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Solar Panel", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
+                                {"name": "Solar Panel", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW", "version": 0}
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.errorCode").value("DEVICE_ALREADY_EXISTS"));
@@ -454,7 +528,7 @@ class PublicBuildingControllerAPITest {
         mockMvc.perform(patch("/v1/buildings/{id}/consumption", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"consumptionValue": 999, "consumptionUnit": "kW"}
+                                {"consumptionValue": 999, "consumptionUnit": "kW", "version": 0}
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.errorCode").value("TOTAL_CAPACITY_EXCEEDED"));
@@ -468,7 +542,7 @@ class PublicBuildingControllerAPITest {
                         BUILDING_ID, DEVICE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"productionValue": 999, "productionUnit": "kW"}
+                                {"productionValue": 999, "productionUnit": "kW", "version": 0}
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.errorCode").value("DEVICE_CAPACITY_OUT_OF_RANGE"));
@@ -482,7 +556,7 @@ class PublicBuildingControllerAPITest {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
-                                {"name": "Solar Panel", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW"}
+                                {"name": "Solar Panel", "type": "SOLAR", "ratedCapacityValue": 100, "ratedCapacityUnit": "kW", "version": 0}
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.errorCode").value("CONCURRENT_MODIFICATION"));
