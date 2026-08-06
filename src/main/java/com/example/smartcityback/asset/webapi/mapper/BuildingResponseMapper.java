@@ -30,7 +30,8 @@ public class BuildingResponseMapper {
                                 d.productionRateValue(),
                                 d.productionRateUnit()
                         ))
-                        .toList()
+                        .toList(),
+                dto.version()
         );
     }
 

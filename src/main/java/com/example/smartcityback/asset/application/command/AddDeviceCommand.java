@@ -17,5 +17,6 @@ public record AddDeviceCommand(
         String name,
         DeviceType type,
         BigDecimal ratedCapacityValue,
-        EnergyUnit ratedCapacityUnit
+        EnergyUnit ratedCapacityUnit,
+        Long version
 ) {}

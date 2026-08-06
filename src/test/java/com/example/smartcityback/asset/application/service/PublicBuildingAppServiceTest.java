@@ -18,6 +18,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
 
 import java.math.BigDecimal;
 import java.util.Optional;
@@ -86,7 +87,7 @@ class PublicBuildingAppServiceTest {
     void delete_buildingNotFound_throwsBuildingNotFoundException() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.delete(BUILDING_ID))
+        assertThatThrownBy(() -> service.delete(BUILDING_ID, null))
                 .isInstanceOf(BuildingNotFoundException.class);
 
         then(repository).should(never()).delete(any());
@@ -96,10 +97,20 @@ class PublicBuildingAppServiceTest {
     void delete_buildingFound_deletesAndPublishesEvent() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1")));
 
-        service.delete(BUILDING_ID);
+        service.delete(BUILDING_ID, null);
 
         then(repository).should().delete(BUILDING_ID);
         then(eventPublisher).should().publishEvent(new BuildingDeletedEvent(BUILDING_ID, "City Hall"));
+    }
+
+    @Test
+    void delete_versionMismatch_throwsOptimisticLockingFailureException() {
+        given(repository.findById(BUILDING_ID)).willReturn(Optional.of(new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1")));
+
+        assertThatThrownBy(() -> service.delete(BUILDING_ID, 5L))
+                .isInstanceOf(ObjectOptimisticLockingFailureException.class);
+
+        then(repository).should(never()).delete(any());
     }
 
     // =====================================================================
@@ -110,7 +121,7 @@ class PublicBuildingAppServiceTest {
     void addDevice_buildingNotFound_throwsBuildingNotFoundException() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.empty());
 
-        AddDeviceCommand cmd = new AddDeviceCommand(BUILDING_ID, "Test Device", DeviceType.SOLAR, new BigDecimal("50"), EnergyUnit.kW);
+        AddDeviceCommand cmd = new AddDeviceCommand(BUILDING_ID, "Test Device", DeviceType.SOLAR, new BigDecimal("50"), EnergyUnit.kW, null);
 
         assertThatThrownBy(() -> service.addDevice(cmd))
                 .isInstanceOf(BuildingNotFoundException.class);
@@ -121,7 +132,7 @@ class PublicBuildingAppServiceTest {
         PublicBuilding emptyBuilding = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(emptyBuilding));
 
-        service.addDevice(new AddDeviceCommand(BUILDING_ID, "Test Device", DeviceType.SOLAR, new BigDecimal("50"), EnergyUnit.kW));
+        service.addDevice(new AddDeviceCommand(BUILDING_ID, "Test Device", DeviceType.SOLAR, new BigDecimal("50"), EnergyUnit.kW, null));
 
         then(repository).should().save(emptyBuilding);
         assertThat(emptyBuilding.getDevices()).hasSize(1);
@@ -139,7 +150,7 @@ class PublicBuildingAppServiceTest {
     void removeDevice_buildingNotFound_throwsBuildingNotFoundException() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.empty());
 
-        assertThatThrownBy(() -> service.removeDevice(BUILDING_ID, DEVICE_ID))
+        assertThatThrownBy(() -> service.removeDevice(BUILDING_ID, DEVICE_ID, null))
                 .isInstanceOf(BuildingNotFoundException.class);
     }
 
@@ -148,7 +159,7 @@ class PublicBuildingAppServiceTest {
         PublicBuilding emptyBuilding = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(emptyBuilding));
 
-        assertThatThrownBy(() -> service.removeDevice(BUILDING_ID, DEVICE_ID))
+        assertThatThrownBy(() -> service.removeDevice(BUILDING_ID, DEVICE_ID, null))
                 .isInstanceOf(com.example.smartcityback.asset.domain.exception.DeviceNotFoundException.class);
 
         then(repository).should(never()).save(any());
@@ -159,7 +170,7 @@ class PublicBuildingAppServiceTest {
         PublicBuilding building = buildingWithOneDevice();
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(building));
 
-        service.removeDevice(BUILDING_ID, DEVICE_ID);
+        service.removeDevice(BUILDING_ID, DEVICE_ID, null);
 
         then(repository).should().save(building);
         assertThat(building.getDevices()).isEmpty();
@@ -175,7 +186,7 @@ class PublicBuildingAppServiceTest {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.changeConsumption(BUILDING_ID,
-                new ChangeConsumptionCommand(new BigDecimal("50"), EnergyUnit.kW)))
+                new ChangeConsumptionCommand(new BigDecimal("50"), EnergyUnit.kW, null)))
                 .isInstanceOf(BuildingNotFoundException.class);
     }
 
@@ -184,7 +195,7 @@ class PublicBuildingAppServiceTest {
         PublicBuilding building = buildingWithOneDevice();
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(building));
 
-        service.changeConsumption(BUILDING_ID, new ChangeConsumptionCommand(new BigDecimal("50"), EnergyUnit.kW));
+        service.changeConsumption(BUILDING_ID, new ChangeConsumptionCommand(new BigDecimal("50"), EnergyUnit.kW, null));
 
         then(repository).should().save(building);
         assertThat(building.getConsumption().value()).isEqualByComparingTo("50");
@@ -195,7 +206,7 @@ class PublicBuildingAppServiceTest {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(buildingWithOneDevice()));
 
         assertThatThrownBy(() -> service.changeConsumption(BUILDING_ID,
-                new ChangeConsumptionCommand(new BigDecimal("200"), EnergyUnit.kW)))
+                new ChangeConsumptionCommand(new BigDecimal("200"), EnergyUnit.kW, null)))
                 // just catching any RuntimeException here, but it should be BuildingTotalCapacityExceededException
                 .isInstanceOf(RuntimeException.class);
 
@@ -211,7 +222,7 @@ class PublicBuildingAppServiceTest {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.empty());
 
         assertThatThrownBy(() -> service.changeProduction(BUILDING_ID, UUID.randomUUID(),
-                new ChangeProductionCommand(new BigDecimal("50"), EnergyUnit.kW)))
+                new ChangeProductionCommand(new BigDecimal("50"), EnergyUnit.kW, null)))
                 .isInstanceOf(BuildingNotFoundException.class);
     }
 
@@ -221,7 +232,7 @@ class PublicBuildingAppServiceTest {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(building));
 
         service.changeProduction(BUILDING_ID, DEVICE_ID,
-                new ChangeProductionCommand(new BigDecimal("60"), EnergyUnit.kW));
+                new ChangeProductionCommand(new BigDecimal("60"), EnergyUnit.kW, null));
 
         then(repository).should().save(building);
         assertThat(building.getDevices().get(0).getProductionRate().value())
@@ -234,7 +245,7 @@ class PublicBuildingAppServiceTest {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(building));
 
         service.changeProduction(BUILDING_ID, DEVICE_ID,
-                new ChangeProductionCommand(new BigDecimal("60"), EnergyUnit.kW));
+                new ChangeProductionCommand(new BigDecimal("60"), EnergyUnit.kW, null));
 
         then(eventPublisher).should().publishEvent(any(ProductionChangedEvent.class));
     }
@@ -245,9 +256,60 @@ class PublicBuildingAppServiceTest {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(emptyBuilding));
 
         assertThatThrownBy(() -> service.changeProduction(BUILDING_ID, UUID.randomUUID(),
-                new ChangeProductionCommand(new BigDecimal("50"), EnergyUnit.kW)))
+                new ChangeProductionCommand(new BigDecimal("50"), EnergyUnit.kW, null)))
                 // just catching any RuntimeException here, but it should be DeviceNotFoundException
                 .isInstanceOf(RuntimeException.class);
+
+        then(repository).should(never()).save(any());
+    }
+
+    // =====================================================================
+    // optimistic locking (version check)
+    //
+    // Test buildings are built via `new PublicBuilding(...)`, which leaves version == null,
+    // so any non-null expected version supplied by a command is a guaranteed mismatch.
+    // =====================================================================
+
+    @Test
+    void addDevice_versionMismatch_throwsOptimisticLockingFailureException() {
+        given(repository.findById(BUILDING_ID)).willReturn(Optional.of(new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1")));
+
+        AddDeviceCommand cmd = new AddDeviceCommand(BUILDING_ID, "Test Device", DeviceType.SOLAR, new BigDecimal("50"), EnergyUnit.kW, 5L);
+
+        assertThatThrownBy(() -> service.addDevice(cmd))
+                .isInstanceOf(ObjectOptimisticLockingFailureException.class);
+
+        then(repository).should(never()).save(any());
+    }
+
+    @Test
+    void changeConsumption_versionMismatch_throwsOptimisticLockingFailureException() {
+        given(repository.findById(BUILDING_ID)).willReturn(Optional.of(buildingWithOneDevice()));
+
+        assertThatThrownBy(() -> service.changeConsumption(BUILDING_ID,
+                new ChangeConsumptionCommand(new BigDecimal("50"), EnergyUnit.kW, 5L)))
+                .isInstanceOf(ObjectOptimisticLockingFailureException.class);
+
+        then(repository).should(never()).save(any());
+    }
+
+    @Test
+    void changeProduction_versionMismatch_throwsOptimisticLockingFailureException() {
+        given(repository.findById(BUILDING_ID)).willReturn(Optional.of(buildingWithOneDevice()));
+
+        assertThatThrownBy(() -> service.changeProduction(BUILDING_ID, DEVICE_ID,
+                new ChangeProductionCommand(new BigDecimal("60"), EnergyUnit.kW, 5L)))
+                .isInstanceOf(ObjectOptimisticLockingFailureException.class);
+
+        then(repository).should(never()).save(any());
+    }
+
+    @Test
+    void removeDevice_versionMismatch_throwsOptimisticLockingFailureException() {
+        given(repository.findById(BUILDING_ID)).willReturn(Optional.of(buildingWithOneDevice()));
+
+        assertThatThrownBy(() -> service.removeDevice(BUILDING_ID, DEVICE_ID, 5L))
+                .isInstanceOf(ObjectOptimisticLockingFailureException.class);
 
         then(repository).should(never()).save(any());
     }

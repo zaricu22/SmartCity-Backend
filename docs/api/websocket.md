@@ -128,6 +128,10 @@ Pushed when a device's production rate is updated via
 
 - Events are dispatched **synchronously** in the HTTP request thread — the WebSocket
   push completes before the REST response is returned to the caller.
+- The push fires only **after** the underlying database transaction commits
+  (`@TransactionalEventListener(phase = AFTER_COMMIT)`, see ADR-0005). A client that reacts
+  to the push by immediately re-fetching the resource is guaranteed to see the committed
+  data — it cannot race the write and read stale state.
 - The in-memory broker (`/topic`) does not persist messages. Clients that are not
   connected when an event fires will miss it. For durable delivery, replace the
   simple broker with RabbitMQ or ActiveMQ in `WebSocketConfig`.
