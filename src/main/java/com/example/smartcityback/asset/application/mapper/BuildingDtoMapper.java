@@ -26,7 +26,8 @@ public class BuildingDtoMapper {
                                 d.getProductionRate().value(),
                                 d.getProductionRate().unit()
                         ))
-                        .toList()
+                        .toList(),
+                building.getVersion()
         );
     }
 }

@@ -99,7 +99,8 @@ class PublicBuildingTransactionalTest {
     void changeConsumption_success_commitsToDatabase() {
         // Building has no devices → total capacity = 0 kW.
         // Consumption of 0 kW satisfies the check (0 <= 0) and the transaction must commit.
-        ChangeConsumptionCommand cmd = new ChangeConsumptionCommand(BigDecimal.ZERO, EnergyUnit.kW);
+        // version=0L matches the version Hibernate assigns on the row inserted in @BeforeEach.
+        ChangeConsumptionCommand cmd = new ChangeConsumptionCommand(BigDecimal.ZERO, EnergyUnit.kW, 0L);
 
         assertThatCode(() -> service.changeConsumption(buildingId, cmd))
                 .doesNotThrowAnyException();
@@ -124,7 +125,7 @@ class PublicBuildingTransactionalTest {
                         .orElse(0));
 
         AddDeviceCommand cmd = new AddDeviceCommand(
-                unknownBuildingId, "Test Device", DeviceType.SOLAR, new BigDecimal("50"), EnergyUnit.kW);
+                unknownBuildingId, "Test Device", DeviceType.SOLAR, new BigDecimal("50"), EnergyUnit.kW, 0L);
 
         assertThatThrownBy(() -> service.addDevice(cmd))
                 .isInstanceOf(BuildingNotFoundException.class);
@@ -140,7 +141,7 @@ class PublicBuildingTransactionalTest {
         // Building has no devices → total capacity = 0 kW.
         // Requesting 50 kW consumption throws BuildingTotalCapacityExceededException
         // before the repository.save() is ever reached.
-        ChangeConsumptionCommand cmd = new ChangeConsumptionCommand(new BigDecimal("50"), EnergyUnit.kW);
+        ChangeConsumptionCommand cmd = new ChangeConsumptionCommand(new BigDecimal("50"), EnergyUnit.kW, 0L);
 
         assertThatThrownBy(() -> service.changeConsumption(buildingId, cmd))
                 .isInstanceOf(BuildingTotalCapacityExceededException.class);
@@ -159,7 +160,7 @@ class PublicBuildingTransactionalTest {
         assertThatThrownBy(() -> service.changeProduction(
                 buildingId,
                 unknownDeviceId,
-                new ChangeProductionCommand(new BigDecimal("50"), EnergyUnit.kW)))
+                new ChangeProductionCommand(new BigDecimal("50"), EnergyUnit.kW, 0L)))
                 .isInstanceOf(DeviceNotFoundException.class);
 
         // DB row must be unchanged — no devices, consumption still 0.

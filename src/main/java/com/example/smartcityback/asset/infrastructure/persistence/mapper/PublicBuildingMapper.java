@@ -28,7 +28,8 @@ public class PublicBuildingMapper {
                 Energy.reconstitute(
                         entity.getConsumption().getValue(),
                         entity.getConsumption().getUnit()
-                )
+                ),
+                entity.getVersion()
         );
     }
 

@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 // from the web layer to the application service — not the correct place for validation logic.
 public record ChangeProductionCommand(
     BigDecimal productionValue,
-    EnergyUnit productionUnit
+    EnergyUnit productionUnit,
+    Long version
 ) {}
 

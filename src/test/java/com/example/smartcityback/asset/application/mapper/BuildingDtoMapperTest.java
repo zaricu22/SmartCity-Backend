@@ -33,6 +33,7 @@ class BuildingDtoMapperTest {
         assertThat(dto.location()).isEqualTo("Main St 1");
         assertThat(dto.consumptionValue()).isEqualByComparingTo(BigDecimal.ZERO);
         assertThat(dto.consumptionUnit()).isEqualTo(EnergyUnit.kW);
+        assertThat(dto.version()).isNull();
     }
 
     // =====================================================================

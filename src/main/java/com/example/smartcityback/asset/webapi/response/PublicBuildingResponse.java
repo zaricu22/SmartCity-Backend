@@ -14,5 +14,6 @@ public record PublicBuildingResponse(
         String location,
         BigDecimal consumptionValue,
         EnergyUnit consumptionUnit,
-        List<EnergyDeviceResponse> devices
+        List<EnergyDeviceResponse> devices,
+        Long version
 ) {}

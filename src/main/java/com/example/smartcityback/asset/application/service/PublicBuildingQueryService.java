@@ -38,7 +38,7 @@ public class PublicBuildingQueryService {
         PagedResult<PublicBuildingSummary> paged = repository.findEligibleForSubsidy(page, size, sortBy, sortDir);
         List<PublicBuildingDto> dtos = paged.content().stream()
                 .map(s -> new PublicBuildingDto(
-                        s.id(), s.name(), s.location(), s.consumptionValue(), s.consumptionUnit(), List.of()))
+                        s.id(), s.name(), s.location(), s.consumptionValue(), s.consumptionUnit(), List.of(), null))
                 .toList();
         return new PagedResult<>(dtos, paged.totalElements(), paged.totalPages(), paged.pageNumber(), paged.pageSize());
     }

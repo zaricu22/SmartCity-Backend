@@ -27,7 +27,7 @@ class BuildingResponseMapperTest {
         PublicBuildingDto dto = new PublicBuildingDto(
                 BUILDING_ID, "City Hall", "Main St 1",
                 new BigDecimal("50"), EnergyUnit.kW,
-                List.of()
+                List.of(), 3L
         );
 
         PublicBuildingResponse response = BuildingResponseMapper.toResponse(dto);
@@ -37,6 +37,7 @@ class BuildingResponseMapperTest {
         assertThat(response.location()).isEqualTo("Main St 1");
         assertThat(response.consumptionValue()).isEqualByComparingTo("50");
         assertThat(response.consumptionUnit()).isEqualTo(EnergyUnit.kW);
+        assertThat(response.version()).isEqualTo(3L);
     }
 
     @Test
@@ -44,7 +45,7 @@ class BuildingResponseMapperTest {
         PublicBuildingDto dto = new PublicBuildingDto(
                 BUILDING_ID, "City Hall", "Main St 1",
                 BigDecimal.ZERO, EnergyUnit.kW,
-                List.of()
+                List.of(), 0L
         );
 
         PublicBuildingResponse response = BuildingResponseMapper.toResponse(dto);
@@ -57,7 +58,8 @@ class BuildingResponseMapperTest {
         PublicBuildingDto dto = new PublicBuildingDto(
                 BUILDING_ID, "City Hall", "Main St 1",
                 BigDecimal.ZERO, EnergyUnit.kW,
-                List.of(new EnergyDeviceDto(DEVICE_ID, "Test Device", DeviceType.SOLAR, new BigDecimal("100"), EnergyUnit.kW, new BigDecimal("60"), EnergyUnit.kW))
+                List.of(new EnergyDeviceDto(DEVICE_ID, "Test Device", DeviceType.SOLAR, new BigDecimal("100"), EnergyUnit.kW, new BigDecimal("60"), EnergyUnit.kW)),
+                0L
         );
 
         PublicBuildingResponse response = BuildingResponseMapper.toResponse(dto);
@@ -87,9 +89,9 @@ class BuildingResponseMapperTest {
     void toResponseList_multipleBuildings_mapsAll() {
         List<PublicBuildingDto> dtos = List.of(
                 new PublicBuildingDto(UUID.randomUUID(), "City Hall", "Main St 1",
-                        BigDecimal.ZERO, EnergyUnit.kW, List.of()),
+                        BigDecimal.ZERO, EnergyUnit.kW, List.of(), 0L),
                 new PublicBuildingDto(UUID.randomUUID(), "Library", "Oak Ave 5",
-                        BigDecimal.ZERO, EnergyUnit.kW, List.of())
+                        BigDecimal.ZERO, EnergyUnit.kW, List.of(), 0L)
         );
 
         List<PublicBuildingResponse> responses = BuildingResponseMapper.toResponseList(dtos);

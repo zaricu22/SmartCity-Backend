@@ -12,6 +12,8 @@ import com.example.smartcityback.asset.webapi.request.AddDeviceRequest;
 import com.example.smartcityback.asset.webapi.request.ChangeConsumptionRequest;
 import com.example.smartcityback.asset.webapi.request.ChangeProductionRequest;
 import com.example.smartcityback.asset.webapi.request.CreateBuildingRequest;
+import com.example.smartcityback.asset.webapi.request.DeleteBuildingRequest;
+import com.example.smartcityback.asset.webapi.request.RemoveDeviceRequest;
 import com.example.smartcityback.asset.webapi.response.PagedResponse;
 import com.example.smartcityback.asset.webapi.response.PublicBuildingResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -96,7 +98,8 @@ public class PublicBuildingController {
                 request.name(),
                 request.type(),
                 request.ratedCapacityValue(),
-                request.ratedCapacityUnit()
+                request.ratedCapacityUnit(),
+                request.version()
         ));
 
         return ResponseEntity.noContent().build();
@@ -123,7 +126,8 @@ public class PublicBuildingController {
                 id,
                 new ChangeConsumptionCommand(
                         request.consumptionValue(),
-                        request.consumptionUnit()
+                        request.consumptionUnit(),
+                        request.version()
                 )
         );
 
@@ -153,7 +157,8 @@ public class PublicBuildingController {
                 deviceId,
                 new ChangeProductionCommand(
                         request.productionValue(),
-                        request.productionUnit()
+                        request.productionUnit(),
+                        request.version()
                 )
         );
 
@@ -164,15 +169,18 @@ public class PublicBuildingController {
     @Operation(summary = "Delete a public building")
     @ApiResponses({
             @ApiResponse(responseCode = "204"),
-            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "422", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> delete(
-            @PathVariable UUID id) {
+            @PathVariable UUID id,
+            @Valid @RequestBody DeleteBuildingRequest request) {
 
         log.info("RequestReceived endpoint=DELETE /buildings/{id} id={} requestId={}", id, requestId());
 
-        service.delete(id);
+        service.delete(id, request.version());
 
         return ResponseEntity.noContent().build();
     }
@@ -181,17 +189,20 @@ public class PublicBuildingController {
     @Operation(summary = "Remove an energy device from a building")
     @ApiResponses({
             @ApiResponse(responseCode = "204"),
-            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+            @ApiResponse(responseCode = "422", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "404", content = @Content(schema = @Schema(implementation = ErrorResponse.class))),
+            @ApiResponse(responseCode = "409", content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     })
     @DeleteMapping("/{buildingId}/devices/{deviceId}")
     public ResponseEntity<Void> removeDevice(
             @PathVariable UUID buildingId,
-            @PathVariable UUID deviceId) {
+            @PathVariable UUID deviceId,
+            @Valid @RequestBody RemoveDeviceRequest request) {
 
         log.info("RequestReceived endpoint=DELETE /buildings/{buildingId}/devices/{deviceId} buildingId={} deviceId={} requestId={}",
                 buildingId, deviceId, requestId());
 
-        service.removeDevice(buildingId, deviceId);
+        service.removeDevice(buildingId, deviceId, request.version());
 
         return ResponseEntity.noContent().build();
     }
