@@ -7,9 +7,10 @@ import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceRemovedEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.context.event.EventListener;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.event.TransactionPhase;
+import org.springframework.transaction.event.TransactionalEventListener;
 
 /**
  * WebSocket event handler — bridges domain events to connected WebSocket clients.
@@ -32,6 +33,15 @@ import org.springframework.stereotype.Component;
  * which is a web/infrastructure concern. Domain events remain pure — they have
  * no knowledge of WebSocket.
  *
+ * All handlers use @TransactionalEventListener(phase = AFTER_COMMIT), not plain
+ * @EventListener. PublicBuildingAppService publishes these events from inside its own
+ * @Transactional method, right after repository.save(...) but before the transaction
+ * commits. A plain @EventListener fires synchronously at publish time — a client that
+ * reacts to the push (e.g. refetching via GET) can race the backend's own commit and
+ * read pre-write state. AFTER_COMMIT defers the push until the transaction has actually
+ * committed, so any client reacting to it is guaranteed to see the committed data.
+ *
+
  * Frontend subscription example (STOMP/SockJS):
  *   client.subscribe('/topic/buildings/550e8400-.../consumption', (msg) => {
  *       const update = JSON.parse(msg.body);
@@ -48,7 +58,7 @@ public class BuildingWebSocketEventHandler {
         this.messagingTemplate = messagingTemplate;
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onBuildingCreated(BuildingCreatedEvent event) {
         BuildingCreatedMessage message = new BuildingCreatedMessage(
                 event.buildingId(),
@@ -61,7 +71,7 @@ public class BuildingWebSocketEventHandler {
         log.debug("WebSocket pushed BuildingCreated buildingId={} topic=/topic/buildings", event.buildingId());
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onBuildingDeleted(BuildingDeletedEvent event) {
         BuildingDeletedMessage message = new BuildingDeletedMessage(event.buildingId(), event.name());
 
@@ -70,7 +80,7 @@ public class BuildingWebSocketEventHandler {
         log.debug("WebSocket pushed BuildingDeleted buildingId={} topic=/topic/buildings/deleted", event.buildingId());
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onConsumptionChanged(ConsumptionChangedEvent event) {
         String topic = "/topic/buildings/" + event.buildingId() + "/consumption";
 
@@ -88,7 +98,7 @@ public class BuildingWebSocketEventHandler {
                 event.buildingId(), topic);
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onDeviceAdded(DeviceAddedEvent event) {
         String topic = "/topic/buildings/" + event.buildingId() + "/devices";
 
@@ -105,7 +115,7 @@ public class BuildingWebSocketEventHandler {
                 event.buildingId(), topic);
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onDeviceRemoved(DeviceRemovedEvent event) {
         String topic = "/topic/buildings/" + event.buildingId() + "/devices/removed";
 
@@ -122,7 +132,7 @@ public class BuildingWebSocketEventHandler {
                 event.buildingId(), topic);
     }
 
-    @EventListener
+    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
     public void onProductionChanged(ProductionChangedEvent event) {
         String topic = "/topic/buildings/" + event.buildingId() + "/production";
 
