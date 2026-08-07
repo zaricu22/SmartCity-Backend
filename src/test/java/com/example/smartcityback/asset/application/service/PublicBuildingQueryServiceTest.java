@@ -124,10 +124,10 @@ class PublicBuildingQueryServiceTest {
 
     @Test
     void getAll_mapsAllPaginationFields() {
-        given(repository.findAll(0, 10, "name", "asc"))
+        given(repository.findAll(null, null, 0, 10, "name", "asc"))
                 .willReturn(new PagedResult<>(List.of(), 42L, 5, 0, 10));
 
-        PagedResult<PublicBuildingDto> result = queryService.getAll(0, 10, "name", "asc");
+        PagedResult<PublicBuildingDto> result = queryService.getAll(null, null, 0, 10, "name", "asc");
 
         assertThat(result.totalElements()).isEqualTo(42L);
         assertThat(result.totalPages()).isEqualTo(5);
@@ -137,30 +137,30 @@ class PublicBuildingQueryServiceTest {
 
     @Test
     void getAll_forwardsAllParamsToRepository() {
-        given(repository.findAll(2, 7, "location", "desc"))
+        given(repository.findAll("City", "Main", 2, 7, "location", "desc"))
                 .willReturn(new PagedResult<>(List.of(), 0L, 0, 2, 7));
 
-        queryService.getAll(2, 7, "location", "desc");
+        queryService.getAll("City", "Main", 2, 7, "location", "desc");
 
-        then(repository).should().findAll(2, 7, "location", "desc");
+        then(repository).should().findAll("City", "Main", 2, 7, "location", "desc");
     }
 
     @Test
     void getAll_emptyPage_returnsEmptyContent() {
-        given(repository.findAll(0, 10, "name", "asc"))
+        given(repository.findAll(null, null, 0, 10, "name", "asc"))
                 .willReturn(new PagedResult<>(List.of(), 0L, 0, 0, 10));
 
-        PagedResult<PublicBuildingDto> result = queryService.getAll(0, 10, "name", "asc");
+        PagedResult<PublicBuildingDto> result = queryService.getAll(null, null, 0, 10, "name", "asc");
 
         assertThat(result.content()).isEmpty();
     }
 
     @Test
     void getAll_withBuildings_mapsContentToDtos() {
-        given(repository.findAll(0, 10, "name", "asc"))
+        given(repository.findAll(null, null, 0, 10, "name", "asc"))
                 .willReturn(new PagedResult<>(List.of(buildingEntity(List.of())), 1L, 1, 0, 10));
 
-        PagedResult<PublicBuildingDto> result = queryService.getAll(0, 10, "name", "asc");
+        PagedResult<PublicBuildingDto> result = queryService.getAll(null, null, 0, 10, "name", "asc");
 
         assertThat(result.content()).hasSize(1);
         assertThat(result.content().get(0).id()).isEqualTo(BUILDING_ID);

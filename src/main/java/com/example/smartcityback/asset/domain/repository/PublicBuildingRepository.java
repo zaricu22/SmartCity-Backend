@@ -9,7 +9,7 @@ import java.util.UUID;
 
 public interface PublicBuildingRepository {
     Optional<PublicBuilding> findById(UUID id);
-    PagedResult<PublicBuilding> findAll(int page, int size, String sortBy, String sortDir);
+    PagedResult<PublicBuilding> findAll(String name, String location, int page, int size, String sortBy, String sortDir);
     PagedResult<PublicBuildingSummary> findEligibleForSubsidy(int page, int size, String sortBy, String sortDir);
     boolean existsByNameAndLocation(String name, String location);
     void save(PublicBuilding building);
