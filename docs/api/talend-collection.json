@@ -232,7 +232,7 @@
               "host": ["smartcity-backend-9g09", "onrender", "com"],
               "path": ["SmartCityREST", "v1", "buildings"]
             },
-            "description": "Creates a new public building. Response: 201 Created — body contains UUID; Location header points to new resource. Errors: 400 | 422. Requires ADMIN role."
+            "description": "Creates a new public building. Response: 201 Created — body contains UUID; Location header points to new resource. Errors: 400 | 409 (duplicate name+location) | 422. Requires ADMIN role."
           },
           "response": []
         },

@@ -20,8 +20,9 @@ class SubsidyEligibilitySpecificationTest {
 
     private PublicBuilding buildingWithDevices(int deviceCount, BigDecimal consumptionValue) {
         PublicBuilding building = new PublicBuilding(UUID.randomUUID(), "City Hall", "Main St 1");
+        // Distinct names — addDevice() rejects a second device with the same name+type.
         for (int i = 0; i < deviceCount; i++) {
-            building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
+            building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device " + i, DeviceType.SOLAR, CAPACITY_100_KW));
         }
         building.changeConsumption(new Energy(consumptionValue, EnergyUnit.kW));
         return building;

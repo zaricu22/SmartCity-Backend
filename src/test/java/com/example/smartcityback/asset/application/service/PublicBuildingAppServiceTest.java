@@ -79,6 +79,17 @@ class PublicBuildingAppServiceTest {
         then(eventPublisher).should().publishEvent(any(BuildingCreatedEvent.class));
     }
 
+    @Test
+    void create_duplicateNameAndLocation_throwsBuildingAlreadyExistsException() {
+        given(repository.existsByNameAndLocation("City Hall", "Main St 1")).willReturn(true);
+
+        assertThatThrownBy(() -> service.create(new CreateBuildingCommand("City Hall", "Main St 1")))
+                .isInstanceOf(com.example.smartcityback.asset.domain.exception.BuildingAlreadyExistsException.class);
+
+        then(repository).should(never()).save(any());
+        then(eventPublisher).should(never()).publishEvent(any());
+    }
+
     // =====================================================================
     // delete
     // =====================================================================
