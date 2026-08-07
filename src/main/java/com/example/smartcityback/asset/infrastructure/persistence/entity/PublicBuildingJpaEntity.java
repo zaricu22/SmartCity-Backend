@@ -3,6 +3,7 @@ package com.example.smartcityback.asset.infrastructure.persistence.entity;
 import com.example.smartcityback.asset.infrastructure.persistence.embedded.EnergyEmbeddable;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.JdbcTypeCode;
 
 import java.util.List;
@@ -39,6 +40,15 @@ public class PublicBuildingJpaEntity {
     })
     private EnergyEmbeddable consumption;
 
+    // @BatchSize avoids N+1 when listing buildings: without it, lazily loading devices for each
+    // building in a page issues one SELECT per building. With it, Hibernate batches those lazy
+    // loads into a single "WHERE building_id IN (...)" query per page instead.
+    // Not @EntityGraph/JOIN FETCH here: the list query is paginated (LIMIT/OFFSET), and JOIN
+    // FETCHing a @OneToMany collection together with SQL-level pagination is a known Hibernate
+    // trap — the join multiplies row count, so Hibernate can't paginate the parent rows in SQL
+    // and silently falls back to loading the entire result set into memory and paginating there
+    // (HHH000104), which is worse than the N+1 it was meant to fix.
+    @BatchSize(size = 20)
     @OneToMany(mappedBy = "building", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<EnergyDeviceJpaEntity> devices;
 
