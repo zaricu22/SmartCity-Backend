@@ -87,7 +87,12 @@ public class PublicBuilding {
 
     // Domain methods
     public void addDevice(EnergyDevice newDevice) {
-        if (devices.stream().anyMatch(d -> d.equals(newDevice))) {
+        // Matched on name+type rather than EnergyDevice.equals() (which is ID-based) so a
+        // retried "add device" request — which generates a fresh random device ID each time —
+        // is actually caught as a duplicate instead of silently creating a second device.
+        boolean isDuplicate = devices.stream()
+                .anyMatch(d -> d.getName().equals(newDevice.getName()) && d.getType() == newDevice.getType());
+        if (isDuplicate) {
             throw new DeviceAlreadyExistsException();
         }
 

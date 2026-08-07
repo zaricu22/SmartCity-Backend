@@ -9,4 +9,5 @@ import java.util.UUID;
 public interface PublicBuildingJpaRepository
         extends JpaRepository<PublicBuildingJpaEntity, UUID>,
                 JpaSpecificationExecutor<PublicBuildingJpaEntity> {
+    boolean existsByNameAndLocation(String name, String location);
 }

@@ -4,6 +4,7 @@ import com.example.smartcityback.asset.application.dto.EnergyDeviceDto;
 import com.example.smartcityback.asset.application.dto.PublicBuildingDto;
 import com.example.smartcityback.asset.application.exception.BuildingNotFoundException;
 import com.example.smartcityback.asset.application.service.PublicBuildingAppService;
+import com.example.smartcityback.asset.domain.exception.BuildingAlreadyExistsException;
 import com.example.smartcityback.asset.domain.exception.BuildingTotalCapacityExceededException;
 import com.example.smartcityback.asset.domain.exception.DeviceCapacityLimitException;
 import com.example.smartcityback.asset.domain.exception.DeviceAlreadyExistsException;
@@ -519,6 +520,19 @@ class PublicBuildingControllerAPITest {
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.errorCode").value("DEVICE_ALREADY_EXISTS"));
+    }
+
+    @Test
+    void create_duplicateNameAndLocation_returns409() throws Exception {
+        willThrow(new BuildingAlreadyExistsException()).given(appService).create(any());
+
+        mockMvc.perform(post("/v1/buildings")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"name": "City Hall", "location": "Main St 1"}
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value("BUILDING_ALREADY_EXISTS"));
     }
 
     @Test
