@@ -190,7 +190,7 @@
               "host": ["smartcity-backend-9g09", "onrender", "com"],
               "path": ["SmartCityREST", "v1", "buildings"]
             },
-            "description": "Returns all public buildings (paginated). Response: 200 OK — array of building objects. Requires VIEWER or ADMIN role."
+            "description": "Returns all public buildings (paginated). Optional ?name= and ?location= query params filter by case-insensitive partial match, combined with AND (not applied when eligible=true). Response: 200 OK — array of building objects. Requires VIEWER or ADMIN role."
           },
           "response": []
         },

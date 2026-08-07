@@ -221,12 +221,16 @@ public class PublicBuildingController {
     }
 
     @PreAuthorize("hasAnyRole('VIEWER', 'ADMIN')")
-    @Operation(summary = "Get all public buildings")
+    @Operation(summary = "Get all public buildings",
+            description = "name/location filter case-insensitive 'contains' match, combined with AND. " +
+                    "Not applied when eligible=true, which uses a separate subsidy-eligibility query.")
     @ApiResponse(responseCode = "200")
     @GetMapping
     public PagedResponse<PublicBuildingResponse> getAll(
             @ParameterObject @PageableDefault(size = 20, sort = "name") Pageable pageable,
-            @RequestParam(required = false) Boolean eligible) {
+            @RequestParam(required = false) Boolean eligible,
+            @RequestParam(required = false) String name,
+            @RequestParam(required = false) String location) {
         Sort.Order order = pageable.getSort().stream().findFirst().orElse(Sort.Order.asc("name"));
         int pageNumber = pageable.getPageNumber();
         int pageSize = pageable.getPageSize();
@@ -236,7 +240,7 @@ public class PublicBuildingController {
         return BuildingResponseMapper.toResponsePage(
                 Boolean.TRUE.equals(eligible)
                         ? queryService.getEligibleForSubsidy(pageNumber, pageSize, sortBy, sortDir)
-                        : queryService.getAll(pageNumber, pageSize, sortBy, sortDir)
+                        : queryService.getAll(name, location, pageNumber, pageSize, sortBy, sortDir)
         );
     }
 }

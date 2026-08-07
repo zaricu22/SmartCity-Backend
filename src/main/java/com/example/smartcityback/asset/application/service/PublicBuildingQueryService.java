@@ -30,8 +30,8 @@ public class PublicBuildingQueryService {
         return BuildingDtoMapper.toDto(building);
     }
 
-    public PagedResult<PublicBuildingDto> getAll(int page, int size, String sortBy, String sortDir) {
-        return toDtoPage(repository.findAll(page, size, sortBy, sortDir));
+    public PagedResult<PublicBuildingDto> getAll(String name, String location, int page, int size, String sortBy, String sortDir) {
+        return toDtoPage(repository.findAll(name, location, page, size, sortBy, sortDir));
     }
 
     public PagedResult<PublicBuildingDto> getEligibleForSubsidy(int page, int size, String sortBy, String sortDir) {

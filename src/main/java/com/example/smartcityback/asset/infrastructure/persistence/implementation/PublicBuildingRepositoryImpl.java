@@ -7,6 +7,7 @@ import com.example.smartcityback.asset.shared.PagedResult;
 import com.example.smartcityback.asset.infrastructure.persistence.entity.PublicBuildingJpaEntity;
 import com.example.smartcityback.asset.infrastructure.persistence.interfaces.PublicBuildingJpaRepository;
 import com.example.smartcityback.asset.infrastructure.persistence.mapper.PublicBuildingMapper;
+import com.example.smartcityback.asset.infrastructure.persistence.specification.BuildingFilterSpecifications;
 import com.example.smartcityback.asset.infrastructure.persistence.specification.SubsidyEligibilityJpaSpecification;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
@@ -46,8 +47,15 @@ public class PublicBuildingRepositoryImpl implements PublicBuildingRepository {
     }
 
     @Override
-    public PagedResult<PublicBuilding> findAll(int page, int size, String sortBy, String sortDir) {
-        Page<PublicBuildingJpaEntity> jpaPage = jpaRepository.findAll(pageRequest(page, size, sortBy, sortDir));
+    public PagedResult<PublicBuilding> findAll(String name, String location, int page, int size, String sortBy, String sortDir) {
+        // First real caller of JpaSpecificationExecutor.findAll(Specification, Pageable) — unlike
+        // findEligibleForSubsidy() below, this returns full entities (no projection needed), so
+        // the interface's own findAll works directly instead of a manual CriteriaQuery.
+        Specification<PublicBuildingJpaEntity> spec = Specification
+                .where(BuildingFilterSpecifications.nameContains(name))
+                .and(BuildingFilterSpecifications.locationContains(location));
+
+        Page<PublicBuildingJpaEntity> jpaPage = jpaRepository.findAll(spec, pageRequest(page, size, sortBy, sortDir));
         return toPagedResult(jpaPage);
     }
 

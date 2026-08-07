@@ -192,7 +192,7 @@ class PublicBuildingRepositoryImplTest {
         em.flush();
         em.clear();
 
-        PagedResult<PublicBuilding> result = repository.findAll(0, 2, "name", "asc");
+        PagedResult<PublicBuilding> result = repository.findAll(null, null, 0, 2, "name", "asc");
 
         assertThat(result.content()).hasSize(2);
         assertThat(result.totalElements()).isEqualTo(3L);
@@ -209,7 +209,7 @@ class PublicBuildingRepositoryImplTest {
         em.flush();
         em.clear();
 
-        PagedResult<PublicBuilding> result = repository.findAll(1, 2, "name", "asc");
+        PagedResult<PublicBuilding> result = repository.findAll(null, null, 1, 2, "name", "asc");
 
         assertThat(result.content()).hasSize(1);
         assertThat(result.pageNumber()).isEqualTo(1);
@@ -223,7 +223,7 @@ class PublicBuildingRepositoryImplTest {
         em.flush();
         em.clear();
 
-        PagedResult<PublicBuilding> result = repository.findAll(0, 10, "name", "asc");
+        PagedResult<PublicBuilding> result = repository.findAll(null, null, 0, 10, "name", "asc");
 
         assertThat(result.content())
                 .extracting(PublicBuilding::getName)
@@ -238,11 +238,69 @@ class PublicBuildingRepositoryImplTest {
         em.flush();
         em.clear();
 
-        PagedResult<PublicBuilding> result = repository.findAll(0, 10, "name", "desc");
+        PagedResult<PublicBuilding> result = repository.findAll(null, null, 0, 10, "name", "desc");
 
         assertThat(result.content())
                 .extracting(PublicBuilding::getName)
                 .containsExactly("Gamma", "Beta", "Alpha");
+    }
+
+    // =====================================================================
+    // findAll — filtering
+    // =====================================================================
+
+    @Test
+    void findAll_nameFilter_returnsCaseInsensitiveContainsMatches() {
+        repository.save(new PublicBuilding(UUID.randomUUID(), "City Hall", "Main St 1"));
+        repository.save(new PublicBuilding(UUID.randomUUID(), "City Library", "Main St 2"));
+        repository.save(new PublicBuilding(UUID.randomUUID(), "Fire Station", "Oak Ave 5"));
+        em.flush();
+        em.clear();
+
+        PagedResult<PublicBuilding> result = repository.findAll("city", null, 0, 10, "name", "asc");
+
+        assertThat(result.content())
+                .extracting(PublicBuilding::getName)
+                .containsExactlyInAnyOrder("City Hall", "City Library");
+    }
+
+    @Test
+    void findAll_locationFilter_returnsCaseInsensitiveContainsMatches() {
+        repository.save(new PublicBuilding(UUID.randomUUID(), "City Hall", "Main St 1"));
+        repository.save(new PublicBuilding(UUID.randomUUID(), "Fire Station", "Oak Ave 5"));
+        em.flush();
+        em.clear();
+
+        PagedResult<PublicBuilding> result = repository.findAll(null, "MAIN", 0, 10, "name", "asc");
+
+        assertThat(result.content())
+                .extracting(PublicBuilding::getName)
+                .containsExactly("City Hall");
+    }
+
+    @Test
+    void findAll_nameAndLocationFilter_combinedWithAnd() {
+        repository.save(new PublicBuilding(UUID.randomUUID(), "City Hall", "Main St 1"));
+        repository.save(new PublicBuilding(UUID.randomUUID(), "City Hall Annex", "Oak Ave 5"));
+        em.flush();
+        em.clear();
+
+        PagedResult<PublicBuilding> result = repository.findAll("City Hall", "Main", 0, 10, "name", "asc");
+
+        assertThat(result.content())
+                .extracting(PublicBuilding::getName)
+                .containsExactly("City Hall");
+    }
+
+    @Test
+    void findAll_noFilterMatch_returnsEmptyContent() {
+        repository.save(new PublicBuilding(UUID.randomUUID(), "City Hall", "Main St 1"));
+        em.flush();
+        em.clear();
+
+        PagedResult<PublicBuilding> result = repository.findAll("Nonexistent", null, 0, 10, "name", "asc");
+
+        assertThat(result.content()).isEmpty();
     }
 
     // =====================================================================

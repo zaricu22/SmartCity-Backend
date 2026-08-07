@@ -120,7 +120,7 @@ class PublicBuildingControllerAPITest {
 
     @Test
     void getAll_returns200WithPagedResult() throws Exception {
-        given(queryService.getAll(anyInt(), anyInt(), anyString(), anyString()))
+        given(queryService.getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString()))
                 .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
 
         mockMvc.perform(get("/v1/buildings"))
@@ -134,24 +134,24 @@ class PublicBuildingControllerAPITest {
 
     @Test
     void getAll_sortDesc_passesDescDirectionToService() throws Exception {
-        given(queryService.getAll(anyInt(), anyInt(), anyString(), anyString()))
+        given(queryService.getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString()))
                 .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
 
         mockMvc.perform(get("/v1/buildings").param("sort", "name,desc"))
                 .andExpect(status().isOk());
 
-        then(queryService).should().getAll(anyInt(), anyInt(), eq("name"), eq("desc"));
+        then(queryService).should().getAll(any(), any(), anyInt(), anyInt(), eq("name"), eq("desc"));
     }
 
     @Test
     void getAll_sortAsc_passesAscDirectionToService() throws Exception {
-        given(queryService.getAll(anyInt(), anyInt(), anyString(), anyString()))
+        given(queryService.getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString()))
                 .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
 
         mockMvc.perform(get("/v1/buildings").param("sort", "name,asc"))
                 .andExpect(status().isOk());
 
-        then(queryService).should().getAll(anyInt(), anyInt(), eq("name"), eq("asc"));
+        then(queryService).should().getAll(any(), any(), anyInt(), anyInt(), eq("name"), eq("asc"));
     }
 
     @Test
@@ -163,31 +163,64 @@ class PublicBuildingControllerAPITest {
                 .andExpect(status().isOk());
 
         then(queryService).should().getEligibleForSubsidy(anyInt(), anyInt(), anyString(), anyString());
-        then(queryService).should(never()).getAll(anyInt(), anyInt(), anyString(), anyString());
+        then(queryService).should(never()).getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString());
     }
 
     @Test
     void getAll_eligibleFalse_callsGetAllNotGetEligibleForSubsidy() throws Exception {
-        given(queryService.getAll(anyInt(), anyInt(), anyString(), anyString()))
+        given(queryService.getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString()))
                 .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
 
         mockMvc.perform(get("/v1/buildings").param("eligible", "false"))
                 .andExpect(status().isOk());
 
-        then(queryService).should().getAll(anyInt(), anyInt(), anyString(), anyString());
+        then(queryService).should().getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString());
         then(queryService).should(never()).getEligibleForSubsidy(anyInt(), anyInt(), anyString(), anyString());
     }
 
     @Test
     void getAll_eligibleParamAbsent_callsGetAll() throws Exception {
-        given(queryService.getAll(anyInt(), anyInt(), anyString(), anyString()))
+        given(queryService.getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString()))
                 .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
 
         mockMvc.perform(get("/v1/buildings"))
                 .andExpect(status().isOk());
 
-        then(queryService).should().getAll(anyInt(), anyInt(), anyString(), anyString());
+        then(queryService).should().getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString());
         then(queryService).should(never()).getEligibleForSubsidy(anyInt(), anyInt(), anyString(), anyString());
+    }
+
+    @Test
+    void getAll_nameParam_forwardedToService() throws Exception {
+        given(queryService.getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString()))
+                .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
+
+        mockMvc.perform(get("/v1/buildings").param("name", "City"))
+                .andExpect(status().isOk());
+
+        then(queryService).should().getAll(eq("City"), isNull(), anyInt(), anyInt(), anyString(), anyString());
+    }
+
+    @Test
+    void getAll_locationParam_forwardedToService() throws Exception {
+        given(queryService.getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString()))
+                .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
+
+        mockMvc.perform(get("/v1/buildings").param("location", "Main St"))
+                .andExpect(status().isOk());
+
+        then(queryService).should().getAll(isNull(), eq("Main St"), anyInt(), anyInt(), anyString(), anyString());
+    }
+
+    @Test
+    void getAll_nameAndLocationParams_bothForwardedToService() throws Exception {
+        given(queryService.getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString()))
+                .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
+
+        mockMvc.perform(get("/v1/buildings").param("name", "City").param("location", "Main St"))
+                .andExpect(status().isOk());
+
+        then(queryService).should().getAll(eq("City"), eq("Main St"), anyInt(), anyInt(), anyString(), anyString());
     }
 
     @Test
