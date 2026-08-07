@@ -97,7 +97,7 @@ class PublicBuildingTest {
 
     @Test
     void addDevice_duplicateDevice_throwsDeviceAlreadyExistsException() {
-        // Two devices with the same UUID are considered the same device.
+        // Duplicate is matched on name+type, not ID — same UUID here is incidental.
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         EnergyDevice first  = new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW);
         EnergyDevice second = new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW);
@@ -106,6 +106,40 @@ class PublicBuildingTest {
 
         assertThatThrownBy(() -> building.addDevice(second))
                 .isInstanceOf(DeviceAlreadyExistsException.class);
+    }
+
+    @Test
+    void addDevice_sameNameAndTypeDifferentIds_throwsDeviceAlreadyExistsException() {
+        // Regression test: AppService.addDevice() generates a fresh random UUID on every call,
+        // so a retried "add device" request always produces two different IDs. Matching on
+        // name+type instead of EnergyDevice.equals() (ID-based) is what makes the duplicate
+        // check actually catch that retry instead of silently creating a second device.
+        PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+        building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
+
+        assertThatThrownBy(() -> building.addDevice(
+                new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW)))
+                .isInstanceOf(DeviceAlreadyExistsException.class);
+    }
+
+    @Test
+    void addDevice_sameNameDifferentType_succeeds() {
+        PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+        building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
+
+        building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.BATTERY, CAPACITY_100_KW));
+
+        assertThat(building.getDevices()).hasSize(2);
+    }
+
+    @Test
+    void addDevice_sameTypeDifferentName_succeeds() {
+        PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+        building.addDevice(new EnergyDevice(UUID.randomUUID(), "Solar Panel A", DeviceType.SOLAR, CAPACITY_100_KW));
+
+        building.addDevice(new EnergyDevice(UUID.randomUUID(), "Solar Panel B", DeviceType.SOLAR, CAPACITY_100_KW));
+
+        assertThat(building.getDevices()).hasSize(2);
     }
 
     // public List<EnergyDevice> getDevices() { return Collections.unmodifiableList(devices); }

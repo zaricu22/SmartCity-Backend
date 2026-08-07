@@ -84,11 +84,14 @@ class PublicBuildingFullIntegrationTest {
     // =====================================================================
 
     private UUID createBuilding() {
+        // Name must be unique per call: this class shares one Testcontainers Postgres instance
+        // across all test methods with no cleanup between them, and PublicBuildingAppService.create()
+        // now rejects a duplicate name+location (BuildingAlreadyExistsException, 409).
         return given(asAdmin)
                 .contentType(ContentType.JSON)
                 .body("""
-                    { "name": "City Hall", "location": "Main St 1" }
-                    """)
+                    { "name": "City Hall %s", "location": "Main St 1" }
+                    """.formatted(UUID.randomUUID()))
                 .when()
                 .post("/v1/buildings")
                 .then()
@@ -121,8 +124,8 @@ class PublicBuildingFullIntegrationTest {
         given(asAdmin)
                 .contentType(ContentType.JSON)
                 .body("""
-                    { "name": "City Hall", "location": "Main St 1" }
-                    """)
+                    { "name": "City Hall %s", "location": "Main St 1" }
+                    """.formatted(UUID.randomUUID()))
                 .when()
                 .post("/v1/buildings")
                 .then()

@@ -7,6 +7,7 @@ import com.example.smartcityback.asset.application.command.CreateBuildingCommand
 import com.example.smartcityback.asset.domain.aggregate.PublicBuilding;
 import com.example.smartcityback.asset.domain.entity.EnergyDevice;
 import com.example.smartcityback.asset.domain.event.BuildingDeletedEvent;
+import com.example.smartcityback.asset.domain.exception.BuildingAlreadyExistsException;
 import com.example.smartcityback.asset.application.exception.BuildingNotFoundException;
 import com.example.smartcityback.asset.domain.repository.PublicBuildingRepository;
 import com.example.smartcityback.asset.domain.valueobject.Energy;
@@ -52,6 +53,15 @@ public class PublicBuildingAppService {
     }
 
     public UUID create(CreateBuildingCommand cmd) {
+        // Rejects a retried "create building" request (double-click, client timeout-and-retry)
+        // instead of silently creating a duplicate row. Not fully race-safe without a DB-level
+        // unique constraint — a genuinely concurrent duplicate submission could still slip past
+        // this check-then-insert — but covers the common non-concurrent retry case cheaply.
+        if (repository.existsByNameAndLocation(cmd.name(), cmd.location())) {
+            log.warn("BuildingAlreadyExists name={} location={}", cmd.name(), cmd.location());
+            throw new BuildingAlreadyExistsException();
+        }
+
         PublicBuilding building = new PublicBuilding(UUID.randomUUID(), cmd.name(), cmd.location());
 
         repository.save(building);

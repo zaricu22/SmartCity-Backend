@@ -91,6 +91,11 @@ public class PublicBuildingRepositoryImpl implements PublicBuildingRepository {
         return new PagedResult<>(content, totalElements, totalPages, page, size);
     }
 
+    @Override
+    public boolean existsByNameAndLocation(String name, String location) {
+        return jpaRepository.existsByNameAndLocation(name, location);
+    }
+
     private PageRequest pageRequest(int page, int size, String sortBy, String sortDir) {
         Sort.Direction direction = "desc".equalsIgnoreCase(sortDir) ? Sort.Direction.DESC : Sort.Direction.ASC;
         return PageRequest.of(page, size, Sort.by(direction, sortBy));
