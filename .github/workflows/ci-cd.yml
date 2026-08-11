@@ -107,7 +107,7 @@ jobs:
       # if: always() — artifact must be available even when the scan step fails (e.g. vulnerability found, NVD download error)
       - name: Upload OWASP report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: owasp-report
           path: reports
@@ -141,7 +141,7 @@ jobs:
 
       # GitHub Action Artifact: Upload jacoco report to be used by SonarCloud and Codecov
       - name: Upload JaCoCo report
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: jacoco-report
           path: target/site/jacoco
@@ -158,7 +158,7 @@ jobs:
       # if: always() — artifact must be available even when tests fail (Surefire reports are most useful for diagnosing failures)
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: test-results
           path: target/surefire-reports/
