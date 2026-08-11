@@ -343,7 +343,7 @@ jobs:
         run: python scripts/enrich_openapi.py
 
       # Install Node
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         if: steps.api_changed.outputs.changed == 'true'
         with:
           node-version: '22'
@@ -387,7 +387,7 @@ jobs:
 
       # Install Node.js 20 for Semantic Release and deployment scripts
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
           node-version: '20'
 
