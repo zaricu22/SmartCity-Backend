@@ -238,7 +238,7 @@
             }
           },
           "400": {
-            "description": "Bad Request. The request body is malformed or missing required fields such as building name or location.",
+            "description": "Bad Request. The request body is missing required fields or contains malformed data that cannot be parsed.",
             "content": {
               "*/*": {
                 "schema": {
@@ -265,7 +265,7 @@
           "Public Buildings"
         ],
         "summary": "Get all public buildings",
-        "description": "Retrieves a paginated list of public buildings registered in the smart city system. Optionally filter by energy eligibility status.",
+        "description": "Returns a paginated list of public buildings. The name and location filters perform case-insensitive 'contains' matching and are combined with AND logic. These filters are ignored when eligible=true, which instead applies a separate subsidy-eligibility query to return only buildings that qualify for energy subsidies.",
         "operationId": "getAll",
         "parameters": [
           {
@@ -308,16 +308,34 @@
           {
             "name": "eligible",
             "in": "query",
-            "description": "When set to true, returns only buildings eligible for energy production programs. When false, returns only ineligible buildings. Omit to return all buildings.",
+            "description": "When true, filters buildings by subsidy eligibility using a dedicated eligibility query. Name and location filters are ignored when this flag is set.",
             "required": false,
             "schema": {
               "type": "boolean"
+            }
+          },
+          {
+            "name": "name",
+            "in": "query",
+            "description": "Case-insensitive partial match filter on the building name. Ignored when eligible=true.",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "location",
+            "in": "query",
+            "description": "Case-insensitive partial match filter on the building location. Ignored when eligible=true.",
+            "required": false,
+            "schema": {
+              "type": "string"
             }
           }
         ],
         "responses": {
           "200": {
-            "description": "A paginated list of public buildings successfully retrieved.",
+            "description": "A paginated list of public buildings matching the specified filters.",
             "content": {
               "*/*": {
                 "schema": {
@@ -328,24 +346,24 @@
                     {
                       "id": "a3f1c2d4-5e6b-7890-abcd-ef1234567890",
                       "name": "City Hall",
-                      "location": "12 Main Street, Downtown District",
+                      "location": "Main Square 1, Downtown",
                       "consumptionValue": 1250.75,
                       "consumptionUnit": "KWH",
                       "devices": [
                         {
-                          "id": "b1e2f3a4-6c7d-8901-bcde-f12345678901",
+                          "id": "b1e2d3c4-1234-5678-9abc-def012345678",
                           "name": "Solar Panel Array A",
-                          "productionValue": 300.5,
+                          "productionValue": 430.0,
                           "productionUnit": "KWH"
                         }
                       ],
                       "version": 3
                     },
                     {
-                      "id": "c4d5e6f7-8a9b-0123-cdef-234567890abc",
-                      "name": "Public Library",
-                      "location": "45 Knowledge Avenue, Cultural Quarter",
-                      "consumptionValue": 870.0,
+                      "id": "c7d8e9f0-1a2b-3c4d-5e6f-7890abcdef12",
+                      "name": "Central Library",
+                      "location": "Knowledge Avenue 12, Midtown",
+                      "consumptionValue": 870.5,
                       "consumptionUnit": "KWH",
                       "devices": [],
                       "version": 1
@@ -354,14 +372,13 @@
                   "page": 0,
                   "size": 20,
                   "totalElements": 2,
-                  "totalPages": 1,
-                  "last": true
+                  "totalPages": 1
                 }
               }
             }
           }
         },
-        "x-raw-hash": "83d64de77f16c158004039cf0552ff88"
+        "x-raw-hash": "bd046d5303008cd7719a014367ff6dee"
       }
     },
     "/v1/buildings/{id}/devices": {
@@ -392,7 +409,7 @@
                 "$ref": "#/components/schemas/AddDeviceRequest"
               },
               "example": {
-                "deviceId": "7c9e6679-7425-40de-944b-e07fc1f90ae7",
+                "deviceId": "9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d",
                 "deviceName": "Rooftop Solar Panel Array",
                 "deviceType": "SOLAR_PANEL",
                 "productionValue": 15.5,
@@ -414,7 +431,7 @@
                   "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "requestId": "a1b2c3d4-0000-0000-0000-000000000001",
+                  "requestId": "a1b2c3d4-0000-0000-0000-111122223333",
                   "status": 400,
                   "error": "Bad Request",
                   "message": "deviceId must not be null",
@@ -431,11 +448,11 @@
                   "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "requestId": "a1b2c3d4-0000-0000-0000-000000000002",
+                  "requestId": "a1b2c3d4-0000-0000-0000-111122223333",
                   "status": 404,
                   "error": "Not Found",
                   "message": "Public building with id '3fa85f64-5717-4562-b3fc-2c963f66afa6' was not found.",
-                  "timestamp": "2024-05-10T09:16:00Z"
+                  "timestamp": "2024-05-10T09:15:00Z"
                 }
               }
             }
@@ -448,11 +465,11 @@
                   "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "requestId": "a1b2c3d4-0000-0000-0000-000000000003",
+                  "requestId": "a1b2c3d4-0000-0000-0000-111122223333",
                   "status": 409,
                   "error": "Conflict",
-                  "message": "Device with id '7c9e6679-7425-40de-944b-e07fc1f90ae7' already exists in building '3fa85f64-5717-4562-b3fc-2c963f66afa6'.",
-                  "timestamp": "2024-05-10T09:17:00Z"
+                  "message": "Device with id '9b1deb4d-3b7d-4bad-9bdd-2b0d7b3dcb6d' already exists in building '3fa85f64-5717-4562-b3fc-2c963f66afa6'.",
+                  "timestamp": "2024-05-10T09:15:00Z"
                 }
               }
             }
@@ -465,11 +482,11 @@
                   "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "requestId": "a1b2c3d4-0000-0000-0000-000000000004",
+                  "requestId": "a1b2c3d4-0000-0000-0000-111122223333",
                   "status": 422,
                   "error": "Unprocessable Entity",
                   "message": "Production value must be greater than zero.",
-                  "timestamp": "2024-05-10T09:18:00Z"
+                  "timestamp": "2024-05-10T09:15:00Z"
                 }
               }
             }
@@ -484,42 +501,42 @@
           "Public Buildings"
         ],
         "summary": "Update production rate of a device",
-        "description": "Updates the energy production rate of a specific device installed in a public building. The device must belong to the specified building. Returns no content on success.",
+        "description": "Updates the energy production rate of a specific device installed in a public building. The device must exist within the specified building. Returns no content on success.",
         "operationId": "changeProduction",
         "parameters": [
           {
             "name": "buildingId",
             "in": "path",
             "required": true,
+            "description": "Unique identifier of the public building that contains the device",
             "schema": {
               "type": "string",
-              "format": "uuid"
-            },
-            "description": "Unique identifier of the public building that owns the device",
-            "example": "a3f1c2d4-5e6b-7890-abcd-ef1234567890"
+              "format": "uuid",
+              "example": "a3f1c2d4-5e6b-7890-abcd-ef1234567890"
+            }
           },
           {
             "name": "deviceId",
             "in": "path",
             "required": true,
+            "description": "Unique identifier of the energy device whose production rate will be updated",
             "schema": {
               "type": "string",
-              "format": "uuid"
-            },
-            "description": "Unique identifier of the energy device whose production rate will be updated",
-            "example": "b7e2d3f5-6a7c-8901-bcde-f01234567891"
+              "format": "uuid",
+              "example": "b7e2d3f5-6a7c-8901-bcde-f01234567891"
+            }
           }
         ],
         "requestBody": {
-          "description": "New production rate value and unit to assign to the device",
           "content": {
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/ChangeProductionRequest"
               },
               "example": {
-                "productionValue": 15.75,
-                "productionUnit": "KWH"
+                "productionValue": 150.75,
+                "productionUnit": "KWH",
+                "version": 2
               }
             }
           },
@@ -529,59 +546,8 @@
           "204": {
             "description": "Device production rate updated successfully. No content is returned."
           },
-          "400": {
-            "description": "Invalid request payload — e.g. missing required fields or malformed UUID path parameters.",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "status": 400,
-                  "error": "Bad Request",
-                  "message": "productionValue must not be null",
-                  "requestId": "req-abc-001",
-                  "timestamp": "2024-06-01T10:15:00Z"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Building or device not found — no public building exists with the given buildingId, or the device does not belong to that building.",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "status": 404,
-                  "error": "Not Found",
-                  "message": "Device with id b7e2d3f5-6a7c-8901-bcde-f01234567891 not found in building a3f1c2d4-5e6b-7890-abcd-ef1234567890",
-                  "requestId": "req-abc-002",
-                  "timestamp": "2024-06-01T10:15:05Z"
-                }
-              }
-            }
-          },
-          "409": {
-            "description": "Optimistic locking conflict — the building or device was concurrently modified. Retry the request with the latest version.",
-            "content": {
-              "*/*": {
-                "schema": {
-                  "$ref": "#/components/schemas/ErrorResponse"
-                },
-                "example": {
-                  "status": 409,
-                  "error": "Conflict",
-                  "message": "Concurrent modification detected for device b7e2d3f5-6a7c-8901-bcde-f01234567891. Please retry.",
-                  "requestId": "req-abc-003",
-                  "timestamp": "2024-06-01T10:15:10Z"
-                }
-              }
-            }
-          },
           "422": {
-            "description": "Business rule violation — e.g. the production value is negative or exceeds the device's rated capacity.",
+            "description": "Unprocessable Entity — The provided production value or unit is semantically invalid (e.g., negative production value or unsupported energy unit).",
             "content": {
               "*/*": {
                 "schema": {
@@ -590,9 +556,56 @@
                 "example": {
                   "status": 422,
                   "error": "Unprocessable Entity",
-                  "message": "Production value -5.00 KWH is invalid; value must be greater than or equal to zero.",
-                  "requestId": "req-abc-004",
-                  "timestamp": "2024-06-01T10:15:15Z"
+                  "message": "Production value must be greater than or equal to zero.",
+                  "requestId": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request — The request body is malformed or contains invalid field types (e.g., non-numeric production value).",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 400,
+                  "error": "Bad Request",
+                  "message": "Invalid request body: 'productionValue' must be a valid number.",
+                  "requestId": "c12de34f-89ab-4567-cdef-0123456789ab"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found — No public building or device was found matching the provided identifiers.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 404,
+                  "error": "Not Found",
+                  "message": "Device with id 'b7e2d3f5-6a7c-8901-bcde-f01234567891' not found in building 'a3f1c2d4-5e6b-7890-abcd-ef1234567890'.",
+                  "requestId": "d89ef012-34ab-5678-cdef-1234567890bc"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict — Optimistic locking failure; the device was modified by another request since it was last read. Retry with the latest version.",
+            "content": {
+              "*/*": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                },
+                "example": {
+                  "status": 409,
+                  "error": "Conflict",
+                  "message": "Optimistic locking conflict: the device has been updated by another operation. Please fetch the latest version and retry.",
+                  "requestId": "e90fg123-45bc-6789-def0-234567890bcd"
                 }
               }
             }
@@ -614,12 +627,12 @@
             "name": "id",
             "in": "path",
             "required": true,
+            "description": "The unique identifier (UUID) of the public building to retrieve.",
             "schema": {
               "type": "string",
-              "format": "uuid"
-            },
-            "description": "The unique identifier (UUID) of the public building to retrieve.",
-            "example": "3fa85f64-5717-4562-b3fc-2c963f66afa6"
+              "format": "uuid",
+              "example": "a3f1c2d4-5e6b-7890-abcd-ef1234567890"
+            }
           }
         ],
         "responses": {
@@ -631,16 +644,16 @@
                   "$ref": "#/components/schemas/PublicBuildingResponse"
                 },
                 "example": {
-                  "id": "3fa85f64-5717-4562-b3fc-2c963f66afa6",
+                  "id": "a3f1c2d4-5e6b-7890-abcd-ef1234567890",
                   "name": "City Hall",
-                  "location": "12 Main Street, Downtown District",
-                  "consumptionValue": 1450.75,
+                  "location": "123 Main Street, Downtown District",
+                  "consumptionValue": 1250.75,
                   "consumptionUnit": "KWH",
                   "devices": [
                     {
-                      "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
-                      "name": "Solar Panel Array A",
-                      "productionValue": 320.5,
+                      "id": "b7e2d3f5-6a7c-8901-bcde-f12345678901",
+                      "name": "Rooftop Solar Panel Array",
+                      "productionValue": 430.5,
                       "productionUnit": "KWH"
                     }
                   ],
@@ -650,17 +663,17 @@
             }
           },
           "404": {
-            "description": "No public building exists with the specified UUID.",
+            "description": "No public building exists with the provided UUID.",
             "content": {
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
+                  "requestId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
                   "status": 404,
                   "error": "Not Found",
-                  "message": "Public building with id '3fa85f64-5717-4562-b3fc-2c963f66afa6' was not found.",
-                  "requestId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
+                  "message": "Public building with id 'a3f1c2d4-5e6b-7890-abcd-ef1234567890' was not found.",
                   "timestamp": "2024-06-15T10:23:45.123Z"
                 }
               }
@@ -674,18 +687,17 @@
           "Public Buildings"
         ],
         "summary": "Delete a public building",
-        "description": "Permanently removes a public building from the system by its unique identifier. The request body must include a version number for optimistic locking to prevent concurrent deletion conflicts.",
+        "description": "Permanently removes a public building from the system by its unique identifier. The request body must include a confirmation or metadata required for deletion. Returns no content on success.",
         "operationId": "delete",
         "parameters": [
           {
             "name": "id",
             "in": "path",
             "required": true,
-            "description": "The unique identifier of the public building to delete.",
+            "description": "The unique identifier (UUID) of the public building to delete.",
             "schema": {
               "type": "string",
-              "format": "uuid",
-              "example": "a3f1c2d4-5e6b-7890-abcd-ef1234567890"
+              "format": "uuid"
             }
           }
         ],
@@ -696,7 +708,7 @@
                 "$ref": "#/components/schemas/DeleteBuildingRequest"
               },
               "example": {
-                "version": 3
+                "reason": "Building decommissioned after infrastructure review"
               }
             }
           },
@@ -707,7 +719,7 @@
             "description": "The public building was successfully deleted. No content is returned."
           },
           "422": {
-            "description": "The deletion request could not be processed due to invalid or missing data, such as a malformed building ID or missing version field.",
+            "description": "The deletion request could not be processed due to invalid or inconsistent data, such as a malformed building identifier or missing required fields.",
             "content": {
               "*/*": {
                 "schema": {
@@ -716,14 +728,14 @@
                 "example": {
                   "status": 422,
                   "error": "Unprocessable Entity",
-                  "message": "Validation failed: version must not be null",
-                  "path": "/v1/buildings/a3f1c2d4-5e6b-7890-abcd-ef1234567890"
+                  "message": "Deletion request contains invalid data: reason must not be blank.",
+                  "timestamp": "2024-06-15T10:45:00Z"
                 }
               }
             }
           },
           "404": {
-            "description": "No public building was found with the specified identifier.",
+            "description": "No public building was found with the specified UUID. It may have already been deleted or never existed.",
             "content": {
               "*/*": {
                 "schema": {
@@ -732,14 +744,14 @@
                 "example": {
                   "status": 404,
                   "error": "Not Found",
-                  "message": "Public building with id 'a3f1c2d4-5e6b-7890-abcd-ef1234567890' does not exist.",
-                  "path": "/v1/buildings/a3f1c2d4-5e6b-7890-abcd-ef1234567890"
+                  "message": "Public building with id 'a3f1c2d4-89ab-4def-bcde-123456789abc' was not found.",
+                  "timestamp": "2024-06-15T10:45:00Z"
                 }
               }
             }
           },
           "409": {
-            "description": "A concurrency conflict occurred. The provided version does not match the current version of the building, indicating it was modified by another request since it was last read.",
+            "description": "The building cannot be deleted due to a conflict, such as active devices still associated with the building or a concurrent modification detected via optimistic locking.",
             "content": {
               "*/*": {
                 "schema": {
@@ -748,8 +760,8 @@
                 "example": {
                   "status": 409,
                   "error": "Conflict",
-                  "message": "Optimistic locking conflict: building with id 'a3f1c2d4-5e6b-7890-abcd-ef1234567890' was modified by another transaction. Expected version 3 but found 4.",
-                  "path": "/v1/buildings/a3f1c2d4-5e6b-7890-abcd-ef1234567890"
+                  "message": "Cannot delete building 'City Hall' because it still has 3 active energy devices attached.",
+                  "timestamp": "2024-06-15T10:45:00Z"
                 }
               }
             }
@@ -962,7 +974,7 @@
           "Public Buildings"
         ],
         "summary": "Remove an energy device from a building",
-        "description": "Removes a specific energy device from a public building. The device is permanently unlinked from the building. Returns no content on success.",
+        "description": "Removes a specific energy device from a public building. The device is identified by its unique ID within the context of the given building. Returns no content on success.",
         "operationId": "removeDevice",
         "parameters": [
           {
@@ -973,7 +985,7 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "Unique identifier of the public building from which the device will be removed",
+            "description": "The unique identifier of the public building from which the device will be removed.",
             "example": "a3f1c2d4-5e6b-7890-abcd-ef1234567890"
           },
           {
@@ -984,8 +996,8 @@
               "type": "string",
               "format": "uuid"
             },
-            "description": "Unique identifier of the energy device to be removed from the building",
-            "example": "b7e2d3f5-6a7c-8901-bcde-f01234567891"
+            "description": "The unique identifier of the energy device to be removed from the building.",
+            "example": "b7e2d3f5-6a7c-8901-bcde-fa2345678901"
           }
         ],
         "requestBody": {
@@ -1006,7 +1018,7 @@
             "description": "Energy device successfully removed from the building. No content is returned."
           },
           "422": {
-            "description": "Unprocessable — the request payload is structurally valid but contains semantic errors, such as an invalid version number or a malformed identifier.",
+            "description": "Unprocessable Entity — the request was well-formed but failed business rule validation, such as an optimistic locking version mismatch.",
             "content": {
               "*/*": {
                 "schema": {
@@ -1016,42 +1028,42 @@
                   "requestId": "f47ac10b-58cc-4372-a567-0e02b2c3d479",
                   "status": 422,
                   "error": "Unprocessable Entity",
-                  "message": "Provided version does not match the current state of the building.",
-                  "timestamp": "2024-06-15T10:32:00Z"
+                  "message": "Version mismatch: the building has been modified by another request.",
+                  "timestamp": "2024-06-15T10:45:00Z"
                 }
               }
             }
           },
           "404": {
-            "description": "Building or device not found — no public building exists with the given buildingId, or no device with the given deviceId is associated with that building.",
+            "description": "Not Found — the specified building or device does not exist in the system.",
             "content": {
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "requestId": "c12de34f-89ab-4567-cdef-012345678901",
+                  "requestId": "c12de34f-89ab-4567-cdef-0123456789ab",
                   "status": 404,
                   "error": "Not Found",
-                  "message": "Device with id 'b7e2d3f5-6a7c-8901-bcde-f01234567891' not found in building 'a3f1c2d4-5e6b-7890-abcd-ef1234567890'.",
-                  "timestamp": "2024-06-15T10:33:00Z"
+                  "message": "Energy device with ID 'b7e2d3f5-6a7c-8901-bcde-fa2345678901' not found in building 'a3f1c2d4-5e6b-7890-abcd-ef1234567890'.",
+                  "timestamp": "2024-06-15T10:45:00Z"
                 }
               }
             }
           },
           "409": {
-            "description": "Conflict — the building has been modified concurrently. The provided version is outdated; retrieve the latest building state and retry.",
+            "description": "Conflict — a concurrent modification conflict was detected, such as another operation currently modifying the same building or device.",
             "content": {
               "*/*": {
                 "schema": {
                   "$ref": "#/components/schemas/ErrorResponse"
                 },
                 "example": {
-                  "requestId": "d89ef012-34ab-5678-def0-123456789012",
+                  "requestId": "d89ef012-34ab-5678-def0-123456789abc",
                   "status": 409,
                   "error": "Conflict",
-                  "message": "Optimistic locking conflict: building version mismatch. Expected version 3 but found 5.",
-                  "timestamp": "2024-06-15T10:34:00Z"
+                  "message": "Concurrent modification detected for building 'a3f1c2d4-5e6b-7890-abcd-ef1234567890'. Please retry the operation.",
+                  "timestamp": "2024-06-15T10:45:00Z"
                 }
               }
             }
@@ -1065,7 +1077,7 @@
     "schemas": {
       "ChangeConsumptionRequest": {
         "type": "object",
-        "description": "Request payload for updating the energy consumption value and unit of a city asset. The version field is used for optimistic locking to prevent concurrent modification conflicts.",
+        "description": "Request payload for updating the energy consumption value and unit of a city asset. Supports optimistic locking via the version field.",
         "properties": {
           "consumptionValue": {
             "type": "number",
@@ -1079,13 +1091,13 @@
               "MW",
               "GW"
             ],
-            "description": "The unit of energy consumption associated with the provided consumption value.",
+            "description": "The unit of energy consumption associated with the consumptionValue.",
             "example": "kW"
           },
           "version": {
             "type": "integer",
             "format": "int64",
-            "description": "The current version of the asset record, used for optimistic locking. Must match the version stored in the database to prevent lost updates.",
+            "description": "The current version of the asset record, used for optimistic locking to prevent concurrent update conflicts.",
             "example": 3
           }
         },
@@ -1096,18 +1108,18 @@
       },
       "CreateBuildingRequest": {
         "type": "object",
-        "description": "Request payload for registering a new building asset in the smart city system.",
+        "description": "Request payload for creating a new building asset in the smart city system.",
         "properties": {
           "name": {
             "type": "string",
             "minLength": 1,
-            "description": "The unique human-readable name identifying the building.",
-            "example": "City Hall Tower"
+            "description": "The unique human-readable name of the building.",
+            "example": "City Hall"
           },
           "location": {
             "type": "string",
             "minLength": 1,
-            "description": "The physical address or geographic location descriptor of the building.",
+            "description": "The physical address or geographic location of the building.",
             "example": "123 Main Street, Downtown District"
           }
         },
@@ -1119,13 +1131,13 @@
       },
       "AddDeviceRequest": {
         "type": "object",
-        "description": "Request payload for adding a new device to a smart city asset",
+        "description": "Request payload for adding a new device to a smart city asset.",
         "properties": {
           "name": {
             "type": "string",
             "minLength": 1,
-            "description": "Human-readable name identifying the device",
-            "example": "Solar Panel Array A1"
+            "description": "Human-readable name of the device.",
+            "example": "Solar Panel Array A"
           },
           "type": {
             "type": "string",
@@ -1134,12 +1146,12 @@
               "PUMP",
               "BATTERY"
             ],
-            "description": "Category of the device based on its energy function",
+            "description": "Category of the device indicating its primary function.",
             "example": "SOLAR"
           },
           "ratedCapacityValue": {
             "type": "number",
-            "description": "Numeric value of the device's rated energy capacity; must be a positive number",
+            "description": "Numeric value of the device's rated energy capacity. Must be a positive number.",
             "example": 250.5
           },
           "ratedCapacityUnit": {
@@ -1149,13 +1161,13 @@
               "MW",
               "GW"
             ],
-            "description": "Unit of measurement for the rated capacity value",
+            "description": "Unit of measurement for the rated capacity value.",
             "example": "kW"
           },
           "version": {
             "type": "integer",
             "format": "int64",
-            "description": "Optimistic locking version number of the parent asset to prevent concurrent modification conflicts",
+            "description": "Optimistic locking version number of the parent asset to prevent concurrent modification conflicts.",
             "example": 1
           }
         },
@@ -1169,11 +1181,11 @@
       },
       "ChangeProductionRequest": {
         "type": "object",
-        "description": "Request payload for updating the energy production value of an asset",
+        "description": "Request payload for updating the energy production value of an asset. Requires the current version for optimistic locking.",
         "properties": {
           "productionValue": {
             "type": "number",
-            "description": "The new energy production value for the asset. Must be zero or positive.",
+            "description": "The new energy production value. Must be zero or positive.",
             "example": 150.75
           },
           "productionUnit": {
@@ -1200,7 +1212,7 @@
       },
       "EnergyDeviceResponse": {
         "type": "object",
-        "description": "Represents an energy device asset registered in the smart city system, including its rated capacity and production rate specifications.",
+        "description": "Represents an energy device asset in the smart city infrastructure, including its rated capacity and production rate specifications.",
         "properties": {
           "id": {
             "type": "string",
@@ -1220,12 +1232,12 @@
               "PUMP",
               "BATTERY"
             ],
-            "description": "Category of the energy device. SOLAR refers to photovoltaic generation units, PUMP to energy-consuming pump devices, and BATTERY to energy storage units.",
+            "description": "Category of the energy device. SOLAR refers to photovoltaic generation units, PUMP to energy-consuming pump systems, and BATTERY to energy storage units.",
             "example": "SOLAR"
           },
           "ratedCapacityValue": {
             "type": "number",
-            "description": "Numeric value of the device's rated capacity, representing the maximum power it can handle or store under standard conditions.",
+            "description": "Numeric value of the device's rated capacity, representing the maximum power output or storage capacity under standard conditions.",
             "example": 250.5
           },
           "ratedCapacityUnit": {
@@ -1268,7 +1280,7 @@
           },
           "name": {
             "type": "string",
-            "description": "Name of the public building.",
+            "description": "Official name of the public building.",
             "example": "City Hall"
           },
           "location": {
@@ -1278,7 +1290,7 @@
           },
           "consumptionValue": {
             "type": "number",
-            "description": "Current energy consumption value of the building, expressed in the specified unit.",
+            "description": "Current energy consumption value of the building, expressed in the unit specified by consumptionUnit.",
             "example": 250.75
           },
           "consumptionUnit": {
@@ -1288,12 +1300,12 @@
               "MW",
               "GW"
             ],
-            "description": "Unit of measurement for the energy consumption value (kilowatts, megawatts, or gigawatts).",
+            "description": "Unit of measurement for the building's energy consumption (kilowatts, megawatts, or gigawatts).",
             "example": "kW"
           },
           "devices": {
             "type": "array",
-            "description": "List of energy devices installed in the public building.",
+            "description": "List of energy devices installed in the public building that contribute to its overall energy consumption.",
             "items": {
               "$ref": "#/components/schemas/EnergyDeviceResponse"
             }
@@ -1309,16 +1321,16 @@
       },
       "ErrorResponse": {
         "type": "object",
-        "description": "Standard error response returned when a request fails, containing details about the error code, human-readable message, HTTP status, time of occurrence, and a unique request identifier for tracing.",
+        "description": "Standard error response returned when a request fails, containing error details and diagnostic information.",
         "properties": {
           "errorCode": {
             "type": "string",
-            "description": "Application-specific error code identifying the type of error (e.g. ASSET_NOT_FOUND, VALIDATION_FAILED).",
+            "description": "Application-specific error code identifying the type of error.",
             "example": "ASSET_NOT_FOUND"
           },
           "message": {
             "type": "string",
-            "description": "Human-readable explanation of what went wrong.",
+            "description": "Human-readable description of the error that occurred.",
             "example": "Asset with ID 42 was not found in the system."
           },
           "status": {
@@ -1330,12 +1342,12 @@
           "timestamp": {
             "type": "string",
             "format": "date-time",
-            "description": "ISO-8601 UTC timestamp indicating when the error occurred.",
+            "description": "ISO 8601 UTC timestamp indicating when the error occurred.",
             "example": "2024-05-15T10:23:47.512Z"
           },
           "requestId": {
             "type": "string",
-            "description": "Unique identifier for the request, useful for correlating logs and tracing the error across services.",
+            "description": "Unique identifier for the request, useful for tracing and debugging in logs.",
             "example": "f47ac10b-58cc-4372-a567-0e02b2c3d479"
           }
         },
@@ -1348,8 +1360,8 @@
           "refreshToken": {
             "type": "string",
             "minLength": 1,
-            "description": "The refresh token issued during a previous authentication or token refresh operation",
-            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNjk4NzY4MDAwLCJleHAiOjE2OTg4NTQ0MDB9.abc123refreshtokenexample"
+            "description": "The refresh token previously issued during authentication",
+            "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiJ1c2VyMTIzIiwiaWF0IjoxNjk4NzY1NDMyLCJleHAiOjE2OTg4NTE4MzJ9.dSzBkj3mN9Qw7vXpLtRuYeKcFhGnOaIbTsMqWzPxUoE"
           }
         },
         "required": [
@@ -1368,18 +1380,18 @@
           },
           "role": {
             "type": "string",
-            "description": "The role assigned to the authenticated user, determining their access level within the Smart City platform.",
+            "description": "Role assigned to the authenticated user, determining their access level within the Smart City platform.",
             "example": "ADMIN"
           },
           "expiresInMs": {
             "type": "integer",
             "format": "int64",
-            "description": "The duration in milliseconds until the access token expires, after which a new token must be obtained using the refresh token.",
+            "description": "Duration in milliseconds until the access token expires, after which a new token must be obtained using the refresh token.",
             "example": 3600000
           },
           "refreshToken": {
             "type": "string",
-            "description": "A long-lived refresh token used to obtain a new access token once the current one has expired, without requiring the user to log in again.",
+            "description": "Long-lived refresh token used to obtain a new access token once the current one has expired, without requiring the user to log in again.",
             "example": "dGhpcyBpcyBhIHNhbXBsZSByZWZyZXNoIHRva2VuIHN0cmluZw=="
           }
         },
@@ -1403,12 +1415,12 @@
       },
       "LoginRequest": {
         "type": "object",
-        "description": "Credentials used to authenticate a user. The username field accepts either a plain username (for pre-seeded admin/viewer accounts) or an email address (for self-registered users).",
+        "description": "Credentials used to authenticate a user. The 'username' field accepts either a plain username (for pre-seeded admin/viewer accounts) or an email address (for self-registered users).",
         "properties": {
           "username": {
             "type": "string",
             "minLength": 1,
-            "description": "The account identifier: either a plain username (e.g. 'admin', 'viewer') or the email address used during self-registration.",
+            "description": "The account identifier: either a plain username (e.g. 'admin', 'viewer') for pre-seeded accounts, or an email address for self-registered users.",
             "example": "admin"
           },
           "password": {
@@ -1430,7 +1442,7 @@
         "properties": {
           "content": {
             "type": "array",
-            "description": "The list of public building records returned for the current page.",
+            "description": "The list of public buildings returned for the current page.",
             "items": {
               "$ref": "#/components/schemas/PublicBuildingResponse"
             }
@@ -1438,7 +1450,7 @@
           "totalElements": {
             "type": "integer",
             "format": "int64",
-            "description": "The total number of public building records across all pages.",
+            "description": "The total number of public buildings across all pages.",
             "example": 142
           },
           "totalPages": {
@@ -1456,7 +1468,7 @@
           "pageSize": {
             "type": "integer",
             "format": "int32",
-            "description": "The number of public building records returned per page.",
+            "description": "The number of public buildings returned per page.",
             "example": 10
           }
         },
@@ -1470,13 +1482,13 @@
             "type": "string",
             "minLength": 1,
             "description": "A valid, unique email address that will be used as the user's login identifier.",
-            "example": "jane.doe@smartcity.example.com"
+            "example": "jane.doe@smartcity.io"
           },
           "password": {
             "type": "string",
             "maxLength": 2147483647,
             "minLength": 8,
-            "description": "The account password. Must be at least 8 characters long.",
+            "description": "The user's chosen password. Must be at least 8 characters long.",
             "example": "S3cur3P@ssw0rd"
           }
         },
@@ -1493,7 +1505,7 @@
           "version": {
             "type": "integer",
             "format": "int64",
-            "description": "The current version number of the building record, used for optimistic locking to ensure the record has not been modified since it was last retrieved.",
+            "description": "The current version number of the building record used for optimistic locking. Must match the latest version stored in the system to prevent overwriting concurrent changes.",
             "example": 3
           }
         },
@@ -1504,12 +1516,12 @@
       },
       "RemoveDeviceRequest": {
         "type": "object",
-        "description": "Request payload for removing a device from an asset, requiring the current version for optimistic locking.",
+        "description": "Request payload for removing a device from an asset, requiring the current version for optimistic locking",
         "properties": {
           "version": {
             "type": "integer",
             "format": "int64",
-            "description": "The current version number of the asset record, used for optimistic locking to prevent concurrent modification conflicts.",
+            "description": "Current version number of the asset used for optimistic locking to prevent concurrent modification conflicts",
             "example": 3
           }
         },
