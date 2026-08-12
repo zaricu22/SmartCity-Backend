@@ -29,6 +29,8 @@ class RefreshTokenStoreTest {
     @DisplayName("returns empty for a refresh token issued with a negative TTL, so it's already expired the "
             + "instant it's created — no waiting or clock mocking needed")
     void consume_expiredToken_returnsEmpty() {
+        // A negative TTL puts the "expires at" timestamp in the past the instant the token is
+        // issued, forcing expiry deterministically — no Thread.sleep() or clock mocking needed.
         RefreshTokenStore expiredStore = new RefreshTokenStore(-1);
         String token = expiredStore.issue("admin", "ADMIN");
         assertThat(expiredStore.consume(token)).isEmpty();

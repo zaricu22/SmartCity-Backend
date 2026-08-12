@@ -63,6 +63,11 @@ class RateLimitFilterTest {
     @DisplayName("rate-limits by the first IP in X-Forwarded-For rather than the proxy's own connection IP, "
             + "so it doesn't lump every client behind the same proxy into one shared bucket")
     void xForwardedFor_usesFirstIp_separateBucketFromDirect() throws Exception {
+        // X-Forwarded-For lists the original client IP first, then each proxy hop that relayed
+        // the request. Bucketing on the raw connection IP (the last proxy) would lump every
+        // client behind that proxy into one shared limit; bucketing on the whole header string
+        // would let a client dodge the limit just by varying the trailing hop values. Parsing
+        // the first entry is what keys the bucket to the actual client.
         var filter = new RateLimitFilter(1, 1);
         var proxiedRequest = postRequest("/v1/auth/login");
         proxiedRequest.addHeader("X-Forwarded-For", "203.0.113.1, 10.0.0.1");

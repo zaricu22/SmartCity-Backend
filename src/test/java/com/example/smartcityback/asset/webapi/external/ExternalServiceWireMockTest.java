@@ -103,7 +103,6 @@ class ExternalServiceWireMockTest {
         // Call stubbed endpoint via client:
            BigDecimal price = energyPriceClient.getCurrentPrice();
            assertThat(price).isEqualByComparingTo("0.12");
-        assertThat(true).isTrue();
     }
 
     @Test
@@ -117,7 +116,6 @@ class ExternalServiceWireMockTest {
         // Call stubbed endpoint via client:
            assertThatThrownBy(() -> energyPriceClient.getCurrentPrice())
                .isInstanceOf(ExternalServiceException.class);
-        assertThat(true).isTrue();
     }
 
     @Test
@@ -133,7 +131,6 @@ class ExternalServiceWireMockTest {
         // Call stubbed endpoint via client:
            assertThatThrownBy(() -> energyPriceClient.getCurrentPrice())
                .isInstanceOf(ExternalServiceTimeoutException.class);
-        assertThat(true).isTrue();
     }
 
     @Test
@@ -152,6 +149,5 @@ class ExternalServiceWireMockTest {
         // Call stubbed endpoint via client:
            assertThatThrownBy(() -> energyPriceClient.getCurrentPrice())
                .isInstanceOf(ExternalServiceException.class);
-        assertThat(true).isTrue();
     }
 }
