@@ -7,6 +7,7 @@ import com.example.smartcityback.auth.infrastructure.token.TokenBlacklist;
 import com.example.smartcityback.auth.infrastructure.user.EmailAlreadyRegisteredException;
 import com.example.smartcityback.auth.infrastructure.user.InMemoryUserRegistry;
 import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration;
@@ -54,6 +55,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("returns 200 with a JWT, refresh token, and the ADMIN role for a valid login")
     void login_validCredentials_returns200WithTokenAndRole() throws Exception {
         var springAuth = new UsernamePasswordAuthenticationToken(
                 "admin", null, List.of(new SimpleGrantedAuthority("ROLE_ADMIN")));
@@ -73,6 +75,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("returns 401 for a login with the wrong password")
     void login_badCredentials_returns401() throws Exception {
         given(authManager.authenticate(any())).willThrow(new BadCredentialsException("bad"));
 
@@ -85,6 +88,8 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("defaults to the VIEWER role when Spring Security's authentication result carries no role "
+            + "authority at all")
     void login_noRoleAuthority_defaultsToViewer() throws Exception {
         var springAuth = new UsernamePasswordAuthenticationToken("viewer", null, List.of());
         given(authManager.authenticate(any())).willReturn(springAuth);
@@ -101,6 +106,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("returns 200 with a brand-new JWT and refresh token when redeeming a valid refresh token")
     void refresh_validToken_returns200WithNewTokens() throws Exception {
         var entry = new RefreshTokenStore.Entry("admin", "ADMIN", Long.MAX_VALUE);
         given(refreshTokenStore.consume("old-refresh")).willReturn(Optional.of(entry));
@@ -118,6 +124,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("returns 401 for a refresh token the store doesn't recognize")
     void refresh_invalidToken_returns401() throws Exception {
         given(refreshTokenStore.consume(anyString())).willReturn(Optional.empty());
 
@@ -130,6 +137,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("returns 201 with a JWT, the default VIEWER role, and a refresh token for a newly registered email")
     void register_newEmail_returns201WithToken() throws Exception {
         given(jwtTokenService.generate(anyString(), anyString())).willReturn("jwt-token");
         given(refreshTokenStore.issue(anyString(), anyString())).willReturn("refresh-token");
@@ -146,6 +154,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("returns 409 when registering an email that's already taken")
     void register_duplicateEmail_returns409() throws Exception {
         willThrow(new EmailAlreadyRegisteredException("existing@example.com"))
                 .given(userRegistry).register(anyString(), anyString());
@@ -159,6 +168,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("rejects a registration request whose email isn't a valid email address")
     void register_invalidEmail_returns422() throws Exception {
         mockMvc.perform(post("/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -169,6 +179,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("rejects a registration request whose password is too short")
     void register_passwordTooShort_returns422() throws Exception {
         mockMvc.perform(post("/v1/auth/register")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -179,6 +190,7 @@ class AuthControllerTest {
     }
 
     @Test
+    @DisplayName("returns 204 and revokes both the access token's JTI and the refresh token on logout")
     void logout_validRequest_returns204() throws Exception {
         var mockAuth = new UsernamePasswordAuthenticationToken("admin", null, List.of());
         mockAuth.setDetails(new JwtAuthDetails("test-jti", System.currentTimeMillis() + 3_600_000));

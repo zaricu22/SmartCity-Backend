@@ -14,6 +14,7 @@ import com.example.smartcityback.asset.infrastructure.persistence.entity.PublicB
 import com.example.smartcityback.asset.infrastructure.persistence.interfaces.PublicBuildingJpaRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -96,6 +97,8 @@ class PublicBuildingTransactionalTest {
     // =====================================================================
 
     @Test
+    @DisplayName("commits a successful consumption change to the database, verified by reading the row back "
+            + "outside the service's own transaction")
     void changeConsumption_success_commitsToDatabase() {
         // Building has no devices → total capacity = 0 kW.
         // Consumption of 0 kW satisfies the check (0 <= 0) and the transaction must commit.
@@ -115,6 +118,8 @@ class PublicBuildingTransactionalTest {
     // =====================================================================
 
     @Test
+    @DisplayName("leaves an existing building's device list completely untouched when a request to add a "
+            + "device to a different, nonexistent building fails")
     void addDevice_buildingNotFound_transactionRollsBack_noOrphanedDevices() {
         // Non-existent buildingId → BuildingNotFoundException is thrown before
         // any domain mutation or save — device count must stay at 0.
@@ -137,6 +142,8 @@ class PublicBuildingTransactionalTest {
     }
 
     @Test
+    @DisplayName("leaves the database consumption value unchanged when a capacity-exceeded error is thrown "
+            + "before the save is ever reached")
     void changeConsumption_domainException_transactionRollsBack_dbUnchanged() {
         // Building has no devices → total capacity = 0 kW.
         // Requesting 50 kW consumption throws BuildingTotalCapacityExceededException
@@ -152,6 +159,8 @@ class PublicBuildingTransactionalTest {
     }
 
     @Test
+    @DisplayName("leaves the database completely unchanged when changing production on a nonexistent device "
+            + "fails before the save is ever reached")
     void changeProduction_domainException_transactionRollsBack_dbUnchanged() {
         // Building has no devices → DeviceNotFoundException is thrown inside changeDeviceProduction
         // before repository.save() is reached — DB must remain unchanged.

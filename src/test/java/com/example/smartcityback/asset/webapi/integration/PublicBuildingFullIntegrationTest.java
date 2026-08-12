@@ -5,6 +5,7 @@ import io.restassured.builder.RequestSpecBuilder;
 import io.restassured.http.ContentType;
 import io.restassured.specification.RequestSpecification;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -120,6 +121,8 @@ class PublicBuildingFullIntegrationTest {
     // =====================================================================
 
     @Test
+    @DisplayName("creates a building through the full HTTP -> controller -> service -> Postgres stack and "
+            + "returns 201 with the new building's ID")
     void createBuilding_validRequest_returns201() {
         given(asAdmin)
                 .contentType(ContentType.JSON)
@@ -134,6 +137,7 @@ class PublicBuildingFullIntegrationTest {
     }
 
     @Test
+    @DisplayName("adds a device to an existing building through the full stack and returns 204 with no body")
     void addDevice_validRequest_returns204() {
         UUID buildingId = createBuilding();
 
@@ -149,6 +153,9 @@ class PublicBuildingFullIntegrationTest {
     }
 
     @Test
+    @DisplayName("changes a building's consumption through the full stack and returns 204 — the building's "
+            + "version is still 0 even after a device was added first, since inserting a device never touches "
+            + "the parent row's version")
     void changeConsumption_validRequest_returns204() {
         // devices is @OneToMany(mappedBy = "building") — the FK lives on the child table, so
         // addDevice() only INSERTs into energy_device and never UPDATEs the building's own row.
@@ -167,6 +174,8 @@ class PublicBuildingFullIntegrationTest {
     }
 
     @Test
+    @DisplayName("changes a device's production through the full stack and returns 204, using the device ID "
+            + "actually returned by a prior GET rather than a hardcoded one")
     void changeProduction_validRequest_returns204() {
         // devices is @OneToMany(mappedBy = "building") — the FK lives on the child table, so
         // addDevice() only INSERTs into energy_device and never UPDATEs the building's own row.

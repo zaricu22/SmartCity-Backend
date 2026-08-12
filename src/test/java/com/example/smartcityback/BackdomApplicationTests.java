@@ -1,5 +1,6 @@
 package com.example.smartcityback;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.test.context.ActiveProfiles;
@@ -29,6 +30,7 @@ class BackdomApplicationTests {
     }
 
     @Test
+    @DisplayName("loads the full Spring application context against a real Postgres container, with no wiring errors")
     void contextLoads() {
     }
 

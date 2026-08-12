@@ -5,6 +5,7 @@ import com.example.smartcityback.auth.infrastructure.token.RefreshTokenStore;
 import com.example.smartcityback.auth.infrastructure.user.InMemoryUserRegistry;
 import com.example.smartcityback.auth.infrastructure.user.RegisteredUser;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -30,6 +31,8 @@ class OAuth2SuccessHandlerTest {
     }
 
     @Test
+    @DisplayName("redirects a first-time Google login to the frontend callback URL with the JWT, role, "
+            + "expiry, and refresh token all packed into the URL fragment")
     void onAuthenticationSuccess_newGoogleUser_redirectsToCallbackWithFragment() throws Exception {
         OAuth2User oAuth2User = mock(OAuth2User.class);
         given(oAuth2User.getAttribute("email")).willReturn("new@example.com");
@@ -55,6 +58,8 @@ class OAuth2SuccessHandlerTest {
     }
 
     @Test
+    @DisplayName("carries an existing admin account's ADMIN role through a Google login, instead of "
+            + "downgrading it to the OAuth default role")
     void onAuthenticationSuccess_existingAdminUser_redirectsWithAdminRole() throws Exception {
         OAuth2User oAuth2User = mock(OAuth2User.class);
         given(oAuth2User.getAttribute("email")).willReturn("admin@example.com");
@@ -76,6 +81,8 @@ class OAuth2SuccessHandlerTest {
     }
 
     @Test
+    @DisplayName("places the token specifically in the URL fragment, not the query string — the fragment "
+            + "never reaches a server, proxy, or browser history log the way a query parameter would")
     void onAuthenticationSuccess_tokenAppearsInFragmentNotQueryParam() throws Exception {
         OAuth2User oAuth2User = mock(OAuth2User.class);
         given(oAuth2User.getAttribute("email")).willReturn("user@example.com");

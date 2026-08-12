@@ -14,6 +14,7 @@ import com.example.smartcityback.asset.domain.exception.ValidationException;
 import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
 import com.example.smartcityback.asset.domain.valueobject.Energy;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -33,6 +34,8 @@ class PublicBuildingTest {
     // =====================================================================
 
     @Test
+    @DisplayName("creates a building with its ID, name, and location set, no devices, and consumption "
+            + "starting at zero")
     void create_validNameAndLocation_succeeds() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
 
@@ -45,24 +48,28 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("rejects creating a building with no name")
     void create_nullName_throwsValidationException() {
         assertThatThrownBy(() -> new PublicBuilding(BUILDING_ID, null, "Main St 1"))
                 .isInstanceOf(ValidationException.class);
     }
 
     @Test
+    @DisplayName("rejects creating a building whose name is an empty string")
     void create_emptyName_throwsValidationException() {
         assertThatThrownBy(() -> new PublicBuilding(BUILDING_ID, "", "Main St 1"))
                 .isInstanceOf(ValidationException.class);
     }
 
     @Test
+    @DisplayName("rejects creating a building with no location")
     void create_nullLocation_throwsValidationException() {
         assertThatThrownBy(() -> new PublicBuilding(BUILDING_ID, "City Hall", null))
                 .isInstanceOf(ValidationException.class);
     }
 
     @Test
+    @DisplayName("rejects creating a building whose location is an empty string")
     void create_emptyLocation_throwsValidationException() {
         assertThatThrownBy(() -> new PublicBuilding(BUILDING_ID, "City Hall", ""))
                 .isInstanceOf(ValidationException.class);
@@ -73,6 +80,7 @@ class PublicBuildingTest {
     // =====================================================================
 
     @Test
+    @DisplayName("adds a device to a building that has no existing devices")
     void addDevice_firstDevice_isAddedSuccessfully() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         EnergyDevice device = new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW);
@@ -84,6 +92,7 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("adds two devices of different types to the same building, keeping both")
     void addDevice_twoDevicesWithDifferentIds_bothAdded() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         EnergyDevice solar   = new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW);
@@ -96,6 +105,7 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("rejects adding a second device with the same name, type, and ID as one already on the building")
     void addDevice_duplicateDevice_throwsDeviceAlreadyExistsException() {
         // Duplicate is matched on name+type, not ID — same UUID here is incidental.
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
@@ -109,6 +119,9 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("rejects a retried add-device request even when it arrives with a different device ID — the "
+            + "duplicate check matches on name+type, not ID, which is what lets it catch a retry instead of "
+            + "silently creating a second device")
     void addDevice_sameNameAndTypeDifferentIds_throwsDeviceAlreadyExistsException() {
         // Regression test: AppService.addDevice() generates a fresh random UUID on every call,
         // so a retried "add device" request always produces two different IDs. Matching on
@@ -123,6 +136,7 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("allows two devices with the same name but different types on the same building")
     void addDevice_sameNameDifferentType_succeeds() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -133,6 +147,7 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("allows two devices of the same type but different names on the same building")
     void addDevice_sameTypeDifferentName_succeeds() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(UUID.randomUUID(), "Solar Panel A", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -144,6 +159,8 @@ class PublicBuildingTest {
 
     // public List<EnergyDevice> getDevices() { return Collections.unmodifiableList(devices); }
     @Test
+    @DisplayName("returns a device list that can't be mutated from outside the aggregate — clearing it "
+            + "throws instead of silently succeeding")
     void addDevice_devicesListIsUnmodifiable() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -157,6 +174,7 @@ class PublicBuildingTest {
     // =====================================================================
 
     @Test
+    @DisplayName("removes an existing device from the building")
     void removeDevice_existingDevice_isRemoved() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -167,6 +185,7 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("rejects removing a device ID that isn't on the building")
     void removeDevice_nonExistentDevice_throwsDeviceNotFoundException() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
 
@@ -175,6 +194,8 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("publishes exactly one DeviceRemovedEvent, carrying the removed device's ID, name, and "
+            + "type, when a device is removed")
     void removeDevice_firesDeviceRemovedEvent() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -199,6 +220,7 @@ class PublicBuildingTest {
     // =====================================================================
 
     @Test
+    @DisplayName("allows setting consumption to zero on a building with no devices")
     void changeConsumption_zeroOnEmptyBuilding_succeeds() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
 
@@ -208,6 +230,7 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("changes consumption to a value within the building's total device capacity")
     void changeConsumption_withinTotalCapacity_updatesConsumption() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -218,6 +241,8 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("allows setting consumption exactly at the building's total device capacity, not just "
+            + "strictly below it")
     void changeConsumption_equalToTotalCapacity_succeeds() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -228,6 +253,7 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("rejects any positive consumption on a building with no devices, since its total capacity is 0 kW")
     void changeConsumption_exceedsTotalCapacity_throwsBuildingTotalCapacityExceededException() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         // Empty building has 0 kW total capacity — any positive consumption exceeds it.
@@ -236,6 +262,8 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("rejects a consumption request of 201 kW against a building with two 100 kW devices, whose "
+            + "capacities sum to 200 kW")
     void changeConsumption_exceedsTwoDevicesCapacity_throwsBuildingTotalCapacityExceededException() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -246,6 +274,8 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("allows a consumption request of 0.05 MW (50 kW) against a device rated in kW — proves the "
+            + "capacity check converts units instead of comparing the raw numbers 0.05 and 100")
     void changeConsumption_crossUnit_0pt05MWWithin100kWCapacity_succeeds() {
         // 100 kW = 0.1 MW; 0.05 MW = 50 kW < 100 kW — must NOT throw.
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
@@ -256,6 +286,7 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("rejects a consumption request of 0.2 MW (200 kW) against a building whose devices only total 100 kW")
     void changeConsumption_crossUnit_0pt2MWExceeds100kWCapacity_throws() {
         // 0.2 MW = 200 kW > 100 kW total capacity — must throw.
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
@@ -273,6 +304,7 @@ class PublicBuildingTest {
     // =====================================================================
 
     @Test
+    @DisplayName("rejects changing production for a device ID on a building that has no devices at all")
     void changeDeviceProduction_deviceNotFound_throwsDeviceNotFoundException() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         // Device not exists
@@ -282,6 +314,8 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("rejects changing production for a device ID that isn't on the building, even though the "
+            + "building does have a different device")
     void changeDeviceProduction_unknownIdOnNonEmptyBuilding_throwsDeviceNotFoundException() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -291,6 +325,7 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("changes an existing device's production rate")
     void changeDeviceProduction_existingDevice_updatesProductionRate() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         EnergyDevice device = new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW);
@@ -308,6 +343,8 @@ class PublicBuildingTest {
     // =====================================================================
 
     @Test
+    @DisplayName("publishes exactly one BuildingCreatedEvent, carrying the building's ID, name, and "
+            + "location, when a building is constructed")
     void construction_firesBuildingCreatedEvent() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
 
@@ -322,6 +359,8 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("publishes exactly one DeviceAddedEvent, carrying the new device's ID, name, and type, "
+            + "when a device is added")
     void addDevice_firesDeviceAddedEvent() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.pullEvents(); // clear BuildingCreatedEvent
@@ -339,6 +378,8 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("publishes exactly one ConsumptionChangedEvent carrying both the old (0 kW) and new (50 kW) "
+            + "consumption values")
     void changeConsumption_firesConsumptionChangedEvent() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -357,6 +398,8 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("publishes exactly one ProductionChangedEvent carrying both the old (0 kW) and new (60 kW) "
+            + "production values")
     void changeDeviceProduction_existingDevice_firesProductionChangedEvent() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -376,6 +419,8 @@ class PublicBuildingTest {
     }
 
     @Test
+    @DisplayName("returns an empty list on a second pullEvents() call, proving the first call actually "
+            + "cleared the pending events instead of just reading them")
     void pullEvents_clearsEventList() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));

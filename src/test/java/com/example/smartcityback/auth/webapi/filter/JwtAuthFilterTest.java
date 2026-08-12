@@ -7,6 +7,7 @@ import io.jsonwebtoken.JwtException;
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpServletResponse;
@@ -42,6 +43,8 @@ class JwtAuthFilterTest {
     }
 
     @Test
+    @DisplayName("passes a request with no Authorization header through the chain untouched, leaving the "
+            + "security context unauthenticated")
     void missingAuthorizationHeader_chainsWithoutSettingAuth() throws Exception {
         var request = new MockHttpServletRequest();
         var response = new MockHttpServletResponse();
@@ -53,6 +56,8 @@ class JwtAuthFilterTest {
     }
 
     @Test
+    @DisplayName("passes a request with a malformed JWT through the chain without authenticating it, instead "
+            + "of rejecting the request outright")
     void invalidToken_chainsWithoutSettingAuth() throws Exception {
         given(jwtTokenService.validate(anyString())).willThrow(new JwtException("bad signature"));
         var request = new MockHttpServletRequest();
@@ -66,6 +71,8 @@ class JwtAuthFilterTest {
     }
 
     @Test
+    @DisplayName("passes a request bearing a validly-signed but revoked JWT through the chain without "
+            + "authenticating it")
     void revokedToken_chainsWithoutSettingAuth() throws Exception {
         Claims claims = mock(Claims.class);
         given(claims.getId()).willReturn("jti-revoked");
@@ -83,6 +90,8 @@ class JwtAuthFilterTest {
     }
 
     @Test
+    @DisplayName("authenticates the security context with the token's subject when the JWT is valid, "
+            + "unexpired, and not revoked")
     void validToken_setsAuthenticationInContext() throws Exception {
         Claims claims = mock(Claims.class);
         given(claims.getId()).willReturn("jti-valid");

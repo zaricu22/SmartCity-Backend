@@ -12,6 +12,7 @@ import com.example.smartcityback.asset.domain.repository.PublicBuildingRepositor
 import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
 import com.example.smartcityback.asset.domain.valueobject.Energy;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -59,6 +60,7 @@ class PublicBuildingAppServiceTest {
     // =====================================================================
 
     @Test
+    @DisplayName("saves a new building to the repository")
     void create_validCommand_savesBuilding() {
         service.create(new CreateBuildingCommand("City Hall", "Main St 1"));
 
@@ -66,6 +68,7 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
+    @DisplayName("returns a generated, non-null ID for the newly created building")
     void create_validCommand_returnsNonNullId() {
         UUID result = service.create(new CreateBuildingCommand("City Hall", "Main St 1"));
 
@@ -73,6 +76,7 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
+    @DisplayName("publishes a BuildingCreatedEvent after successfully creating a building")
     void create_validCommand_publishesBuildingCreatedEvent() {
         service.create(new CreateBuildingCommand("City Hall", "Main St 1"));
 
@@ -80,6 +84,8 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
+    @DisplayName("rejects creating a building with the same name and location as one that already exists, "
+            + "without saving anything or publishing an event")
     void create_duplicateNameAndLocation_throwsBuildingAlreadyExistsException() {
         given(repository.existsByNameAndLocation("City Hall", "Main St 1")).willReturn(true);
 
@@ -95,6 +101,7 @@ class PublicBuildingAppServiceTest {
     // =====================================================================
 
     @Test
+    @DisplayName("rejects deleting a building ID that doesn't exist, without calling delete on the repository")
     void delete_buildingNotFound_throwsBuildingNotFoundException() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.empty());
 
@@ -105,6 +112,7 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
+    @DisplayName("deletes an existing building and publishes a BuildingDeletedEvent carrying its ID and name")
     void delete_buildingFound_deletesAndPublishesEvent() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1")));
 
@@ -115,6 +123,8 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
+    @DisplayName("rejects deleting a building when the request's version number is stale — the same conflict "
+            + "two concurrent editors would trigger — without calling delete on the repository")
     void delete_versionMismatch_throwsOptimisticLockingFailureException() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1")));
 
@@ -129,6 +139,7 @@ class PublicBuildingAppServiceTest {
     // =====================================================================
 
     @Test
+    @DisplayName("rejects adding a device to a building ID that doesn't exist")
     void addDevice_buildingNotFound_throwsBuildingNotFoundException() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.empty());
 
@@ -139,6 +150,7 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
+    @DisplayName("adds a device to an existing building and saves the updated aggregate with the device attached")
     void addDevice_buildingFound_savesUpdatedBuilding() {
         PublicBuilding emptyBuilding = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(emptyBuilding));
@@ -158,6 +170,7 @@ class PublicBuildingAppServiceTest {
     // =====================================================================
 
     @Test
+    @DisplayName("rejects removing a device from a building ID that doesn't exist")
     void removeDevice_buildingNotFound_throwsBuildingNotFoundException() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.empty());
 
@@ -166,6 +179,7 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
+    @DisplayName("rejects removing a device ID that isn't on the building, without saving anything")
     void removeDevice_deviceNotFound_throwsDeviceNotFoundException() {
         PublicBuilding emptyBuilding = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(emptyBuilding));
@@ -177,6 +191,8 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
+    @DisplayName("removes a device from the building, saves the updated aggregate, and publishes a "
+            + "DeviceRemovedEvent")
     void removeDevice_deviceFound_savesAndPublishesEvent() {
         PublicBuilding building = buildingWithOneDevice();
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(building));
@@ -193,6 +209,7 @@ class PublicBuildingAppServiceTest {
     // =====================================================================
 
     @Test
+    @DisplayName("rejects changing consumption on a building ID that doesn't exist")
     void changeConsumption_buildingNotFound_throwsBuildingNotFoundException() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.empty());
 
@@ -202,6 +219,7 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
+    @DisplayName("changes a building's consumption to a value within its total device capacity and saves the result")
     void changeConsumption_withinCapacity_savesBuilding() {
         PublicBuilding building = buildingWithOneDevice();
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(building));
@@ -213,6 +231,8 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
+    @DisplayName("rejects a consumption change that exceeds the building's total device capacity, without "
+            + "saving anything")
     void changeConsumption_domainException_doesNotSave() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(buildingWithOneDevice()));
 
@@ -229,6 +249,7 @@ class PublicBuildingAppServiceTest {
     // =====================================================================
 
     @Test
+    @DisplayName("rejects changing production on a building ID that doesn't exist")
     void changeProduction_buildingNotFound_throwsBuildingNotFoundException() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.empty());
 
@@ -238,6 +259,7 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
+    @DisplayName("changes a device's production rate and saves the updated aggregate")
     void changeProduction_success_savesBuilding() {
         PublicBuilding building = buildingWithOneDevice();
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(building));
@@ -251,6 +273,7 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
+    @DisplayName("publishes a ProductionChangedEvent after successfully changing a device's production rate")
     void changeProduction_success_publishesProductionChangedEvent() {
         PublicBuilding building = buildingWithOneDevice();
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(building));
@@ -262,6 +285,7 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
+    @DisplayName("rejects changing production on a device ID that isn't on the building, without saving anything")
     void changeProduction_domainException_doesNotSave() {
         PublicBuilding emptyBuilding = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(emptyBuilding));
@@ -282,6 +306,8 @@ class PublicBuildingAppServiceTest {
     // =====================================================================
 
     @Test
+    @DisplayName("rejects adding a device when the request's version number is stale — the same conflict "
+            + "two concurrent editors would trigger — without saving anything")
     void addDevice_versionMismatch_throwsOptimisticLockingFailureException() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1")));
 
@@ -294,6 +320,8 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
+    @DisplayName("rejects a consumption change when the request's version number is stale — the same conflict "
+            + "two concurrent editors would trigger — without saving anything")
     void changeConsumption_versionMismatch_throwsOptimisticLockingFailureException() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(buildingWithOneDevice()));
 
@@ -305,6 +333,8 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
+    @DisplayName("rejects a production change when the request's version number is stale — the same conflict "
+            + "two concurrent editors would trigger — without saving anything")
     void changeProduction_versionMismatch_throwsOptimisticLockingFailureException() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(buildingWithOneDevice()));
 
@@ -316,6 +346,8 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
+    @DisplayName("rejects removing a device when the request's version number is stale — the same conflict "
+            + "two concurrent editors would trigger — without saving anything")
     void removeDevice_versionMismatch_throwsOptimisticLockingFailureException() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(buildingWithOneDevice()));
 

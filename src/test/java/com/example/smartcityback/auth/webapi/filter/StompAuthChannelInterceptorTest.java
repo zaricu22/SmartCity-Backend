@@ -5,6 +5,7 @@ import com.example.smartcityback.auth.infrastructure.token.TokenBlacklist;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.messaging.Message;
 import org.springframework.messaging.simp.stomp.StompCommand;
@@ -44,6 +45,7 @@ class StompAuthChannelInterceptorTest {
     }
 
     @Test
+    @DisplayName("rejects a STOMP CONNECT frame with no Authorization header")
     void connectWithoutAuthorizationHeader_isRejected() {
         Message<byte[]> frame = connectFrame(null);
 
@@ -52,6 +54,7 @@ class StompAuthChannelInterceptorTest {
     }
 
     @Test
+    @DisplayName("rejects a STOMP CONNECT frame carrying a malformed JWT")
     void connectWithInvalidToken_isRejected() {
         given(jwtTokenService.validate(anyString())).willThrow(new JwtException("bad signature"));
         Message<byte[]> frame = connectFrame("Bearer invalid-token");
@@ -61,6 +64,7 @@ class StompAuthChannelInterceptorTest {
     }
 
     @Test
+    @DisplayName("rejects a STOMP CONNECT frame carrying a validly-signed but revoked JWT")
     void connectWithRevokedToken_isRejected() {
         Claims claims = mock(Claims.class);
         given(claims.getId()).willReturn("jti-revoked");
@@ -73,6 +77,8 @@ class StompAuthChannelInterceptorTest {
     }
 
     @Test
+    @DisplayName("attaches an authenticated user matching the token's subject onto a STOMP CONNECT frame "
+            + "carrying a valid JWT")
     void connectWithValidToken_setsStompUser() {
         Claims claims = mock(Claims.class);
         given(claims.getId()).willReturn("jti-valid");
@@ -90,6 +96,8 @@ class StompAuthChannelInterceptorTest {
     }
 
     @Test
+    @DisplayName("lets a non-CONNECT STOMP frame (like SEND) through unchanged, without running any "
+            + "authentication check on it")
     void nonConnectFrame_isPassedThroughWithoutAuth() {
         StompHeaderAccessor accessor = StompHeaderAccessor.create(StompCommand.SEND);
         Message<byte[]> frame = MessageBuilder.createMessage(new byte[0], accessor.getMessageHeaders());
@@ -100,6 +108,8 @@ class StompAuthChannelInterceptorTest {
     }
 
     @Test
+    @DisplayName("rejects a STOMP CONNECT frame whose Authorization header uses the wrong scheme (Basic "
+            + "instead of Bearer)")
     void connectWithMalformedAuthorizationHeader_isRejected() {
         Message<byte[]> frame = connectFrame("Basic xyz");
 
@@ -108,6 +118,8 @@ class StompAuthChannelInterceptorTest {
     }
 
     @Test
+    @DisplayName("lets a message with no STOMP command header through unchanged, without running any "
+            + "authentication check on it")
     void nonStompMessage_isPassedThroughWithoutAuth() {
         Message<byte[]> frame = MessageBuilder.withPayload(new byte[0]).build();
 

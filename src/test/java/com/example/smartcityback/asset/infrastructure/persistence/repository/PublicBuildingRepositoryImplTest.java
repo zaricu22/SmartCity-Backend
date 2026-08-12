@@ -8,6 +8,7 @@ import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
 import com.example.smartcityback.asset.domain.valueobject.Energy;
 import com.example.smartcityback.asset.infrastructure.persistence.implementation.PublicBuildingRepositoryImpl;
 import com.example.smartcityback.asset.shared.PagedResult;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
@@ -65,6 +66,7 @@ class PublicBuildingRepositoryImplTest {
     // =====================================================================
 
     @Test
+    @DisplayName("saves a building with no devices and reads it back correctly through a real Postgres round trip")
     void save_and_findById_returnsBuilding() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
 
@@ -83,6 +85,7 @@ class PublicBuildingRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("saves a building with one device and reads the device back with its type correctly persisted")
     void save_withDevice_persistsDevice() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -99,6 +102,7 @@ class PublicBuildingRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("saves a building with two devices of different types and reads both of them back")
     void save_withMultipleDevices_persistsAll() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -116,6 +120,7 @@ class PublicBuildingRepositoryImplTest {
     // =====================================================================
 
     @Test
+    @DisplayName("returns empty for a building ID that was never saved")
     void findById_nonExistentId_returnsEmpty() {
         Optional<PublicBuilding> found = repository.findById(UUID.randomUUID());
 
@@ -127,6 +132,7 @@ class PublicBuildingRepositoryImplTest {
     // =====================================================================
 
     @Test
+    @DisplayName("deletes a building with no devices, and it's gone on the next lookup")
     void delete_existingBuilding_removesIt() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         repository.save(building);
@@ -140,6 +146,8 @@ class PublicBuildingRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("deletes a building's device row along with the building itself, verified by querying the "
+            + "child JPA entity directly instead of trusting the parent lookup alone")
     void delete_buildingWithDevices_cascadesDeviceRemoval() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -163,6 +171,7 @@ class PublicBuildingRepositoryImplTest {
     // =====================================================================
 
     @Test
+    @DisplayName("persists a device's production rate change (60 kW) across a save/reload round trip")
     void save_withChangedProduction_persistsProduction() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         EnergyDevice device = new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW);
@@ -185,6 +194,8 @@ class PublicBuildingRepositoryImplTest {
     // =====================================================================
 
     @Test
+    @DisplayName("returns the correct total-element and total-page counts when asking for a page of 2 out of "
+            + "3 saved buildings")
     void findAll_returnsCorrectPaginationFields() {
         repository.save(new PublicBuilding(UUID.randomUUID(), "Alpha", "Addr 1"));
         repository.save(new PublicBuilding(UUID.randomUUID(), "Beta",  "Addr 2"));
@@ -202,6 +213,7 @@ class PublicBuildingRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("returns the single remaining building on page 2 when 3 buildings are split across pages of 2")
     void findAll_secondPage_returnsCorrectPageNumberAndRemainingItems() {
         repository.save(new PublicBuilding(UUID.randomUUID(), "Alpha", "Addr 1"));
         repository.save(new PublicBuilding(UUID.randomUUID(), "Beta",  "Addr 2"));
@@ -216,6 +228,8 @@ class PublicBuildingRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("returns buildings sorted alphabetically ascending by name, regardless of the order they "
+            + "were saved in")
     void findAll_sortAsc_returnsItemsInAscendingOrder() {
         repository.save(new PublicBuilding(UUID.randomUUID(), "Gamma", "Addr 3"));
         repository.save(new PublicBuilding(UUID.randomUUID(), "Alpha", "Addr 1"));
@@ -231,6 +245,8 @@ class PublicBuildingRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("returns buildings sorted alphabetically descending by name, regardless of the order they "
+            + "were saved in")
     void findAll_sortDesc_returnsItemsInDescendingOrder() {
         repository.save(new PublicBuilding(UUID.randomUUID(), "Gamma", "Addr 3"));
         repository.save(new PublicBuilding(UUID.randomUUID(), "Alpha", "Addr 1"));
@@ -250,6 +266,8 @@ class PublicBuildingRepositoryImplTest {
     // =====================================================================
 
     @Test
+    @DisplayName("matches buildings whose name contains the filter text \"city\", case-insensitively, and "
+            + "excludes the ones that don't")
     void findAll_nameFilter_returnsCaseInsensitiveContainsMatches() {
         repository.save(new PublicBuilding(UUID.randomUUID(), "City Hall", "Main St 1"));
         repository.save(new PublicBuilding(UUID.randomUUID(), "City Library", "Main St 2"));
@@ -265,6 +283,8 @@ class PublicBuildingRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("matches buildings whose location contains the filter text \"MAIN\" case-insensitively, "
+            + "even though the filter is typed in uppercase and the stored value isn't")
     void findAll_locationFilter_returnsCaseInsensitiveContainsMatches() {
         repository.save(new PublicBuilding(UUID.randomUUID(), "City Hall", "Main St 1"));
         repository.save(new PublicBuilding(UUID.randomUUID(), "Fire Station", "Oak Ave 5"));
@@ -279,6 +299,8 @@ class PublicBuildingRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("returns only the building matching both the name and location filters together, using two "
+            + "buildings that each satisfy only one filter alone, to prove the filters are AND-ed rather than OR-ed")
     void findAll_nameAndLocationFilter_combinedWithAnd() {
         repository.save(new PublicBuilding(UUID.randomUUID(), "City Hall", "Main St 1"));
         repository.save(new PublicBuilding(UUID.randomUUID(), "City Hall Annex", "Oak Ave 5"));
@@ -293,6 +315,7 @@ class PublicBuildingRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("returns an empty page, not an error, when the name filter matches nothing")
     void findAll_noFilterMatch_returnsEmptyContent() {
         repository.save(new PublicBuilding(UUID.randomUUID(), "City Hall", "Main St 1"));
         em.flush();
@@ -308,6 +331,7 @@ class PublicBuildingRepositoryImplTest {
     // =====================================================================
 
     @Test
+    @DisplayName("persists a building's consumption change (50 kW) across a save/reload round trip")
     void save_withChangedConsumption_persistsConsumption() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.BATTERY, CAPACITY_100_KW));
@@ -328,6 +352,8 @@ class PublicBuildingRepositoryImplTest {
     // =====================================================================
 
     @Test
+    @DisplayName("includes a building with 2 devices and consumption above 50 kW in the subsidy-eligible "
+            + "results, with every summary field populated correctly")
     void findEligibleForSubsidy_twoDevicesAndConsumptionAbove50_isIncludedWithCorrectFields() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -349,6 +375,8 @@ class PublicBuildingRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("excludes a building with fewer than 2 devices from the subsidy-eligible results, against a "
+            + "real database query rather than the in-memory Specification")
     void findEligibleForSubsidy_fewerThanTwoDevices_isExcluded() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -364,6 +392,9 @@ class PublicBuildingRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("excludes a building whose consumption is exactly 50 kW from the subsidy-eligible results, "
+            + "proving the strictly-greater-than-50 boundary holds in the real SQL query too, not just in the "
+            + "in-memory domain check")
     void findEligibleForSubsidy_consumptionAtExactly50_isExcluded() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -379,6 +410,8 @@ class PublicBuildingRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("returns only the eligible building when an eligible and an ineligible building are saved "
+            + "side by side")
     void findEligibleForSubsidy_mixedBuildings_returnsOnlyEligibleOnes() {
         PublicBuilding eligible = new PublicBuilding(UUID.randomUUID(), "Eligible Hall", "Addr 1");
         eligible.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
@@ -401,6 +434,8 @@ class PublicBuildingRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("returns the correct total-count and page-count metadata for the subsidy-eligible query when "
+            + "results span multiple pages")
     void findEligibleForSubsidy_pagination_returnsCorrectPageMetadata() {
         for (int i = 0; i < 3; i++) {
             PublicBuilding building = new PublicBuilding(UUID.randomUUID(), "Building " + i, "Addr " + i);
@@ -422,6 +457,8 @@ class PublicBuildingRepositoryImplTest {
     }
 
     @Test
+    @DisplayName("returns subsidy-eligible buildings sorted descending by name, even when both buildings tie "
+            + "on device count and consumption")
     void findEligibleForSubsidy_descSort_returnsDescendingOrder() {
         PublicBuilding a = new PublicBuilding(UUID.randomUUID(), "A Hall", "Addr A");
         a.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));

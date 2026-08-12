@@ -9,6 +9,7 @@ import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
 import com.example.smartcityback.asset.domain.valueobject.Energy;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.ArgumentCaptor;
@@ -42,6 +43,8 @@ class BuildingWebSocketEventHandlerTest {
     // =====================================================================
 
     @Test
+    @DisplayName("broadcasts a new building to the shared /topic/buildings channel every connected client "
+            + "is subscribed to")
     void onBuildingCreated_publishesToCollectionTopic() {
         BuildingCreatedEvent event = new BuildingCreatedEvent(BUILDING_ID, "City Hall", "Main St 1");
 
@@ -54,6 +57,8 @@ class BuildingWebSocketEventHandlerTest {
     }
 
     @Test
+    @DisplayName("includes the building's ID, name, and location in the broadcast message for a newly "
+            + "created building")
     void onBuildingCreated_messageContainsCorrectValues() {
         BuildingCreatedEvent event = new BuildingCreatedEvent(BUILDING_ID, "City Hall", "Main St 1");
 
@@ -75,6 +80,7 @@ class BuildingWebSocketEventHandlerTest {
     // =====================================================================
 
     @Test
+    @DisplayName("broadcasts a deleted building to the /topic/buildings/deleted channel")
     void onBuildingDeleted_publishesToCollectionTopic() {
         BuildingDeletedEvent event = new BuildingDeletedEvent(BUILDING_ID, "City Hall");
 
@@ -87,6 +93,7 @@ class BuildingWebSocketEventHandlerTest {
     }
 
     @Test
+    @DisplayName("includes the building's ID and name in the broadcast message for a deleted building")
     void onBuildingDeleted_messageContainsCorrectValues() {
         BuildingDeletedEvent event = new BuildingDeletedEvent(BUILDING_ID, "City Hall");
 
@@ -106,6 +113,8 @@ class BuildingWebSocketEventHandlerTest {
     // =====================================================================
 
     @Test
+    @DisplayName("broadcasts a consumption change to a channel scoped to that specific building's ID, not "
+            + "the shared collection channel")
     void onConsumptionChanged_publishesToCorrectTopic() {
         ConsumptionChangedEvent event = new ConsumptionChangedEvent(
                 BUILDING_ID,
@@ -122,6 +131,7 @@ class BuildingWebSocketEventHandlerTest {
     }
 
     @Test
+    @DisplayName("includes the building's ID and both the old and new consumption values in the broadcast message")
     void onConsumptionChanged_messageContainsCorrectValues() {
         ConsumptionChangedEvent event = new ConsumptionChangedEvent(
                 BUILDING_ID,
@@ -149,6 +159,7 @@ class BuildingWebSocketEventHandlerTest {
     // =====================================================================
 
     @Test
+    @DisplayName("broadcasts a newly added device to a channel scoped to that specific building's device list")
     void onDeviceAdded_publishesToCorrectTopic() {
         DeviceAddedEvent event = new DeviceAddedEvent(BUILDING_ID, DEVICE_ID, "Test Device", DeviceType.SOLAR);
 
@@ -161,6 +172,7 @@ class BuildingWebSocketEventHandlerTest {
     }
 
     @Test
+    @DisplayName("includes the device's ID, name, and type in the broadcast message for a newly added device")
     void onDeviceAdded_messageContainsCorrectValues() {
         DeviceAddedEvent event = new DeviceAddedEvent(BUILDING_ID, DEVICE_ID, "Test Device", DeviceType.BATTERY);
 
@@ -183,6 +195,7 @@ class BuildingWebSocketEventHandlerTest {
     // =====================================================================
 
     @Test
+    @DisplayName("broadcasts a removed device to a channel scoped to that specific building's removed-devices list")
     void onDeviceRemoved_publishesToCorrectTopic() {
         DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, "Test Device", DeviceType.SOLAR);
 
@@ -195,6 +208,7 @@ class BuildingWebSocketEventHandlerTest {
     }
 
     @Test
+    @DisplayName("includes the device's ID, name, and type in the broadcast message for a removed device")
     void onDeviceRemoved_messageContainsCorrectValues() {
         DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, "Test Device", DeviceType.BATTERY);
 
@@ -217,6 +231,7 @@ class BuildingWebSocketEventHandlerTest {
     // =====================================================================
 
     @Test
+    @DisplayName("broadcasts a production change to a channel scoped to that specific building and device")
     void onProductionChanged_publishesToCorrectTopic() {
         ProductionChangedEvent event = new ProductionChangedEvent(
                 BUILDING_ID,
@@ -234,6 +249,7 @@ class BuildingWebSocketEventHandlerTest {
     }
 
     @Test
+    @DisplayName("includes the device's ID and both the old and new production values in the broadcast message")
     void onProductionChanged_messageContainsCorrectValues() {
         ProductionChangedEvent event = new ProductionChangedEvent(
                 BUILDING_ID,
