@@ -4,6 +4,7 @@ import com.github.tomakehurst.wiremock.WireMockServer;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.core.WireMockConfiguration;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -87,6 +88,8 @@ class ExternalServiceWireMockTest {
     // -------------------------------------------------------------------------
 
     @Test
+    @DisplayName("fetches the current energy price (0.12 EUR/kWh) from a stubbed server standing in for the "
+            + "real pricing API")
     void wireMock_serverStartsAndAcceptsStubs() {
         // Stub a happy path response — verify WireMock is working correctly:
            wireMock.stubFor(get(urlEqualTo("/api/v1/energy-prices"))
@@ -104,6 +107,8 @@ class ExternalServiceWireMockTest {
     }
 
     @Test
+    @DisplayName("turns a 500 error from the upstream pricing service into an ExternalServiceException, instead "
+            + "of letting the raw HTTP failure escape to the caller")
     void wireMock_externalServiceReturns500_applicationHandlesGracefully() {
         // Stub a server error — verify no unhandled exception escapes the client:
            wireMock.stubFor(get(urlEqualTo("/api/v1/energy-prices"))
@@ -116,6 +121,8 @@ class ExternalServiceWireMockTest {
     }
 
     @Test
+    @DisplayName("turns an upstream response that takes 5 seconds — longer than the client's configured "
+            + "timeout — into an ExternalServiceTimeoutException")
     void wireMock_externalServiceTimesOut_applicationHandlesGracefully() {
         // Stub a delayed response exceeding the client's timeout threshold:
            wireMock.stubFor(get(urlEqualTo("/api/v1/energy-prices"))
@@ -130,6 +137,8 @@ class ExternalServiceWireMockTest {
     }
 
     @Test
+    @DisplayName("turns an upstream response with an unrecognized JSON shape (missing the expected price field) "
+            + "into an ExternalServiceException, instead of a raw deserialization crash")
     void wireMock_externalServiceReturnsUnexpectedShape_applicationHandlesGracefully() {
         // Stub a response with missing/malformed fields — verify deserialization failure is handled:
            wireMock.stubFor(get(urlEqualTo("/api/v1/energy-prices"))

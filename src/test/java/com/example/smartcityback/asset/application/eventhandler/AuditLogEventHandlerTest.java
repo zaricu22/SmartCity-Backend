@@ -9,6 +9,7 @@ import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
 import com.example.smartcityback.asset.domain.valueobject.Energy;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -38,6 +39,7 @@ class AuditLogEventHandlerTest {
     // =====================================================================
 
     @Test
+    @DisplayName("records a newly created building in the audit log without raising an error")
     void onBuildingCreated_validEvent_doesNotThrow() {
         BuildingCreatedEvent event = new BuildingCreatedEvent(BUILDING_ID, "City Hall", "Main St 1");
 
@@ -50,6 +52,7 @@ class AuditLogEventHandlerTest {
     // =====================================================================
 
     @Test
+    @DisplayName("records a deleted building in the audit log without raising an error")
     void onBuildingDeleted_validEvent_doesNotThrow() {
         BuildingDeletedEvent event = new BuildingDeletedEvent(BUILDING_ID, "City Hall");
 
@@ -62,6 +65,7 @@ class AuditLogEventHandlerTest {
     // =====================================================================
 
     @Test
+    @DisplayName("records a newly added device in the audit log without raising an error")
     void onDeviceAdded_validEvent_doesNotThrow() {
         DeviceAddedEvent event = new DeviceAddedEvent(BUILDING_ID, DEVICE_ID, "Test Device", DeviceType.SOLAR);
 
@@ -70,6 +74,7 @@ class AuditLogEventHandlerTest {
     }
 
     @Test
+    @DisplayName("records a newly added device in the audit log for every device type, not just the common ones")
     void onDeviceAdded_allDeviceTypes_doesNotThrow() {
         for (DeviceType type : DeviceType.values()) {
             DeviceAddedEvent event = new DeviceAddedEvent(BUILDING_ID, DEVICE_ID, "Test Device", type);
@@ -84,6 +89,7 @@ class AuditLogEventHandlerTest {
     // =====================================================================
 
     @Test
+    @DisplayName("records a removed device in the audit log without raising an error")
     void onDeviceRemoved_validEvent_doesNotThrow() {
         DeviceRemovedEvent event = new DeviceRemovedEvent(BUILDING_ID, DEVICE_ID, "Test Device", DeviceType.SOLAR);
 
@@ -96,6 +102,7 @@ class AuditLogEventHandlerTest {
     // =====================================================================
 
     @Test
+    @DisplayName("records a consumption change from 0 kW to 50 kW in the audit log without raising an error")
     void onConsumptionChanged_validEvent_doesNotThrow() {
         ConsumptionChangedEvent event = new ConsumptionChangedEvent(
                 BUILDING_ID,
@@ -108,6 +115,7 @@ class AuditLogEventHandlerTest {
     }
 
     @Test
+    @DisplayName("still logs a consumption change event even when it's a no-op, going from 0 kW to 0 kW")
     void onConsumptionChanged_zeroToZero_doesNotThrow() {
         ConsumptionChangedEvent event = new ConsumptionChangedEvent(
                 BUILDING_ID,
@@ -124,6 +132,7 @@ class AuditLogEventHandlerTest {
     // =====================================================================
 
     @Test
+    @DisplayName("records a production change from 0 kW to 60 kW in the audit log without raising an error")
     void onProductionChanged_validEvent_doesNotThrow() {
         ProductionChangedEvent event = new ProductionChangedEvent(
                 BUILDING_ID,
@@ -137,6 +146,7 @@ class AuditLogEventHandlerTest {
     }
 
     @Test
+    @DisplayName("still logs a production change event even when it's a no-op, going from 0 kW to 0 kW")
     void onProductionChanged_zeroToZero_doesNotThrow() {
         ProductionChangedEvent event = new ProductionChangedEvent(
                 BUILDING_ID,

@@ -6,6 +6,7 @@ import com.example.smartcityback.asset.domain.entity.EnergyDevice;
 import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
 import com.example.smartcityback.asset.domain.valueobject.Energy;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -23,6 +24,8 @@ class BuildingDtoMapperTest {
     // =====================================================================
 
     @Test
+    @DisplayName("maps a building's ID, name, location, and zero consumption into the DTO — version stays "
+            + "null since this building was never actually persisted")
     void toDto_mapsAllScalarFields() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
 
@@ -41,6 +44,7 @@ class BuildingDtoMapperTest {
     // =====================================================================
 
     @Test
+    @DisplayName("maps a building with no devices to a DTO with an empty device list, not a null one")
     void toDto_noDevices_returnsEmptyDeviceList() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
 
@@ -50,6 +54,7 @@ class BuildingDtoMapperTest {
     }
 
     @Test
+    @DisplayName("maps a device's ID, name, type, rated capacity, and production rate into the DTO's device list")
     void toDto_withDevice_mapsDeviceFields() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR,
@@ -68,6 +73,7 @@ class BuildingDtoMapperTest {
     }
 
     @Test
+    @DisplayName("maps every device on the building into the DTO, not just the first one")
     void toDto_withMultipleDevices_mapsAll() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR,

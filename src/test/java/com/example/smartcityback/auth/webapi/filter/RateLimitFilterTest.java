@@ -2,6 +2,7 @@ package com.example.smartcityback.auth.webapi.filter;
 
 import jakarta.servlet.FilterChain;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpStatus;
 import org.springframework.mock.web.MockHttpServletRequest;
@@ -21,6 +22,7 @@ class RateLimitFilterTest {
     }
 
     @Test
+    @DisplayName("lets a request to a non-auth endpoint through the filter chain unthrottled, regardless of rate")
     void nonAuthPath_passesThrough() throws Exception {
         var filter = new RateLimitFilter(10, 10);
         var request = postRequest("/v1/buildings");
@@ -32,6 +34,7 @@ class RateLimitFilterTest {
     }
 
     @Test
+    @DisplayName("lets an auth-endpoint request through when its rate-limit bucket still has capacity")
     void authPath_bucketNotExhausted_passesThrough() throws Exception {
         var filter = new RateLimitFilter(10, 10);
         var request = postRequest("/v1/auth/login");
@@ -43,6 +46,7 @@ class RateLimitFilterTest {
     }
 
     @Test
+    @DisplayName("returns 429 on a second login request that exhausts a bucket sized to allow only one")
     void authPath_bucketExhausted_returns429() throws Exception {
         var filter = new RateLimitFilter(1, 1);
 
@@ -56,6 +60,8 @@ class RateLimitFilterTest {
     }
 
     @Test
+    @DisplayName("rate-limits by the first IP in X-Forwarded-For rather than the proxy's own connection IP, "
+            + "so it doesn't lump every client behind the same proxy into one shared bucket")
     void xForwardedFor_usesFirstIp_separateBucketFromDirect() throws Exception {
         var filter = new RateLimitFilter(1, 1);
         var proxiedRequest = postRequest("/v1/auth/login");
@@ -68,6 +74,7 @@ class RateLimitFilterTest {
     }
 
     @Test
+    @DisplayName("rate-limits the token-refresh endpoint the same way as login, not just /v1/auth/login")
     void authRefreshPath_isAlsoRateLimited() throws Exception {
         var filter = new RateLimitFilter(1, 1);
 

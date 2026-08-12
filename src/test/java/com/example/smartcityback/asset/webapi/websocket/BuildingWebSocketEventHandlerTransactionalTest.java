@@ -9,6 +9,7 @@ import com.example.smartcityback.asset.infrastructure.persistence.entity.PublicB
 import com.example.smartcityback.asset.infrastructure.persistence.interfaces.PublicBuildingJpaRepository;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -110,6 +111,8 @@ class BuildingWebSocketEventHandlerTransactionalTest {
 
     @Test
     @Transactional
+    @DisplayName("never pushes a WebSocket update for a device addition whose surrounding transaction gets "
+            + "rolled back, since AFTER_COMMIT only fires once a commit actually happens")
     void deviceAdded_transactionRollsBack_neverPushesOverWebSocket() {
         // version=0L matches the version Hibernate assigns on the row inserted in @BeforeEach.
         service.addDevice(new AddDeviceCommand(
@@ -129,6 +132,8 @@ class BuildingWebSocketEventHandlerTransactionalTest {
     // =====================================================================
 
     @Test
+    @DisplayName("pushes a WebSocket update only once the device-addition transaction actually commits, "
+            + "proving the push isn't sent optimistically before the data is durable")
     void deviceAdded_transactionCommits_pushesOverWebSocketAfterCommit() {
         // No wrapping test transaction here — PublicBuildingAppService's own @Transactional
         // starts and commits entirely within this call, so by the time addDevice() returns,

@@ -5,6 +5,7 @@ import com.example.smartcityback.asset.application.dto.PublicBuildingDto;
 import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
 import com.example.smartcityback.asset.webapi.response.PublicBuildingResponse;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
 import java.math.BigDecimal;
@@ -23,6 +24,7 @@ class BuildingResponseMapperTest {
     // =====================================================================
 
     @Test
+    @DisplayName("maps a building DTO's ID, name, location, consumption, and version into the HTTP response")
     void toResponse_mapsAllScalarFields() {
         PublicBuildingDto dto = new PublicBuildingDto(
                 BUILDING_ID, "City Hall", "Main St 1",
@@ -41,6 +43,7 @@ class BuildingResponseMapperTest {
     }
 
     @Test
+    @DisplayName("maps a building with no devices to a response with an empty device list, not a null one")
     void toResponse_noDevices_returnsEmptyDeviceList() {
         PublicBuildingDto dto = new PublicBuildingDto(
                 BUILDING_ID, "City Hall", "Main St 1",
@@ -54,6 +57,8 @@ class BuildingResponseMapperTest {
     }
 
     @Test
+    @DisplayName("maps a device's ID, name, type, rated capacity, and production rate into the response's "
+            + "device list")
     void toResponse_withDevice_mapsDeviceFields() {
         PublicBuildingDto dto = new PublicBuildingDto(
                 BUILDING_ID, "City Hall", "Main St 1",
@@ -79,6 +84,7 @@ class BuildingResponseMapperTest {
     // =====================================================================
 
     @Test
+    @DisplayName("maps an empty list of building DTOs to an empty list of responses")
     void toResponseList_emptyList_returnsEmptyList() {
         List<PublicBuildingResponse> responses = BuildingResponseMapper.toResponseList(List.of());
 
@@ -86,6 +92,7 @@ class BuildingResponseMapperTest {
     }
 
     @Test
+    @DisplayName("maps a list of building DTOs to responses in the same order, not just mapping the first one")
     void toResponseList_multipleBuildings_mapsAll() {
         List<PublicBuildingDto> dtos = List.of(
                 new PublicBuildingDto(UUID.randomUUID(), "City Hall", "Main St 1",

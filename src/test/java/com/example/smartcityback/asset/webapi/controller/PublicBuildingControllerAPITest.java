@@ -15,6 +15,7 @@ import com.example.smartcityback.asset.domain.shared.enums.ErrorCode;
 import com.example.smartcityback.asset.application.service.PublicBuildingQueryService;
 import com.example.smartcityback.auth.infrastructure.jwt.JwtTokenService;
 import com.example.smartcityback.auth.infrastructure.token.TokenBlacklist;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.security.oauth2.client.OAuth2ClientAutoConfiguration;
@@ -85,6 +86,7 @@ class PublicBuildingControllerAPITest {
     // =====================================================================
 
     @Test
+    @DisplayName("creates a building and returns 201 with a Location header and a body that both point at the new ID")
     void create_validRequest_returns201() throws Exception {
         given(appService.create(any())).willReturn(BUILDING_ID);
 
@@ -99,6 +101,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("adds a device to a building and returns 204 with no body")
     void addDevice_validRequest_returns204() throws Exception {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -109,6 +112,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("changes a building's consumption and returns 204 with no body")
     void changeConsumption_validRequest_returns204() throws Exception {
         mockMvc.perform(patch("/v1/buildings/{id}/consumption", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -119,6 +123,8 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("returns 200 with the paginated result's content, total elements, total pages, page number, "
+            + "and page size all present in the body")
     void getAll_returns200WithPagedResult() throws Exception {
         given(queryService.getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString()))
                 .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
@@ -133,6 +139,8 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("splits a \"name,desc\" sort query parameter into separate field and direction arguments "
+            + "passed to the service")
     void getAll_sortDesc_passesDescDirectionToService() throws Exception {
         given(queryService.getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString()))
                 .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
@@ -144,6 +152,8 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("splits a \"name,asc\" sort query parameter into separate field and direction arguments "
+            + "passed to the service")
     void getAll_sortAsc_passesAscDirectionToService() throws Exception {
         given(queryService.getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString()))
                 .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
@@ -155,6 +165,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("routes to the subsidy-eligibility query, not the regular listing query, when eligible=true")
     void getAll_eligibleTrue_callsGetEligibleForSubsidyNotGetAll() throws Exception {
         given(queryService.getEligibleForSubsidy(anyInt(), anyInt(), anyString(), anyString()))
                 .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
@@ -167,6 +178,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("routes to the regular listing query, not the subsidy-eligibility query, when eligible=false")
     void getAll_eligibleFalse_callsGetAllNotGetEligibleForSubsidy() throws Exception {
         given(queryService.getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString()))
                 .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
@@ -179,6 +191,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("routes to the regular listing query by default when the eligible parameter is omitted entirely")
     void getAll_eligibleParamAbsent_callsGetAll() throws Exception {
         given(queryService.getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString()))
                 .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
@@ -191,6 +204,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("forwards the name filter to the service while leaving the location filter null")
     void getAll_nameParam_forwardedToService() throws Exception {
         given(queryService.getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString()))
                 .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
@@ -202,6 +216,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("forwards the location filter to the service while leaving the name filter null")
     void getAll_locationParam_forwardedToService() throws Exception {
         given(queryService.getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString()))
                 .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
@@ -213,6 +228,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("forwards both the name and location filters to the service together")
     void getAll_nameAndLocationParams_bothForwardedToService() throws Exception {
         given(queryService.getAll(any(), any(), anyInt(), anyInt(), anyString(), anyString()))
                 .willReturn(new com.example.smartcityback.asset.shared.PagedResult<>(List.of(), 0L, 0, 0, 20));
@@ -224,6 +240,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("returns 200 with a building's ID, name, location, device list, and version all in the body")
     void getBuilding_found_returns200WithBody() throws Exception {
         PublicBuildingDto response = new PublicBuildingDto(
                 BUILDING_ID, "City Hall", "Main St 1",
@@ -249,6 +266,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("returns 404 with a BUILDING_NOT_FOUND error code for a building ID that doesn't exist")
     void getBuilding_notFound_returns404() throws Exception {
         given(queryService.getById(BUILDING_ID)).willThrow(new BuildingNotFoundException());
 
@@ -258,6 +276,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("deletes a building and returns 204 with no body")
     void delete_validRequest_returns204() throws Exception {
         mockMvc.perform(delete("/v1/buildings/{id}", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -268,6 +287,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("removes a device from a building and returns 204 with no body")
     void removeDevice_validRequest_returns204() throws Exception {
         mockMvc.perform(delete("/v1/buildings/{buildingId}/devices/{deviceId}", BUILDING_ID, DEVICE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -278,6 +298,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("changes a device's production and returns 204 with no body")
     void changeProduction_validRequest_returns204() throws Exception {
         mockMvc.perform(patch("/v1/buildings/{buildingId}/devices/{deviceId}/production",
                         BUILDING_ID, DEVICE_ID)
@@ -293,6 +314,8 @@ class PublicBuildingControllerAPITest {
     // =====================================================================
 
     @Test
+    @DisplayName("translates a domain-level ValidationException into a 422 response carrying that exception's "
+            + "own specific error code (BUILDING_NAME_EMPTY), not a generic one")
     void create_domainValidationException_returns422WithDomainErrorCode() throws Exception {
         given(appService.create(any()))
                 .willThrow(new ValidationException("Building must have a name!", ErrorCode.BUILDING_NAME_EMPTY));
@@ -311,6 +334,8 @@ class PublicBuildingControllerAPITest {
     // =====================================================================
 
     @Test
+    @DisplayName("rejects a blank building name at the request-validation layer, before the domain is ever "
+            + "reached, with a generic VALIDATION_ERROR code")
     void create_blankName_returns422WithValidationErrorCode() throws Exception {
         mockMvc.perform(post("/v1/buildings")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -323,6 +348,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("rejects a create-building request with no location field at all")
     void create_missingLocation_returns422() throws Exception {
         mockMvc.perform(post("/v1/buildings")
                         .contentType(MediaType.APPLICATION_JSON)
@@ -334,6 +360,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("rejects an add-device request with no device type")
     void addDevice_missingType_returns422() throws Exception {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -345,6 +372,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("rejects an add-device request with a blank device name")
     void addDevice_blankName_returns422() throws Exception {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -356,6 +384,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("rejects an add-device request with a negative rated capacity")
     void addDevice_negativeCapacity_returns422() throws Exception {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -367,6 +396,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("rejects a consumption-change request with a negative value")
     void changeConsumption_negativeValue_returns422() throws Exception {
         mockMvc.perform(patch("/v1/buildings/{id}/consumption", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -378,6 +408,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("rejects a production-change request with a negative value")
     void changeProduction_negativeValue_returns422() throws Exception {
         mockMvc.perform(patch("/v1/buildings/{buildingId}/devices/{deviceId}/production",
                         BUILDING_ID, DEVICE_ID)
@@ -390,6 +421,8 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("rejects an add-device request with no version field, since optimistic locking requires the "
+            + "client to state what version it expects")
     void addDevice_missingVersion_returns422() throws Exception {
         mockMvc.perform(post("/v1/buildings/{id}/devices", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -401,6 +434,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("rejects a consumption-change request with no version field")
     void changeConsumption_missingVersion_returns422() throws Exception {
         mockMvc.perform(patch("/v1/buildings/{id}/consumption", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -412,6 +446,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("rejects a production-change request with no version field")
     void changeProduction_missingVersion_returns422() throws Exception {
         mockMvc.perform(patch("/v1/buildings/{buildingId}/devices/{deviceId}/production",
                         BUILDING_ID, DEVICE_ID)
@@ -424,6 +459,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("rejects a remove-device request with no version field")
     void removeDevice_missingVersion_returns422() throws Exception {
         mockMvc.perform(delete("/v1/buildings/{buildingId}/devices/{deviceId}", BUILDING_ID, DEVICE_ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -437,6 +473,8 @@ class PublicBuildingControllerAPITest {
     // =====================================================================
 
     @Test
+    @DisplayName("translates the service throwing BuildingNotFoundException during addDevice into a 404 with "
+            + "a BUILDING_NOT_FOUND error code")
     void addDevice_buildingNotFound_returns404() throws Exception {
         willThrow(new BuildingNotFoundException()).given(appService).addDevice(any());
 
@@ -450,6 +488,8 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("translates the service throwing BuildingNotFoundException during changeConsumption into a "
+            + "404 with a BUILDING_NOT_FOUND error code")
     void changeConsumption_buildingNotFound_returns404() throws Exception {
         willThrow(new BuildingNotFoundException()).given(appService).changeConsumption(any(), any());
 
@@ -463,6 +503,8 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("translates the service throwing BuildingNotFoundException during changeProduction into a "
+            + "404 with a BUILDING_NOT_FOUND error code")
     void changeProduction_buildingNotFound_returns404() throws Exception {
         willThrow(new BuildingNotFoundException()).given(appService).changeProduction(any(), any(), any());
 
@@ -477,6 +519,8 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("translates the service throwing DeviceNotFoundException during changeProduction into a 404 "
+            + "with a DEVICE_NOT_FOUND error code, distinct from the building-not-found case")
     void changeProduction_deviceNotFound_returns404() throws Exception {
         willThrow(new DeviceNotFoundException()).given(appService).changeProduction(any(), any(), any());
 
@@ -491,6 +535,8 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("translates the service throwing BuildingNotFoundException during delete into a 404 with a "
+            + "BUILDING_NOT_FOUND error code")
     void delete_buildingNotFound_returns404() throws Exception {
         willThrow(new BuildingNotFoundException()).given(appService).delete(any(), any());
 
@@ -504,6 +550,7 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("rejects a delete request with no version field")
     void delete_missingVersion_returns422() throws Exception {
         mockMvc.perform(delete("/v1/buildings/{id}", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -513,6 +560,8 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("translates the service throwing BuildingNotFoundException during removeDevice into a 404 "
+            + "with a BUILDING_NOT_FOUND error code")
     void removeDevice_buildingNotFound_returns404() throws Exception {
         willThrow(new BuildingNotFoundException()).given(appService).removeDevice(any(), any(), any());
 
@@ -526,6 +575,8 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("translates the service throwing DeviceNotFoundException during removeDevice into a 404 "
+            + "with a DEVICE_NOT_FOUND error code")
     void removeDevice_deviceNotFound_returns404() throws Exception {
         willThrow(new DeviceNotFoundException()).given(appService).removeDevice(any(), any(), any());
 
@@ -543,6 +594,8 @@ class PublicBuildingControllerAPITest {
     // =====================================================================
 
     @Test
+    @DisplayName("translates the service throwing DeviceAlreadyExistsException into a 409 with a "
+            + "DEVICE_ALREADY_EXISTS error code")
     void addDevice_duplicateDevice_returns409() throws Exception {
         willThrow(new DeviceAlreadyExistsException()).given(appService).addDevice(any());
 
@@ -556,6 +609,8 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("translates the service throwing BuildingAlreadyExistsException into a 409 with a "
+            + "BUILDING_ALREADY_EXISTS error code")
     void create_duplicateNameAndLocation_returns409() throws Exception {
         willThrow(new BuildingAlreadyExistsException()).given(appService).create(any());
 
@@ -569,6 +624,8 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("translates the service throwing BuildingTotalCapacityExceededException into a 409 with a "
+            + "TOTAL_CAPACITY_EXCEEDED error code")
     void changeConsumption_exceedsCapacity_returns409() throws Exception {
         willThrow(new BuildingTotalCapacityExceededException()).given(appService).changeConsumption(any(), any());
 
@@ -582,6 +639,8 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("translates the service throwing DeviceCapacityLimitException into a 409 with a "
+            + "DEVICE_CAPACITY_OUT_OF_RANGE error code")
     void changeProduction_exceedsDeviceCapacity_returns409() throws Exception {
         willThrow(new DeviceCapacityLimitException()).given(appService).changeProduction(any(), any(), any());
 
@@ -596,6 +655,8 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
+    @DisplayName("translates the service throwing ObjectOptimisticLockingFailureException into a 409 with a "
+            + "CONCURRENT_MODIFICATION error code, instead of the generic 500 an unmapped exception would get")
     void optimisticLock_returns409WithConcurrentModification() throws Exception {
         willThrow(new ObjectOptimisticLockingFailureException("PublicBuildingJpaEntity", BUILDING_ID))
                 .given(appService).addDevice(any());
@@ -614,6 +675,8 @@ class PublicBuildingControllerAPITest {
     // =====================================================================
 
     @Test
+    @DisplayName("translates a completely unexpected, unmapped exception into a 500 with an INTERNAL_ERROR "
+            + "error code, instead of leaking a stack trace or crashing the response")
     void unexpectedException_returns500() throws Exception {
         given(appService.create(any())).willThrow(new RuntimeException("Unexpected"));
 
@@ -631,6 +694,8 @@ class PublicBuildingControllerAPITest {
     // =====================================================================
 
     @Test
+    @DisplayName("includes an error code, message, HTTP status, timestamp, and request ID in every error "
+            + "response, regardless of which specific error triggered it")
     void errorResponse_hasAllRequiredFields() throws Exception {
         mockMvc.perform(post("/v1/buildings")
                         .contentType(MediaType.APPLICATION_JSON)

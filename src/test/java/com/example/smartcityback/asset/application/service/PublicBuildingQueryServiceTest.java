@@ -10,6 +10,7 @@ import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
 import com.example.smartcityback.asset.domain.valueobject.Energy;
 import com.example.smartcityback.asset.shared.PagedResult;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -61,6 +62,7 @@ class PublicBuildingQueryServiceTest {
     // =====================================================================
 
     @Test
+    @DisplayName("returns a building's ID, name, location, and consumption correctly mapped when it has no devices")
     void getById_buildingWithNoDevices_mapsAllScalarFields() {
         given(repository.findById(BUILDING_ID))
                 .willReturn(Optional.of(buildingEntity(List.of())));
@@ -76,6 +78,7 @@ class PublicBuildingQueryServiceTest {
     }
 
     @Test
+    @DisplayName("returns a building's single device with its ID, type, and rated capacity correctly mapped")
     void getById_buildingWithDevices_mapsDeviceList() {
         given(repository.findById(BUILDING_ID))
                 .willReturn(Optional.of(buildingEntity(List.of(deviceEntity()))));
@@ -90,6 +93,7 @@ class PublicBuildingQueryServiceTest {
     }
 
     @Test
+    @DisplayName("returns both of a building's devices, of two different types, not just the first one")
     void getById_multipleDevices_allMapped() {
         EnergyDevice solar   = deviceEntity();
         EnergyDevice battery = new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.BATTERY,
@@ -107,6 +111,7 @@ class PublicBuildingQueryServiceTest {
     }
 
     @Test
+    @DisplayName("returns a zero consumption value correctly mapped in MW, a unit no other test in this class uses")
     void getById_consumptionZero_mapsCorrectly() {
         PublicBuilding entity = new PublicBuilding(BUILDING_ID, "Library", "Park Ave 5");
         entity.changeConsumption(new Energy(BigDecimal.ZERO, EnergyUnit.MW));
@@ -123,6 +128,8 @@ class PublicBuildingQueryServiceTest {
     // =====================================================================
 
     @Test
+    @DisplayName("forwards the repository's total-element count, page count, page number, and page size "
+            + "through to the returned result unchanged")
     void getAll_mapsAllPaginationFields() {
         given(repository.findAll(null, null, 0, 10, "name", "asc"))
                 .willReturn(new PagedResult<>(List.of(), 42L, 5, 0, 10));
@@ -136,6 +143,8 @@ class PublicBuildingQueryServiceTest {
     }
 
     @Test
+    @DisplayName("passes the name filter, location filter, page, size, sort field, and sort direction through "
+            + "to the repository exactly as given")
     void getAll_forwardsAllParamsToRepository() {
         given(repository.findAll("City", "Main", 2, 7, "location", "desc"))
                 .willReturn(new PagedResult<>(List.of(), 0L, 0, 2, 7));
@@ -146,6 +155,7 @@ class PublicBuildingQueryServiceTest {
     }
 
     @Test
+    @DisplayName("returns an empty content list, not an error, when the repository's page has no results")
     void getAll_emptyPage_returnsEmptyContent() {
         given(repository.findAll(null, null, 0, 10, "name", "asc"))
                 .willReturn(new PagedResult<>(List.of(), 0L, 0, 0, 10));
@@ -156,6 +166,7 @@ class PublicBuildingQueryServiceTest {
     }
 
     @Test
+    @DisplayName("maps each building the repository returns into a DTO in the result's content list")
     void getAll_withBuildings_mapsContentToDtos() {
         given(repository.findAll(null, null, 0, 10, "name", "asc"))
                 .willReturn(new PagedResult<>(List.of(buildingEntity(List.of())), 1L, 1, 0, 10));
@@ -172,6 +183,9 @@ class PublicBuildingQueryServiceTest {
     // =====================================================================
 
     @Test
+    @DisplayName("maps a subsidy-eligible summary into a DTO with an empty device list, since the subsidy "
+            + "projection never fetches devices in the first place — an intentionally empty list, not an "
+            + "unmapped field")
     void getEligibleForSubsidy_mapsSummaryToDtoWithEmptyDevices() {
         PublicBuildingSummary summary = new PublicBuildingSummary(
                 BUILDING_ID, "City Hall", "Main St 1", new BigDecimal("75"), EnergyUnit.kW);
@@ -192,6 +206,8 @@ class PublicBuildingQueryServiceTest {
     }
 
     @Test
+    @DisplayName("passes the page, size, sort field, and sort direction through to the subsidy-eligibility "
+            + "repository query exactly as given")
     void getEligibleForSubsidy_forwardsAllParamsToRepository() {
         given(repository.findEligibleForSubsidy(1, 5, "location", "desc"))
                 .willReturn(new PagedResult<>(List.of(), 0L, 0, 1, 5));
@@ -202,6 +218,8 @@ class PublicBuildingQueryServiceTest {
     }
 
     @Test
+    @DisplayName("forwards the subsidy-eligibility repository's total-element count, page count, page number, "
+            + "and page size through to the returned result unchanged")
     void getEligibleForSubsidy_mapsAllPaginationFields() {
         given(repository.findEligibleForSubsidy(0, 10, "name", "asc"))
                 .willReturn(new PagedResult<>(List.of(), 7L, 2, 0, 10));
@@ -215,6 +233,8 @@ class PublicBuildingQueryServiceTest {
     }
 
     @Test
+    @DisplayName("returns an empty content list, not an error, when the subsidy-eligibility repository's page "
+            + "has no results")
     void getEligibleForSubsidy_emptyPage_returnsEmptyContent() {
         given(repository.findEligibleForSubsidy(0, 10, "name", "asc"))
                 .willReturn(new PagedResult<>(List.of(), 0L, 0, 0, 10));
@@ -229,6 +249,7 @@ class PublicBuildingQueryServiceTest {
     // =====================================================================
 
     @Test
+    @DisplayName("rejects a lookup for a building ID that doesn't exist")
     void getById_buildingNotFound_throwsBuildingNotFoundException() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.empty());
 
@@ -241,6 +262,8 @@ class PublicBuildingQueryServiceTest {
     // =====================================================================
 
     @Test
+    @DisplayName("calls the repository exactly once per lookup and nothing else on it, proving getById() "
+            + "doesn't accidentally re-query or trigger any other repository interaction")
     void getById_callsRepositoryExactlyOnce() {
         given(repository.findById(BUILDING_ID))
                 .willReturn(Optional.of(buildingEntity(List.of())));
