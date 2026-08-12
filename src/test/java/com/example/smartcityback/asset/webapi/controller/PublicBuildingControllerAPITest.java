@@ -78,6 +78,9 @@ class PublicBuildingControllerAPITest {
     @MockitoBean
     private TokenBlacklist tokenBlacklist;
 
+    // Fixed, not random: the service layer is mocked here, so the ID value is never resolved
+    // against a real aggregate — using a recognizable constant instead of UUID.randomUUID()
+    // makes failing assertions and request/response JSON in test output easy to eyeball.
     private static final UUID BUILDING_ID = UUID.fromString("550e8400-e29b-41d4-a716-446655440000");
     private static final UUID DEVICE_ID   = UUID.fromString("660e8400-e29b-41d4-a716-446655440001");
 
