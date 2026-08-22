@@ -104,7 +104,10 @@ public class PublicBuilding {
                 .findFirst()
                 .orElseThrow(DeviceNotFoundException::new);
 
-        if (device.getProductionRate().value().compareTo(BigDecimal.ZERO) > 0) {
+        BigDecimal totalProductionRateAfterRemoval = calculateTotalProductionRate().value()
+                .subtract(device.getProductionRate().to(EnergyUnit.kW).value());
+
+        if (totalProductionRateAfterRemoval.compareTo(consumption.to(EnergyUnit.kW).value()) < 0) {
             throw new DeviceInUseException();
         }
 
