@@ -9,6 +9,7 @@ import com.example.smartcityback.asset.domain.event.DomainEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import com.example.smartcityback.asset.domain.exception.BuildingProductionRateExceededException;
 import com.example.smartcityback.asset.domain.exception.DeviceAlreadyExistsException;
+import com.example.smartcityback.asset.domain.exception.DeviceInUseException;
 import com.example.smartcityback.asset.domain.exception.DeviceNotFoundException;
 import com.example.smartcityback.asset.domain.exception.ValidationException;
 import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
@@ -226,6 +227,17 @@ class PublicBuildingTest {
         assertThat(event.deviceId()).isEqualTo(DEVICE_ID);
         assertThat(event.deviceName()).isEqualTo("Test Device");
         assertThat(event.deviceType()).isEqualTo(DeviceType.SOLAR);
+    }
+
+    @Test
+    @DisplayName("rejects removing a device that is still actively producing, leaving it on the building")
+    void removeDevice_deviceActivelyProducing_throwsDeviceInUseException() {
+        PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
+        addProducingDevice(building);
+
+        assertThatThrownBy(() -> building.removeDevice(DEVICE_ID))
+                .isInstanceOf(DeviceInUseException.class);
+        assertThat(building.getDevices()).hasSize(1);
     }
 
     //* =====================================================================

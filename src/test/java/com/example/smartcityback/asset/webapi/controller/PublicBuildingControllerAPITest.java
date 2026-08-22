@@ -8,6 +8,7 @@ import com.example.smartcityback.asset.domain.exception.BuildingAlreadyExistsExc
 import com.example.smartcityback.asset.domain.exception.BuildingProductionRateExceededException;
 import com.example.smartcityback.asset.domain.exception.DeviceCapacityLimitException;
 import com.example.smartcityback.asset.domain.exception.DeviceAlreadyExistsException;
+import com.example.smartcityback.asset.domain.exception.DeviceInUseException;
 import com.example.smartcityback.asset.domain.exception.DeviceNotFoundException;
 import com.example.smartcityback.asset.domain.exception.ValidationException;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
@@ -655,6 +656,21 @@ class PublicBuildingControllerAPITest {
                                 """))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.errorCode").value("DEVICE_CAPACITY_OUT_OF_RANGE"));
+    }
+
+    @Test
+    @DisplayName("translates the service throwing DeviceInUseException during removeDevice into a 409 with a "
+            + "DEVICE_IN_USE error code")
+    void removeDevice_deviceInUse_returns409() throws Exception {
+        willThrow(new DeviceInUseException()).given(appService).removeDevice(any(), any(), any());
+
+        mockMvc.perform(delete("/v1/buildings/{buildingId}/devices/{deviceId}", BUILDING_ID, DEVICE_ID)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"version": 0}
+                                """))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.errorCode").value("DEVICE_IN_USE"));
     }
 
     @Test

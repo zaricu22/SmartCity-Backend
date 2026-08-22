@@ -192,10 +192,23 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
+    @DisplayName("rejects removing a device ID that is still active")
+    void removeDevice_deviceInUse_throwsDeviceInUseException() {
+        PublicBuilding building = buildingWithOneDevice();
+        given(repository.findById(BUILDING_ID)).willReturn(Optional.of(building));
+
+        assertThatThrownBy(() -> service.removeDevice(BUILDING_ID, DEVICE_ID, null))
+                .isInstanceOf(com.example.smartcityback.asset.domain.exception.DeviceInUseException.class);
+
+        then(repository).should(never()).save(any());
+    }
+
+    @Test
     @DisplayName("removes a device from the building, saves the updated aggregate, and publishes a "
             + "DeviceRemovedEvent")
     void removeDevice_deviceFound_savesAndPublishesEvent() {
         PublicBuilding building = buildingWithOneDevice();
+        building.getDevices().get(0).changeProduction(new Energy (new BigDecimal("0"), EnergyUnit.kW));
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(building));
 
         service.removeDevice(BUILDING_ID, DEVICE_ID, null);
