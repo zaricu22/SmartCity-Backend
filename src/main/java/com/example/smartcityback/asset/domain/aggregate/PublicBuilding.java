@@ -7,10 +7,7 @@ import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceRemovedEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DomainEvent;
-import com.example.smartcityback.asset.domain.exception.BuildingProductionRateExceededException;
-import com.example.smartcityback.asset.domain.exception.DeviceAlreadyExistsException;
-import com.example.smartcityback.asset.domain.exception.DeviceNotFoundException;
-import com.example.smartcityback.asset.domain.exception.ValidationException;
+import com.example.smartcityback.asset.domain.exception.*;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
 import com.example.smartcityback.asset.domain.shared.enums.ErrorCode;
 import com.example.smartcityback.asset.domain.valueobject.*;
@@ -106,6 +103,10 @@ public class PublicBuilding {
                 .filter(d -> d.getId().equals(deviceId))
                 .findFirst()
                 .orElseThrow(DeviceNotFoundException::new);
+
+        if (device.getProductionRate().value().compareTo(BigDecimal.ZERO) > 0) {
+            throw new DeviceInUseException();
+        }
 
         devices.remove(device);
 
