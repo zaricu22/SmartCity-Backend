@@ -7,7 +7,7 @@ import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceRemovedEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
 import com.example.smartcityback.asset.domain.event.DomainEvent;
-import com.example.smartcityback.asset.domain.exception.BuildingTotalCapacityExceededException;
+import com.example.smartcityback.asset.domain.exception.BuildingProductionRateExceededException;
 import com.example.smartcityback.asset.domain.exception.DeviceAlreadyExistsException;
 import com.example.smartcityback.asset.domain.exception.DeviceNotFoundException;
 import com.example.smartcityback.asset.domain.exception.ValidationException;
@@ -112,9 +112,9 @@ public class PublicBuilding {
         domainEvents.add(new DeviceRemovedEvent(id, deviceId, device.getName(), device.getType()));
     }
 
-    private Energy calculateTotalCapacity() {
+    private Energy calculateTotalProductionRate() {
         BigDecimal total = devices.stream()
-                .map(EnergyDevice::getDeviceRatedCapacity)
+                .map(EnergyDevice::getProductionRate)
                 .map(e -> e.to(EnergyUnit.kW).value())
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
@@ -122,8 +122,8 @@ public class PublicBuilding {
     }
 
     public void changeConsumption(Energy newConsumptionRate){
-        if (newConsumptionRate.greaterThan(calculateTotalCapacity())) {
-            throw new BuildingTotalCapacityExceededException();
+        if (newConsumptionRate.greaterThan(calculateTotalProductionRate())) {
+            throw new BuildingProductionRateExceededException();
         }
 
         Energy old = this.consumption;

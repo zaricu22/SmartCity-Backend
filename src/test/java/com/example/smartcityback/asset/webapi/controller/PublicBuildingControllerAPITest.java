@@ -5,7 +5,7 @@ import com.example.smartcityback.asset.application.dto.PublicBuildingDto;
 import com.example.smartcityback.asset.application.exception.BuildingNotFoundException;
 import com.example.smartcityback.asset.application.service.PublicBuildingAppService;
 import com.example.smartcityback.asset.domain.exception.BuildingAlreadyExistsException;
-import com.example.smartcityback.asset.domain.exception.BuildingTotalCapacityExceededException;
+import com.example.smartcityback.asset.domain.exception.BuildingProductionRateExceededException;
 import com.example.smartcityback.asset.domain.exception.DeviceCapacityLimitException;
 import com.example.smartcityback.asset.domain.exception.DeviceAlreadyExistsException;
 import com.example.smartcityback.asset.domain.exception.DeviceNotFoundException;
@@ -627,10 +627,10 @@ class PublicBuildingControllerAPITest {
     }
 
     @Test
-    @DisplayName("translates the service throwing BuildingTotalCapacityExceededException into a 409 with a "
-            + "TOTAL_CAPACITY_EXCEEDED error code")
-    void changeConsumption_exceedsCapacity_returns409() throws Exception {
-        willThrow(new BuildingTotalCapacityExceededException()).given(appService).changeConsumption(any(), any());
+    @DisplayName("translates the service throwing BuildingProductionRateExceededException into a 409 with a "
+            + "PRODUCTION_RATE_EXCEEDED error code")
+    void changeConsumption_exceedsProductionRate_returns409() throws Exception {
+        willThrow(new BuildingProductionRateExceededException()).given(appService).changeConsumption(any(), any());
 
         mockMvc.perform(patch("/v1/buildings/{id}/consumption", BUILDING_ID)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -638,7 +638,7 @@ class PublicBuildingControllerAPITest {
                                 {"consumptionValue": 999, "consumptionUnit": "kW", "version": 0}
                                 """))
                 .andExpect(status().isConflict())
-                .andExpect(jsonPath("$.errorCode").value("TOTAL_CAPACITY_EXCEEDED"));
+                .andExpect(jsonPath("$.errorCode").value("PRODUCTION_RATE_EXCEEDED"));
     }
 
     @Test

@@ -154,13 +154,31 @@ class PublicBuildingFullIntegrationTest {
 
     @Test
     @DisplayName("changes a building's consumption through the full stack and returns 204 — the building's "
-            + "version is still 0 even after a device was added first, since inserting a device never touches "
-            + "the parent row's version")
+            + "version is still 0 even after a device was added and its production set, since neither "
+            + "touches the parent row's version")
     void changeConsumption_validRequest_returns204() {
         // devices is @OneToMany(mappedBy = "building") — the FK lives on the child table, so
-        // addDevice() only INSERTs into energy_device and never UPDATEs the building's own row.
-        // The building's version is therefore still 0 after createBuildingWithDevice().
+        // addDevice() and changeProduction() only touch the energy_device row and never UPDATE
+        // the building's own row. The building's version is therefore still 0 here.
         UUID buildingId = createBuildingWithDevice();
+        UUID deviceId = given(asAdmin)
+                .when()
+                .get("/v1/buildings/{id}", buildingId)
+                .then()
+                .statusCode(200)
+                .extract().jsonPath().getUUID("devices[0].id");
+
+        // changeConsumption() checks total production rate, not rated capacity — the device
+        // must actually be producing before consumption can be set against it.
+        given(asAdmin)
+                .contentType(ContentType.JSON)
+                .body("""
+                    { "productionValue": 50, "productionUnit": "kW", "version": 0 }
+                    """)
+                .when()
+                .patch("/v1/buildings/{buildingId}/devices/{deviceId}/production", buildingId, deviceId)
+                .then()
+                .statusCode(204);
 
         given(asAdmin)
                 .contentType(ContentType.JSON)

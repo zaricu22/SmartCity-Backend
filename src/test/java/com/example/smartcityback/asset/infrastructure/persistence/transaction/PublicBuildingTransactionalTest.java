@@ -6,7 +6,7 @@ import com.example.smartcityback.asset.application.command.ChangeProductionComma
 import com.example.smartcityback.asset.domain.exception.DeviceNotFoundException;
 import com.example.smartcityback.asset.application.exception.BuildingNotFoundException;
 import com.example.smartcityback.asset.application.service.PublicBuildingAppService;
-import com.example.smartcityback.asset.domain.exception.BuildingTotalCapacityExceededException;
+import com.example.smartcityback.asset.domain.exception.BuildingProductionRateExceededException;
 import com.example.smartcityback.asset.domain.shared.enums.DeviceType;
 import com.example.smartcityback.asset.domain.shared.enums.EnergyUnit;
 import com.example.smartcityback.asset.infrastructure.persistence.embedded.EnergyEmbeddable;
@@ -100,7 +100,7 @@ class PublicBuildingTransactionalTest {
     @DisplayName("commits a successful consumption change to the database, verified by reading the row back "
             + "outside the service's own transaction")
     void changeConsumption_success_commitsToDatabase() {
-        // Building has no devices → total capacity = 0 kW.
+        // Building has no devices → total production rate = 0 kW.
         // Consumption of 0 kW satisfies the check (0 <= 0) and the transaction must commit.
         // version=0L matches the version Hibernate assigns on the row inserted in @BeforeEach.
         ChangeConsumptionCommand cmd = new ChangeConsumptionCommand(BigDecimal.ZERO, EnergyUnit.kW, 0L);
@@ -145,13 +145,13 @@ class PublicBuildingTransactionalTest {
     @DisplayName("leaves the database consumption value unchanged when a capacity-exceeded error is thrown "
             + "before the save is ever reached")
     void changeConsumption_domainException_transactionRollsBack_dbUnchanged() {
-        // Building has no devices → total capacity = 0 kW.
-        // Requesting 50 kW consumption throws BuildingTotalCapacityExceededException
+        // Building has no devices → production rate = 0 kW.
+        // Requesting 50 kW consumption throws BuildingProductionRateExceededException
         // before the repository.save() is ever reached.
         ChangeConsumptionCommand cmd = new ChangeConsumptionCommand(new BigDecimal("50"), EnergyUnit.kW, 0L);
 
         assertThatThrownBy(() -> service.changeConsumption(buildingId, cmd))
-                .isInstanceOf(BuildingTotalCapacityExceededException.class);
+                .isInstanceOf(BuildingProductionRateExceededException.class);
 
         // DB row must be unchanged — consumption stays at 0.
         PublicBuildingJpaEntity persisted = jpaRepository.findById(buildingId).orElseThrow();
