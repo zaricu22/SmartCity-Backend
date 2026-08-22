@@ -7,7 +7,7 @@ import com.example.smartcityback.asset.domain.event.DeviceAddedEvent;
 import com.example.smartcityback.asset.domain.event.DeviceRemovedEvent;
 import com.example.smartcityback.asset.domain.event.DomainEvent;
 import com.example.smartcityback.asset.domain.event.ProductionChangedEvent;
-import com.example.smartcityback.asset.domain.exception.BuildingTotalCapacityExceededException;
+import com.example.smartcityback.asset.domain.exception.BuildingProductionRateExceededException;
 import com.example.smartcityback.asset.domain.exception.DeviceAlreadyExistsException;
 import com.example.smartcityback.asset.domain.exception.DeviceNotFoundException;
 import com.example.smartcityback.asset.domain.exception.ValidationException;
@@ -28,6 +28,21 @@ class PublicBuildingTest {
     private static final UUID   BUILDING_ID     = UUID.randomUUID();
     private static final UUID   DEVICE_ID       = UUID.randomUUID();
     private static final Energy CAPACITY_100_KW = new Energy(new BigDecimal("100"), EnergyUnit.kW);
+
+    // Adds a device to the building and immediately sets its production rate to match its
+    // capacity — the "fully producing" fixture shape changeConsumption() tests need, since the
+    // invariant checks production rate rather than rated capacity. Sets production directly on
+    // the entity (not via PublicBuilding.changeDeviceProduction()), so it publishes no event.
+    private static EnergyDevice addProducingDevice(PublicBuilding building, UUID deviceId, DeviceType type, Energy capacity) {
+        EnergyDevice device = new EnergyDevice(deviceId, "Test Device", type, capacity);
+        building.addDevice(device);
+        device.changeProduction(capacity);
+        return device;
+    }
+
+    private static EnergyDevice addProducingDevice(PublicBuilding building) {
+        return addProducingDevice(building, DEVICE_ID, DeviceType.SOLAR, CAPACITY_100_KW);
+    }
 
     // =====================================================================
     // Construction / Validation
@@ -216,7 +231,7 @@ class PublicBuildingTest {
     //* =====================================================================
     // changeConsumption
     //
-    // if (newConsumptionRate.greaterThan(calculateTotalCapacity()))
+    // if (newConsumptionRate.greaterThan(calculateTotalProductionRate()))
     // =====================================================================
 
     @Test
@@ -230,10 +245,10 @@ class PublicBuildingTest {
     }
 
     @Test
-    @DisplayName("changes consumption to a value within the building's total device capacity")
-    void changeConsumption_withinTotalCapacity_updatesConsumption() {
+    @DisplayName("changes consumption to a value within the building's total production rate")
+    void changeConsumption_withinProductionRate_updatesConsumption() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
+        addProducingDevice(building);
 
         building.changeConsumption(new Energy(new BigDecimal("50"), EnergyUnit.kW));
 
@@ -241,11 +256,11 @@ class PublicBuildingTest {
     }
 
     @Test
-    @DisplayName("allows setting consumption exactly at the building's total device capacity, not just "
+    @DisplayName("allows setting consumption exactly at the building's total production rate, not just "
             + "strictly below it")
-    void changeConsumption_equalToTotalCapacity_succeeds() {
+    void changeConsumption_equalToProductionRate_succeeds() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
+        addProducingDevice(building);
 
         building.changeConsumption(CAPACITY_100_KW);
 
@@ -253,24 +268,24 @@ class PublicBuildingTest {
     }
 
     @Test
-    @DisplayName("rejects any positive consumption on a building with no devices, since its total capacity is 0 kW")
-    void changeConsumption_exceedsTotalCapacity_throwsBuildingTotalCapacityExceededException() {
+    @DisplayName("rejects any positive consumption on a building with no devices, since its total production rate is 0 kW")
+    void changeConsumption_exceedsProductionRate_throwsBuildingProductionRateExceededException() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        // Empty building has 0 kW total capacity — any positive consumption exceeds it.
+        // Empty building has 0 kW production — any positive consumption exceeds it.
         assertThatThrownBy(() -> building.changeConsumption(new Energy(new BigDecimal("1"), EnergyUnit.kW)))
-                .isInstanceOf(BuildingTotalCapacityExceededException.class);
+                .isInstanceOf(BuildingProductionRateExceededException.class);
     }
 
     @Test
     @DisplayName("rejects a consumption request of 201 kW against a building with two 100 kW devices, whose "
-            + "capacities sum to 200 kW")
-    void changeConsumption_exceedsTwoDevicesCapacity_throwsBuildingTotalCapacityExceededException() {
+            + "production rates sum to 200 kW")
+    void changeConsumption_exceedsTwoDevicesProductionRate_throwsBuildingProductionRateExceededException() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
-        building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device", DeviceType.BATTERY, CAPACITY_100_KW));
-        // Total capacity = 200 kW
+        addProducingDevice(building, UUID.randomUUID(), DeviceType.SOLAR, CAPACITY_100_KW);
+        addProducingDevice(building, UUID.randomUUID(), DeviceType.BATTERY, CAPACITY_100_KW);
+        // ProductionRate = 200 kW
         assertThatThrownBy(() -> building.changeConsumption(new Energy(new BigDecimal("201"), EnergyUnit.kW)))
-                .isInstanceOf(BuildingTotalCapacityExceededException.class);
+                .isInstanceOf(BuildingProductionRateExceededException.class);
     }
 
     @Test
@@ -279,7 +294,7 @@ class PublicBuildingTest {
     void changeConsumption_crossUnit_0pt05MWWithin100kWCapacity_succeeds() {
         // 100 kW = 0.1 MW; 0.05 MW = 50 kW < 100 kW — must NOT throw.
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
+        addProducingDevice(building);
         Energy consumptionInMW = new Energy(new BigDecimal("0.05"), EnergyUnit.MW);
 
         assertThatCode(() -> building.changeConsumption(consumptionInMW)).doesNotThrowAnyException();
@@ -288,13 +303,13 @@ class PublicBuildingTest {
     @Test
     @DisplayName("rejects a consumption request of 0.2 MW (200 kW) against a building whose devices only total 100 kW")
     void changeConsumption_crossUnit_0pt2MWExceeds100kWCapacity_throws() {
-        // 0.2 MW = 200 kW > 100 kW total capacity — must throw.
+        // 0.2 MW = 200 kW > 100 kW production rate — must throw.
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
+        addProducingDevice(building);
         Energy consumptionInMW = new Energy(new BigDecimal("0.2"), EnergyUnit.MW);
 
         assertThatThrownBy(() -> building.changeConsumption(consumptionInMW))
-                .isInstanceOf(BuildingTotalCapacityExceededException.class);
+                .isInstanceOf(BuildingProductionRateExceededException.class);
     }
 
     // =====================================================================
@@ -382,7 +397,7 @@ class PublicBuildingTest {
             + "consumption values")
     void changeConsumption_firesConsumptionChangedEvent() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
-        building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
+        addProducingDevice(building);
         building.pullEvents(); // clear DeviceAddedEvent
 
         Energy newConsumption = new Energy(new BigDecimal("50"), EnergyUnit.kW);

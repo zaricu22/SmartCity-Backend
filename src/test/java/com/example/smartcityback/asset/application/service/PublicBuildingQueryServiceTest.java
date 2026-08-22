@@ -44,8 +44,8 @@ class PublicBuildingQueryServiceTest {
     private PublicBuilding buildingEntity(List<EnergyDevice> devices) {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         devices.forEach(building::addDevice);
-        // A 0-device building has 0 kW total capacity, so changeConsumption() would throw
-        // BuildingTotalCapacityExceededException for any nonzero value — only set consumption
+        // A 0-device building has 0 kW total production rate, so changeConsumption() would throw
+        // BuildingProductionRateExceededException for any nonzero value — only set consumption
         // when there's at least one device to back it.
         if (!devices.isEmpty()) {
             building.changeConsumption(new Energy(new BigDecimal("50"), EnergyUnit.kW));

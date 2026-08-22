@@ -52,6 +52,7 @@ class PublicBuildingAppServiceTest {
     private PublicBuilding buildingWithOneDevice() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         building.addDevice(new EnergyDevice(DEVICE_ID, "Test Device", DeviceType.SOLAR, CAPACITY_100_KW));
+        building.getDevices().get(0).changeProduction(new Energy(new BigDecimal("100"), EnergyUnit.kW));
         return building;
     }
 
@@ -219,7 +220,7 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
-    @DisplayName("changes a building's consumption to a value within its total device capacity and saves the result")
+    @DisplayName("changes a building's consumption to a value within its production rate capacity and saves the result")
     void changeConsumption_withinCapacity_savesBuilding() {
         PublicBuilding building = buildingWithOneDevice();
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(building));
@@ -231,14 +232,14 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
-    @DisplayName("rejects a consumption change that exceeds the building's total device capacity, without "
+    @DisplayName("rejects a consumption change that exceeds the building's total production rate, without "
             + "saving anything")
     void changeConsumption_domainException_doesNotSave() {
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(buildingWithOneDevice()));
 
         assertThatThrownBy(() -> service.changeConsumption(BUILDING_ID,
                 new ChangeConsumptionCommand(new BigDecimal("200"), EnergyUnit.kW, null)))
-                // just catching any RuntimeException here, but it should be BuildingTotalCapacityExceededException
+                // just catching any RuntimeException here, but it should be BuildingProductionRateExceededException
                 .isInstanceOf(RuntimeException.class);
 
         then(repository).should(never()).save(any());

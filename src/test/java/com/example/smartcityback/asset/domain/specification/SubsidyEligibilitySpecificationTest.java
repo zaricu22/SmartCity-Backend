@@ -24,6 +24,7 @@ class SubsidyEligibilitySpecificationTest {
         // Distinct names — addDevice() rejects a second device with the same name+type.
         for (int i = 0; i < deviceCount; i++) {
             building.addDevice(new EnergyDevice(UUID.randomUUID(), "Test Device " + i, DeviceType.SOLAR, CAPACITY_100_KW));
+            building.getDevices().get(i).changeProduction(new Energy(new BigDecimal("100"), EnergyUnit.kW));
         }
         building.changeConsumption(new Energy(consumptionValue, EnergyUnit.kW));
         return building;
@@ -57,10 +58,10 @@ class SubsidyEligibilitySpecificationTest {
 
     @Test
     @DisplayName("disqualifies a building with zero devices — the fixture also has to use zero consumption here, "
-            + "since a building with no devices has no capacity and can't legally record any consumption at all")
+            + "since a building with no devices has no production rate and can't legally record any consumption at all")
     void isSatisfiedBy_noDevices_returnsFalse() {
-        // 0 devices means 0 total capacity, so consumption can only be 0 without
-        // tripping BuildingTotalCapacityExceededException.
+        // 0 devices means 0 total production rate, so consumption can only be 0 without
+        // tripping BuildingProductionRateExceededException.
         PublicBuilding building = buildingWithDevices(0, BigDecimal.ZERO);
 
         assertThat(spec.isSatisfiedBy(building)).isFalse();

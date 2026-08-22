@@ -144,9 +144,11 @@ Enforced structurally by ArchUnit — see [ADR-0002](adr/0002-archunit-ddd-enfor
 ║                                                                               ║
 ║  ─────────────────────────────────────────────────────────────────────────   ║
 ║  Invariants enforced at aggregate boundary:                                   ║
-║  · addDevice()              — total capacity across all devices ≤ limit       ║
+║  · addDevice()               — name+type must not already exist on the       ║
+║                                 building (DeviceAlreadyExistsException)      ║
 ║  · removeDevice()           — device must exist (DeviceNotFoundException)    ║
-║  · changeConsumption()      — value must be positive                          ║
+║  · changeConsumption()      — must not exceed total production rate across   ║
+║                                 all devices (BuildingProductionRateExceeded) ║
 ║  · changeDeviceProduction() — must not exceed that device's ratedCapacity    ║
 ║                                                                               ║
 ║  Domain Events (collected, published after save — never before):              ║

@@ -6,7 +6,7 @@
 ## Context
 
 Energy values enter the system in different units: clients may send `kW`, `MW`, or `W`.
-Domain invariants (e.g. `consumption ≤ totalCapacity`) require comparing values that may
+Domain invariants (e.g. `consumption ≤ totalProductionRate`) require comparing values that may
 arrive in different units. Without normalization, every comparison would need explicit
 unit conversion at the point of use.
 
@@ -21,8 +21,8 @@ Key implications:
 - `Energy.greaterThan()` converts both operands to kW via `to()` before comparing
 - `Energy.equals()` and `hashCode()` normalize to kW before hashing — two `Energy` objects
   with the same physical quantity but different units are considered equal
-- `PublicBuilding.calculateTotalCapacity()` calls `.to(EnergyUnit.kW).value()` on each device
-  capacity and sums the results — all arithmetic stays in kW
+- `PublicBuilding.calculateTotalProductionRate()` calls `.to(EnergyUnit.kW).value()` on each device's
+  production rate and sums the results — all arithmetic stays in kW
 - New buildings start with `Energy(0, kW)`
 
 The `EnergyUnit` enum provides the `toKw(BigDecimal)` conversion factor for each unit.
