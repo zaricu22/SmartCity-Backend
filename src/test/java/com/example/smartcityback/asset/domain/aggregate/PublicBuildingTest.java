@@ -230,10 +230,14 @@ class PublicBuildingTest {
     }
 
     @Test
-    @DisplayName("rejects removing a device that is still actively producing, leaving it on the building")
-    void removeDevice_deviceActivelyProducing_throwsDeviceInUseException() {
+    @DisplayName("rejects removing a device whose production the building's current consumption still "
+            + "depends on, leaving it on the building")
+    void removeDevice_remainingProductionInsufficientForConsumption_throwsDeviceInUseException() {
         PublicBuilding building = new PublicBuilding(BUILDING_ID, "City Hall", "Main St 1");
         addProducingDevice(building);
+        // Sole device produces 100 kW — consumption at 50 kW means removing it would leave
+        // 0 kW of production against 50 kW of consumption.
+        building.changeConsumption(new Energy(new BigDecimal("50"), EnergyUnit.kW));
 
         assertThatThrownBy(() -> building.removeDevice(DEVICE_ID))
                 .isInstanceOf(DeviceInUseException.class);

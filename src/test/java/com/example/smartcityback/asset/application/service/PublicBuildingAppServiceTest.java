@@ -192,9 +192,12 @@ class PublicBuildingAppServiceTest {
     }
 
     @Test
-    @DisplayName("rejects removing a device ID that is still active")
+    @DisplayName("rejects removing a device whose production the building's current consumption still depends on")
     void removeDevice_deviceInUse_throwsDeviceInUseException() {
         PublicBuilding building = buildingWithOneDevice();
+        // Sole device produces 100 kW — consumption at 50 kW means removing it would leave
+        // 0 kW of production against 50 kW of consumption.
+        building.changeConsumption(new Energy(new BigDecimal("50"), EnergyUnit.kW));
         given(repository.findById(BUILDING_ID)).willReturn(Optional.of(building));
 
         assertThatThrownBy(() -> service.removeDevice(BUILDING_ID, DEVICE_ID, null))
